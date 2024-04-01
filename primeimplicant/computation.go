@@ -3,12 +3,12 @@ package primeimplicant
 import (
 	"slices"
 
-	"booleworks.com/logicng/handler"
+	"github.com/booleworks/logicng-go/handler"
 
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/model"
-	"booleworks.com/logicng/sat"
-	"booleworks.com/logicng/transformation"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/model"
+	"github.com/booleworks/logicng-go/sat"
+	"github.com/booleworks/logicng-go/transformation"
 )
 
 // CoverSort encodes the sort of the cover: Implicants or Implicates.

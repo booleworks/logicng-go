@@ -3,10 +3,10 @@ package count
 import (
 	"math/big"
 
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/model"
-	"booleworks.com/logicng/model/iter"
-	"booleworks.com/logicng/sat"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/model"
+	"github.com/booleworks/logicng-go/model/iter"
+	"github.com/booleworks/logicng-go/sat"
 )
 
 // OnFormula counts all models of a formula over the given variables.

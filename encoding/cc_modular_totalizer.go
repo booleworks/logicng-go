@@ -3,7 +3,7 @@ package encoding
 import (
 	"math"
 
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 func modtotalizerAMK(result Result, vars []f.Literal, rhs int) *CCIncrementalData {

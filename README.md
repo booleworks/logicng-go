@@ -68,7 +68,7 @@ The following code creates the Boolean Formula _A and not (B or not C)_
 programmatically.
 
 ```go
-import "booleworks.com/logicng/formula"
+import "github.com/booleworks/logicng-go/formula"
 
 fac := formula.NewFactory()
 a := fac.Variable("A")
@@ -81,8 +81,8 @@ Alternatively you can just parse the formula from a string:
 
 ```go
 import (
-    "booleworks.com/logicng/formula"
-    "booleworks.com/logicng/parser" 
+    "github.com/booleworks/logicng-go/formula"
+    "github.com/booleworks/logicng-go/parser" 
 )
 
 fac := formula.NewFactory()
@@ -96,10 +96,10 @@ solve it with a SAT solver:
 ```go
 import (
     "fmt"
-    "booleworks.com/logicng/formula"
-    "booleworks.com/logicng/normalform"
-    "booleworks.com/logicng/parser"
-    "booleworks.com/logicng/sat"
+    "github.com/booleworks/logicng-go/formula"
+    "github.com/booleworks/logicng-go/normalform"
+    "github.com/booleworks/logicng-go/parser"
+    "github.com/booleworks/logicng-go/sat"
 )
 
 fac := formula.NewFactory()

@@ -1,8 +1,8 @@
 package simplification
 
 import (
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // FactorOut simplifies a formula by applying factor out operations.  For

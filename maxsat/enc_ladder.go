@@ -1,6 +1,6 @@
 package maxsat
 
-import "booleworks.com/logicng/sat"
+import "github.com/booleworks/logicng-go/sat"
 
 func encodeLadder(s *sat.CoreSolver, lits []int32) {
 	if len(lits) == 1 {

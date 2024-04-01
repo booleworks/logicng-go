@@ -1,12 +1,12 @@
 package iter
 
 import (
-	"booleworks.com/logicng/sat"
+	"github.com/booleworks/logicng-go/sat"
 	"math"
 	"sort"
 
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // A SplitProvider provides functionality to generate a new set of variables

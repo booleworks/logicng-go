@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"booleworks.com/logicng/errorx"
+	"github.com/booleworks/logicng-go/errorx"
 )
 
 // PrintSymbols gathers all symbols for Boolean and pseudo-Boolean formulas for

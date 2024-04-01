@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/handler"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 	"github.com/stretchr/testify/assert"
 )
 

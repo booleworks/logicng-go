@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/function"
-	"booleworks.com/logicng/io"
-	"booleworks.com/logicng/normalform"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/function"
+	"github.com/booleworks/logicng-go/io"
+	"github.com/booleworks/logicng-go/normalform"
 	"github.com/stretchr/testify/assert"
 )
 

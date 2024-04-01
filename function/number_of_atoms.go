@@ -1,6 +1,6 @@
 package function
 
-import f "booleworks.com/logicng/formula"
+import f "github.com/booleworks/logicng-go/formula"
 
 // NumberOfAtoms returns the number of atomic formulas of the given formula. An
 // atomic formula is a constant or a literal.

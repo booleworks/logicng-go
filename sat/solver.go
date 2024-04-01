@@ -3,12 +3,12 @@ package sat
 import (
 	"sort"
 
-	"booleworks.com/logicng/configuration"
-	"booleworks.com/logicng/encoding"
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/model"
-	"booleworks.com/logicng/normalform"
+	"github.com/booleworks/logicng-go/configuration"
+	"github.com/booleworks/logicng-go/encoding"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/model"
+	"github.com/booleworks/logicng-go/normalform"
 )
 
 // A Solver is the main interface an external user should interact with a SAT

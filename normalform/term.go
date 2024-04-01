@@ -1,8 +1,8 @@
 package normalform
 
 import (
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // IsMinterm reports whether the given formula is a minterm, i.e. a conjunction

@@ -5,10 +5,10 @@ import (
 	"os"
 	"testing"
 
-	"booleworks.com/logicng/explanation"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/io"
-	"booleworks.com/logicng/parser"
+	"github.com/booleworks/logicng-go/explanation"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/io"
+	"github.com/booleworks/logicng-go/parser"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -4,9 +4,9 @@ import (
 	"math"
 	"slices"
 
-	"booleworks.com/logicng/errorx"
-	e "booleworks.com/logicng/explanation"
-	f "booleworks.com/logicng/formula"
+	"github.com/booleworks/logicng-go/errorx"
+	e "github.com/booleworks/logicng-go/explanation"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // ComputeUnsatCore computes an unsatisfiable core of the formula on the

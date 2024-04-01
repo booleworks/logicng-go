@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 type clause struct {

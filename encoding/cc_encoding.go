@@ -1,9 +1,9 @@
 package encoding
 
 import (
-	"booleworks.com/logicng/configuration"
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
+	"github.com/booleworks/logicng-go/configuration"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // EncodeCC encodes a cardinality constraint to a CNF formula as a list of

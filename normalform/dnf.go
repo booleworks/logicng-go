@@ -1,9 +1,9 @@
 package normalform
 
 import (
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/handler"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 )
 
 // IsDNF reports whether the given formula is in disjunctive normal form.  A

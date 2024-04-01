@@ -3,7 +3,7 @@ package bdd
 import (
 	"fmt"
 
-	"booleworks.com/logicng/graphical"
+	"github.com/booleworks/logicng-go/graphical"
 )
 
 var (

@@ -1,6 +1,6 @@
 package sat
 
-import f "booleworks.com/logicng/formula"
+import f "github.com/booleworks/logicng-go/formula"
 
 // IsSatisfiable reports whether the formula is satisfiable.
 func IsSatisfiable(fac f.Factory, formula f.Formula) bool {

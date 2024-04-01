@@ -3,7 +3,7 @@ package encoding
 import (
 	"testing"
 
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 	"github.com/stretchr/testify/assert"
 )
 

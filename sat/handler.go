@@ -1,8 +1,8 @@
 package sat
 
 import (
-	"booleworks.com/logicng/handler"
-	"booleworks.com/logicng/model"
+	"github.com/booleworks/logicng-go/handler"
+	"github.com/booleworks/logicng-go/model"
 )
 
 // Handler is an interface for SAT handlers which can abort the computation

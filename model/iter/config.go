@@ -1,7 +1,7 @@
 package iter
 
 import (
-	"booleworks.com/logicng/configuration"
+	"github.com/booleworks/logicng-go/configuration"
 )
 
 // Config represents a model iteration configuration including a handler

@@ -3,10 +3,10 @@ package mus
 import (
 	"testing"
 
-	e "booleworks.com/logicng/explanation"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/io"
-	s "booleworks.com/logicng/sat"
+	e "github.com/booleworks/logicng-go/explanation"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/io"
+	s "github.com/booleworks/logicng-go/sat"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -1,12 +1,12 @@
 package dnnf
 
 import (
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/handler"
-	"booleworks.com/logicng/normalform"
-	"booleworks.com/logicng/sat"
-	"booleworks.com/logicng/simplification"
-	"booleworks.com/logicng/transformation"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
+	"github.com/booleworks/logicng-go/normalform"
+	"github.com/booleworks/logicng-go/sat"
+	"github.com/booleworks/logicng-go/simplification"
+	"github.com/booleworks/logicng-go/transformation"
 	"github.com/emirpasic/gods/maps/treemap"
 )
 

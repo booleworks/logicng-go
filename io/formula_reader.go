@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"os"
 
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/parser"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/parser"
 )
 
 // ReadFormula reads a formula from the given file.  If the file contains more

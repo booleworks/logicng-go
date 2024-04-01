@@ -3,7 +3,7 @@ package sat
 import (
 	"strconv"
 
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // GeneratePigeonHole generates a pigeon hole problem of size n and returns it

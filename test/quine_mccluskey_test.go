@@ -3,14 +3,14 @@ package test
 import (
 	"testing"
 
-	"booleworks.com/logicng/model/enum"
-	"booleworks.com/logicng/simplification"
+	"github.com/booleworks/logicng-go/model/enum"
+	"github.com/booleworks/logicng-go/simplification"
 
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/io"
-	"booleworks.com/logicng/normalform"
-	"booleworks.com/logicng/parser"
-	"booleworks.com/logicng/sat"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/io"
+	"github.com/booleworks/logicng-go/normalform"
+	"github.com/booleworks/logicng-go/parser"
+	"github.com/booleworks/logicng-go/sat"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -3,7 +3,7 @@ package encoding
 import (
 	"slices"
 
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 const nullLit = "@NULL_LIT"

@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // WriteFormula writes the given formula to a file with the given filename. The

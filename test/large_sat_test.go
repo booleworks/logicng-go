@@ -5,15 +5,15 @@ import (
 	"testing"
 	"time"
 
-	"booleworks.com/logicng/model/count"
-	"booleworks.com/logicng/model/enum"
+	"github.com/booleworks/logicng-go/model/count"
+	"github.com/booleworks/logicng-go/model/enum"
 
-	"booleworks.com/logicng/assignment"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/function"
-	"booleworks.com/logicng/io"
-	"booleworks.com/logicng/model"
-	"booleworks.com/logicng/sat"
+	"github.com/booleworks/logicng-go/assignment"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/function"
+	"github.com/booleworks/logicng-go/io"
+	"github.com/booleworks/logicng-go/model"
+	"github.com/booleworks/logicng-go/sat"
 	"github.com/stretchr/testify/assert"
 )
 

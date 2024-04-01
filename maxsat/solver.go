@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"slices"
 
-	"booleworks.com/logicng/configuration"
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/function"
-	"booleworks.com/logicng/model"
-	"booleworks.com/logicng/normalform"
+	"github.com/booleworks/logicng-go/configuration"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/function"
+	"github.com/booleworks/logicng-go/model"
+	"github.com/booleworks/logicng-go/normalform"
 )
 
 // Result represents the result of a MAX-SAT computation.  It holds a flag

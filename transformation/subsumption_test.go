@@ -3,11 +3,11 @@ package transformation
 import (
 	"testing"
 
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/io"
-	"booleworks.com/logicng/normalform"
-	"booleworks.com/logicng/parser"
-	"booleworks.com/logicng/sat"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/io"
+	"github.com/booleworks/logicng-go/normalform"
+	"github.com/booleworks/logicng-go/parser"
+	"github.com/booleworks/logicng-go/sat"
 	"github.com/emirpasic/gods/sets/treeset"
 	"github.com/stretchr/testify/assert"
 )

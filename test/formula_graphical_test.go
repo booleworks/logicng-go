@@ -6,10 +6,10 @@ import (
 	"testing"
 	"unicode"
 
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/graphical"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/graphical"
 
-	"booleworks.com/logicng/parser"
+	"github.com/booleworks/logicng-go/parser"
 	"github.com/stretchr/testify/assert"
 )
 

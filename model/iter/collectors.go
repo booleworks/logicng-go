@@ -1,8 +1,8 @@
 package iter
 
 import (
-	"booleworks.com/logicng/model"
-	"booleworks.com/logicng/sat"
+	"github.com/booleworks/logicng-go/model"
+	"github.com/booleworks/logicng-go/sat"
 )
 
 // Collector gathers functionality for model iteration collectors.

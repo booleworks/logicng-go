@@ -3,9 +3,9 @@ package transformation
 import (
 	"github.com/emirpasic/gods/lists/arraylist"
 
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/normalform"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/normalform"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/emirpasic/gods/sets/linkedhashset"
 	"github.com/emirpasic/gods/sets/treeset"

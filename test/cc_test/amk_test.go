@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"booleworks.com/logicng/model/enum"
+	"github.com/booleworks/logicng-go/model/enum"
 
-	"booleworks.com/logicng/encoding"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/sat"
+	"github.com/booleworks/logicng-go/encoding"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/sat"
 	"github.com/stretchr/testify/assert"
 )
 

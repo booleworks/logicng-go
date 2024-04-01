@@ -1,6 +1,6 @@
 package bdd
 
-import "booleworks.com/logicng/handler"
+import "github.com/booleworks/logicng-go/handler"
 
 // A Handler for a BDD can abort the compilation of a BDD.  The method
 // NewRefAdded is called by the BDD compiler everytime a newBdd BDD node

@@ -3,7 +3,7 @@ package transformation
 import (
 	"fmt"
 
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // An Anonymizer can be used to replace variables in a formula with newly

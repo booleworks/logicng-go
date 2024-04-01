@@ -3,13 +3,13 @@ package count
 import (
 	"math/big"
 
-	"booleworks.com/logicng/assignment"
-	"booleworks.com/logicng/dnnf"
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/graph"
-	"booleworks.com/logicng/normalform"
-	"booleworks.com/logicng/transformation"
+	"github.com/booleworks/logicng-go/assignment"
+	"github.com/booleworks/logicng-go/dnnf"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/graph"
+	"github.com/booleworks/logicng-go/normalform"
+	"github.com/booleworks/logicng-go/transformation"
 )
 
 // Count computes the model count for the given formulas (interpreted as

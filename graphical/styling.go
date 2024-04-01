@@ -3,7 +3,7 @@ package graphical
 import (
 	"fmt"
 
-	"booleworks.com/logicng/errorx"
+	"github.com/booleworks/logicng-go/errorx"
 )
 
 // Color used in graphical representations.

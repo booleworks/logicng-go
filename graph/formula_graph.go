@@ -3,7 +3,7 @@ package graph
 import (
 	"slices"
 
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // A FormulaGraph represents a graph with nodes holding formulas.

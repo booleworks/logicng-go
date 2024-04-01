@@ -5,13 +5,13 @@ import (
 	"math/big"
 	"testing"
 
-	"booleworks.com/logicng/assignment"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/model"
-	"booleworks.com/logicng/normalform"
-	"booleworks.com/logicng/parser"
-	"booleworks.com/logicng/randomizer"
-	"booleworks.com/logicng/sat"
+	"github.com/booleworks/logicng-go/assignment"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/model"
+	"github.com/booleworks/logicng-go/normalform"
+	"github.com/booleworks/logicng-go/parser"
+	"github.com/booleworks/logicng-go/randomizer"
+	"github.com/booleworks/logicng-go/sat"
 	"github.com/stretchr/testify/assert"
 )
 

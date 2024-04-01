@@ -3,8 +3,8 @@ package encoding
 import (
 	"slices"
 
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // Normalize returns a normalized <= constraint of the given pseudo-Boolean or

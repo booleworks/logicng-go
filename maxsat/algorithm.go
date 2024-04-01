@@ -4,10 +4,10 @@ import (
 	"math"
 	"slices"
 
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/handler"
-	"booleworks.com/logicng/model"
-	"booleworks.com/logicng/sat"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
+	"github.com/booleworks/logicng-go/model"
+	"github.com/booleworks/logicng-go/sat"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/emirpasic/gods/sets/treeset"
 )

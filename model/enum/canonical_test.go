@@ -3,14 +3,14 @@ package enum
 import (
 	"testing"
 
-	"booleworks.com/logicng/sat"
+	"github.com/booleworks/logicng-go/sat"
 
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/function"
-	"booleworks.com/logicng/normalform"
-	"booleworks.com/logicng/parser"
-	"booleworks.com/logicng/randomizer"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/function"
+	"github.com/booleworks/logicng-go/normalform"
+	"github.com/booleworks/logicng-go/parser"
+	"github.com/booleworks/logicng-go/randomizer"
 	"github.com/stretchr/testify/assert"
 )
 

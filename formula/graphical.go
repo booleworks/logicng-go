@@ -3,8 +3,8 @@ package formula
 import (
 	"fmt"
 
-	"booleworks.com/logicng/errorx"
-	"booleworks.com/logicng/graphical"
+	"github.com/booleworks/logicng-go/errorx"
+	"github.com/booleworks/logicng-go/graphical"
 )
 
 const id = "id"

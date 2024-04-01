@@ -1,7 +1,7 @@
 package sat
 
 import (
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 type solverEncoding struct {

@@ -1,8 +1,8 @@
 package assignment
 
 import (
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // Restrict restricts a formula with the given assignment.  In contrast to

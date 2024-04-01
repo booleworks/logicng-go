@@ -6,9 +6,9 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
 	"github.com/antlr4-go/antlr/v4"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // PropositionalParser is a parser for LogicNG formulas.

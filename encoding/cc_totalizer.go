@@ -1,6 +1,6 @@
 package encoding
 
-import f "booleworks.com/logicng/formula"
+import f "github.com/booleworks/logicng-go/formula"
 
 type bound byte
 

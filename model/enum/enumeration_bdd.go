@@ -3,11 +3,11 @@ package enum
 import (
 	"math"
 
-	"booleworks.com/logicng/bdd"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/model"
-	"booleworks.com/logicng/model/iter"
-	"booleworks.com/logicng/sat"
+	"github.com/booleworks/logicng-go/bdd"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/model"
+	"github.com/booleworks/logicng-go/model/iter"
+	"github.com/booleworks/logicng-go/sat"
 )
 
 // ToBDDOnFormula enumerates all models of a formula over the given variables

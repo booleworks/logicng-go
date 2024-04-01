@@ -3,7 +3,7 @@ package dnnf
 import (
 	"math/big"
 
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // A DNNF holds the formula of the d-DNNF and all the original variables (since

@@ -1,12 +1,12 @@
 package iter
 
 import (
-	"booleworks.com/logicng/sat"
+	"github.com/booleworks/logicng-go/sat"
 	"strings"
 	"testing"
 
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/parser"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/parser"
 	"github.com/stretchr/testify/assert"
 )
 

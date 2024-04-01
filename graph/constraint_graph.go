@@ -1,6 +1,6 @@
 package graph
 
-import f "booleworks.com/logicng/formula"
+import f "github.com/booleworks/logicng-go/formula"
 
 // GenerateConstraintGraph generates a constraint graph for the given formulas.
 // The nodes of the constraint graph hold all variables of the given formulas.

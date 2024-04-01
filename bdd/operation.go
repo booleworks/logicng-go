@@ -3,8 +3,8 @@ package bdd
 import (
 	"math/big"
 
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 func (k *Kernel) satOne(r int32) int32 {

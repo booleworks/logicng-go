@@ -4,14 +4,14 @@ import (
 	"math/big"
 	"testing"
 
-	"booleworks.com/logicng/model/enum"
+	"github.com/booleworks/logicng-go/model/enum"
 
-	"booleworks.com/logicng/normalform"
-	"booleworks.com/logicng/parser"
-	"booleworks.com/logicng/randomizer"
-	"booleworks.com/logicng/sat"
+	"github.com/booleworks/logicng-go/normalform"
+	"github.com/booleworks/logicng-go/parser"
+	"github.com/booleworks/logicng-go/randomizer"
+	"github.com/booleworks/logicng-go/sat"
 
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 	"github.com/stretchr/testify/assert"
 )
 

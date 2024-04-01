@@ -1,9 +1,9 @@
 package graph
 
 import (
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/normalform"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/normalform"
 )
 
 // HypergraphFromClauses generates a hyper-graph from a CNF given as a list of

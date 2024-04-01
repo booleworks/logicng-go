@@ -1,8 +1,8 @@
 package encoding
 
 import (
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // CCIncrementalData gathers data for an incremental at-most-k cardinality

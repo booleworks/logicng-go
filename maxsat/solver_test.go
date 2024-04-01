@@ -1,10 +1,10 @@
 package maxsat
 
 import (
-	"booleworks.com/logicng/parser"
+	"github.com/booleworks/logicng-go/parser"
 	"testing"
 
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 	"github.com/stretchr/testify/assert"
 )
 

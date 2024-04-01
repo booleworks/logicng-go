@@ -1,6 +1,6 @@
 package simplification
 
-import f "booleworks.com/logicng/formula"
+import f "github.com/booleworks/logicng-go/formula"
 
 // A RatingFunction is used during simplification to compute the simplicity
 // rating of a formula.  This rating is then used to compare it during

@@ -1,12 +1,12 @@
 package normalform
 
 import (
-	"booleworks.com/logicng/assignment"
-	"booleworks.com/logicng/configuration"
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/function"
-	"booleworks.com/logicng/handler"
+	"github.com/booleworks/logicng-go/assignment"
+	"github.com/booleworks/logicng-go/configuration"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/function"
+	"github.com/booleworks/logicng-go/handler"
 )
 
 // CNFAlgorithm encodes the different algorithms for converting a formula to

@@ -1,8 +1,8 @@
 package sat
 
 import (
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // UpZeroLits returns all unit propagated literals on level 0 of the current

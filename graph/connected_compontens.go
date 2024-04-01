@@ -3,8 +3,8 @@ package graph
 import (
 	"slices"
 
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // ComputeConnectedComponents returns the strongly connected components of a

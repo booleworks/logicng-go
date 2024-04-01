@@ -3,9 +3,9 @@ package graph
 import (
 	"fmt"
 
-	"booleworks.com/logicng/graphical"
+	"github.com/booleworks/logicng-go/graphical"
 
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 const id = "id"

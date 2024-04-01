@@ -3,7 +3,7 @@ package formula
 import (
 	"fmt"
 
-	"booleworks.com/logicng/errorx"
+	"github.com/booleworks/logicng-go/errorx"
 )
 
 // Formula represents a Boolean (or pseudo-Boolean) formula in LogicNG.  The

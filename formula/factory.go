@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"booleworks.com/logicng/configuration"
-	"booleworks.com/logicng/errorx"
+	"github.com/booleworks/logicng-go/configuration"
+	"github.com/booleworks/logicng-go/errorx"
 )
 
 // A Factory is the central concept of LogicNG and is always required

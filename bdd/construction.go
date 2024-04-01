@@ -3,7 +3,7 @@ package bdd
 import (
 	"math"
 
-	"booleworks.com/logicng/errorx"
+	"github.com/booleworks/logicng-go/errorx"
 )
 
 func (k *Kernel) ithVar(i int32) (int32, bool) {

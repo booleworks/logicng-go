@@ -1,7 +1,7 @@
 package encoding
 
 import (
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 func encodePBCSWC(result Result, lits []f.Literal, coeffs []int, rhs int) {

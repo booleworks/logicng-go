@@ -4,12 +4,12 @@ import (
 	"math"
 	"testing"
 
-	"booleworks.com/logicng/model/iter"
-	"booleworks.com/logicng/randomizer"
-	"booleworks.com/logicng/sat"
+	"github.com/booleworks/logicng-go/model/iter"
+	"github.com/booleworks/logicng-go/randomizer"
+	"github.com/booleworks/logicng-go/sat"
 
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/parser"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/parser"
 	"github.com/stretchr/testify/assert"
 )
 

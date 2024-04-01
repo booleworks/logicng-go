@@ -6,12 +6,12 @@ import (
 	"slices"
 	"testing"
 
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/io"
-	"booleworks.com/logicng/model"
-	"booleworks.com/logicng/parser"
-	"booleworks.com/logicng/randomizer"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/io"
+	"github.com/booleworks/logicng-go/model"
+	"github.com/booleworks/logicng-go/parser"
+	"github.com/booleworks/logicng-go/randomizer"
 	"github.com/stretchr/testify/assert"
 )
 

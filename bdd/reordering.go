@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"sort"
 
-	"booleworks.com/logicng/errorx"
+	"github.com/booleworks/logicng-go/errorx"
 )
 
 type ReorderingMethod byte

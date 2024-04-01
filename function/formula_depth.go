@@ -1,6 +1,6 @@
 package function
 
-import f "booleworks.com/logicng/formula"
+import f "github.com/booleworks/logicng-go/formula"
 
 // FormulaDepth returns the depth of the given formula. The depth of an atomic
 // formula is defined as 0, all other operators increase the depth by 1.

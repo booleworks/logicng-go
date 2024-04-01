@@ -3,8 +3,8 @@ package sat
 import (
 	"fmt"
 
-	e "booleworks.com/logicng/encoding"
-	f "booleworks.com/logicng/formula"
+	e "github.com/booleworks/logicng-go/encoding"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // GenerateNQueens generates an n-queens problem of size n and returns it as a

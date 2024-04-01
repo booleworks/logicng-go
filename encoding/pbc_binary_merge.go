@@ -4,7 +4,7 @@ import (
 	"math"
 	"slices"
 
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 func encodePBCBinaryMerge(result Result, lts []f.Literal, cffs []int, rhs int, config *Config) {

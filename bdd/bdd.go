@@ -3,11 +3,11 @@ package bdd
 import (
 	"math/big"
 
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/handler"
-	"booleworks.com/logicng/model"
-	"booleworks.com/logicng/normalform"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
+	"github.com/booleworks/logicng-go/model"
+	"github.com/booleworks/logicng-go/normalform"
 )
 
 // A BDD is a canonical representation of a Boolean formula. It contains a

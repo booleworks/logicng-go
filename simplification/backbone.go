@@ -1,9 +1,9 @@
 package simplification
 
 import (
-	"booleworks.com/logicng/assignment"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/sat"
+	"github.com/booleworks/logicng-go/assignment"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/sat"
 )
 
 // SimplifyWithBackbone simplifies the given formula by computing its backbone

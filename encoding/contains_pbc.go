@@ -1,8 +1,8 @@
 package encoding
 
 import (
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // ContainsPBC reports whether the given formula contains a pseudo-Boolean

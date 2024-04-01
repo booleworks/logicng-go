@@ -3,8 +3,8 @@ package bdd
 import (
 	"slices"
 
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/model"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/model"
 )
 
 func bddModelEnum(bdd *BDD, variables []f.Variable) []*model.Model {

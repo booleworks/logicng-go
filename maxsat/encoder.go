@@ -1,7 +1,7 @@
 package maxsat
 
 import (
-	"booleworks.com/logicng/sat"
+	"github.com/booleworks/logicng-go/sat"
 )
 
 type encoder struct {

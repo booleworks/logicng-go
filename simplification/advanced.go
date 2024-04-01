@@ -1,13 +1,13 @@
 package simplification
 
 import (
-	"booleworks.com/logicng/assignment"
-	"booleworks.com/logicng/configuration"
-	"booleworks.com/logicng/explanation/smus"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/handler"
-	"booleworks.com/logicng/primeimplicant"
-	"booleworks.com/logicng/sat"
+	"github.com/booleworks/logicng-go/assignment"
+	"github.com/booleworks/logicng-go/configuration"
+	"github.com/booleworks/logicng-go/explanation/smus"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
+	"github.com/booleworks/logicng-go/primeimplicant"
+	"github.com/booleworks/logicng-go/sat"
 )
 
 // Config describes the configuration of an advanced simplifier.  It

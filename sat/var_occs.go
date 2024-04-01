@@ -1,6 +1,6 @@
 package sat
 
-import f "booleworks.com/logicng/formula"
+import f "github.com/booleworks/logicng-go/formula"
 
 // VarOccurrences counts all occurrences of variables on the solver and returns
 // the mapping from variable to number of occurrences.  Note that these are

@@ -1,6 +1,6 @@
-module booleworks.com/logicng
+module github.com/booleworks/logicng-go
 
-go 1.21.4
+go 1.21
 
 require (
 	github.com/antlr4-go/antlr/v4 v4.13.0

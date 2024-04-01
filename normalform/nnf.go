@@ -1,9 +1,9 @@
 package normalform
 
 import (
-	"booleworks.com/logicng/encoding"
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
+	"github.com/booleworks/logicng-go/encoding"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // NNF returns the negation normal form of the given formula.  In an NNF only

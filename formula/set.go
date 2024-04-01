@@ -1,7 +1,7 @@
 package formula
 
 import (
-	"booleworks.com/logicng/errorx"
+	"github.com/booleworks/logicng-go/errorx"
 	"slices"
 )
 

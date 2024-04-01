@@ -4,10 +4,10 @@ import (
 	"slices"
 	"sort"
 
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/function"
-	"booleworks.com/logicng/graph"
-	"booleworks.com/logicng/normalform"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/function"
+	"github.com/booleworks/logicng-go/graph"
+	"github.com/booleworks/logicng-go/normalform"
 	"github.com/emirpasic/gods/maps/linkedhashmap"
 )
 

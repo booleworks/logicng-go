@@ -1,6 +1,6 @@
 package sat
 
-import f "booleworks.com/logicng/formula"
+import f "github.com/booleworks/logicng-go/formula"
 
 // FormulasOnSolver returns the current formulas on the solver.
 //

@@ -1,11 +1,11 @@
 package primeimplicant
 
 import (
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/normalform"
-	"booleworks.com/logicng/sat"
-	"booleworks.com/logicng/transformation"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/normalform"
+	"github.com/booleworks/logicng-go/sat"
+	"github.com/booleworks/logicng-go/transformation"
 )
 
 // Minimum computes a minimum-size prime implicant for the given formula.  If

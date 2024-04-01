@@ -3,8 +3,8 @@ package model
 import (
 	"strings"
 
-	"booleworks.com/logicng/assignment"
-	f "booleworks.com/logicng/formula"
+	"github.com/booleworks/logicng-go/assignment"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // A Model represents a list of literals.

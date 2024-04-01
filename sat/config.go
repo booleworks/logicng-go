@@ -1,6 +1,6 @@
 package sat
 
-import "booleworks.com/logicng/configuration"
+import "github.com/booleworks/logicng-go/configuration"
 
 // ClauseMinimization encodes the different algorithms for minimizing learnt
 // clauses on the solver.

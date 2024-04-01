@@ -1,6 +1,6 @@
 package function
 
-import f "booleworks.com/logicng/formula"
+import f "github.com/booleworks/logicng-go/formula"
 
 // LiteralProfile returns the number of occurrences of each literal in the
 // given formula.

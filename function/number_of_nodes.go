@@ -1,7 +1,7 @@
 package function
 
 import (
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // NumberOfNodes returns the number of nodes (in the DAG) of the given formula.

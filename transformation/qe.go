@@ -1,8 +1,8 @@
 package transformation
 
 import (
-	"booleworks.com/logicng/assignment"
-	f "booleworks.com/logicng/formula"
+	"github.com/booleworks/logicng-go/assignment"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // ExistentialQE eliminates a number of existentially quantified variables by

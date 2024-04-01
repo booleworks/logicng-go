@@ -1,9 +1,9 @@
 package simplification
 
 import (
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/normalform"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/normalform"
 )
 
 // SimplifyNegations minimizes the number of negations of the given formula by

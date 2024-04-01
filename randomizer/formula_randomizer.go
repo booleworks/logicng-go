@@ -5,8 +5,8 @@ import (
 	"math"
 	"math/rand"
 
-	"booleworks.com/logicng/configuration"
-	f "booleworks.com/logicng/formula"
+	"github.com/booleworks/logicng-go/configuration"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // Config describes the configuration of a formula randomizer with

@@ -1,7 +1,7 @@
 package function
 
 import (
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 	"github.com/emirpasic/gods/sets/linkedhashset"
 )
 

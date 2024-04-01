@@ -1,10 +1,10 @@
 package iter
 
 import (
-	"booleworks.com/logicng/sat"
+	"github.com/booleworks/logicng-go/sat"
 	"math"
 
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 const minModels = 3

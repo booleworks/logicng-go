@@ -3,8 +3,8 @@ package encoding
 import (
 	"math"
 
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // EncodePBC encodes a pseudo-Boolean constraint to a CNF formula as a list of

@@ -1,9 +1,9 @@
 package bdd
 
 import (
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/normalform"
-	"booleworks.com/logicng/simplification"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/normalform"
+	"github.com/booleworks/logicng-go/simplification"
 )
 
 // CNF transforms a given formula into a CNF by using a BDD. The

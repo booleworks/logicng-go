@@ -3,8 +3,8 @@ package maxsat
 import (
 	"math"
 
-	"booleworks.com/logicng/errorx"
-	"booleworks.com/logicng/sat"
+	"github.com/booleworks/logicng-go/errorx"
+	"github.com/booleworks/logicng-go/sat"
 )
 
 type swc struct {

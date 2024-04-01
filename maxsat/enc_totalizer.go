@@ -1,6 +1,6 @@
 package maxsat
 
-import "booleworks.com/logicng/sat"
+import "github.com/booleworks/logicng-go/sat"
 
 type totalizer struct {
 	totalizerIterativeLeft   [][]int32

@@ -1,8 +1,8 @@
 package normalform
 
 import (
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/handler"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 )
 
 // FactorizationHandler is a special handler able to abort CNF or DNF factorizations.

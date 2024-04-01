@@ -1,7 +1,7 @@
 package encoding
 
 import (
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // A Result is used to abstract CNF encodings for cardinality and

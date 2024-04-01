@@ -1,9 +1,9 @@
 package transformation
 
 import (
-	"booleworks.com/logicng/encoding"
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
+	"github.com/booleworks/logicng-go/encoding"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // ExpandAMOAndEXO expands all at-most-one and exactly-one cardinality

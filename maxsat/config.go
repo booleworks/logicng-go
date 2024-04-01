@@ -3,7 +3,7 @@ package maxsat
 import (
 	"math"
 
-	"booleworks.com/logicng/configuration"
+	"github.com/booleworks/logicng-go/configuration"
 )
 
 // Algorithm encodes the different MAX-SAT algorithms.

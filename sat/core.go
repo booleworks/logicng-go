@@ -3,11 +3,11 @@ package sat
 import (
 	"slices"
 
-	"booleworks.com/logicng/model"
+	"github.com/booleworks/logicng-go/model"
 
-	"booleworks.com/logicng/errorx"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/handler"
+	"github.com/booleworks/logicng-go/errorx"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 )
 
 const (

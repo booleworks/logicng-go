@@ -1,6 +1,6 @@
 package encoding
 
-import "booleworks.com/logicng/configuration"
+import "github.com/booleworks/logicng-go/configuration"
 
 type (
 	AMOEncoder        byte

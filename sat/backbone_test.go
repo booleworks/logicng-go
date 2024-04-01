@@ -3,8 +3,8 @@ package sat
 import (
 	"testing"
 
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/io"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/io"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -4,11 +4,11 @@ import (
 	"slices"
 	"testing"
 
-	"booleworks.com/logicng/bdd"
-	f "booleworks.com/logicng/formula"
-	"booleworks.com/logicng/model/iter"
-	"booleworks.com/logicng/parser"
-	"booleworks.com/logicng/sat"
+	"github.com/booleworks/logicng-go/bdd"
+	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/model/iter"
+	"github.com/booleworks/logicng-go/parser"
+	"github.com/booleworks/logicng-go/sat"
 	"github.com/stretchr/testify/assert"
 )
 

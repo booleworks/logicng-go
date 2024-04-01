@@ -1,9 +1,9 @@
 package maxsat
 
 import (
-	"booleworks.com/logicng/handler"
-	"booleworks.com/logicng/model"
-	"booleworks.com/logicng/sat"
+	"github.com/booleworks/logicng-go/handler"
+	"github.com/booleworks/logicng-go/model"
+	"github.com/booleworks/logicng-go/sat"
 )
 
 // Handler is an interface for MAX-SAT handlers which can abort the computation

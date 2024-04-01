@@ -1,8 +1,8 @@
 package iter
 
 import (
-	"booleworks.com/logicng/handler"
-	"booleworks.com/logicng/sat"
+	"github.com/booleworks/logicng-go/handler"
+	"github.com/booleworks/logicng-go/sat"
 )
 
 // Handler describes the functionality of a model iteration handler.

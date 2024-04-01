@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	f "booleworks.com/logicng/formula"
+	f "github.com/booleworks/logicng-go/formula"
 )
 
 // ReadDimacsToSolver reads a Dimacs file for weighted MAX-SAT problems from
