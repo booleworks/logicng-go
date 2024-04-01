@@ -1,6 +1,7 @@
 <a href="https://www.logicng.org"><img src="https://github.com/booleworks/logicng-go/blob/main/doc/logos/logicng_logo_gopher.png?raw=true" alt="logo" width="400"></a>
 
-[![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)]()
+<a href="https://pkg.go.dev/github.com/booleworks/logicng-go"><img src="https://pkg.go.dev/badge/github.com/booleworks/logicng-go.svg" alt="Go Reference"></a>
+[![license](https://img.shields.io/badge/license-MIT-purple?style=flat-square)]()
 
 # A Library for Creating, Manipulating, and Solving Boolean Formulas
 
