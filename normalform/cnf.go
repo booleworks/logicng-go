@@ -346,7 +346,7 @@ func pgVariable(fac f.Factory, formula f.Formula, state *CNFAuxState) f.Literal 
 	}
 	variable, ok := state.LiteralMap[formula]
 	if !ok {
-		variable = fac.NewCNFVariable().AsLiteral()
+		variable = fac.NewAuxVar(f.AuxCNF).AsLiteral()
 		state.LiteralMap[formula] = variable
 	}
 	return variable
@@ -414,7 +414,7 @@ func computeTseitin(fac f.Factory, formula f.Formula, state *CNFAuxState) {
 		state.LiteralMap[formula] = f.Literal(formula)
 	case f.SortAnd, f.SortOr:
 		isConjunction := formula.Sort() == f.SortAnd
-		tsLiteral := fac.NewCNFVariable().AsLiteral()
+		tsLiteral := fac.NewAuxVar(f.AuxCNF).AsLiteral()
 		var nops []f.Formula
 		naryOps := fac.Operands(formula)
 		operands := make([]f.Formula, 0, len(naryOps))

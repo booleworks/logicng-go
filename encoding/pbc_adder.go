@@ -69,7 +69,7 @@ func adderTree(result Result, buckets *[][]f.Literal, literals *[]f.Literal, nul
 
 func faSum(result Result, a, b, c f.Literal) f.Literal {
 	fac := result.Factory()
-	x := result.NewPbVariable().AsLiteral()
+	x := result.NewAuxVar(f.AuxPBC).AsLiteral()
 	result.AddClause(a, b, c, x.Negate(fac))
 	result.AddClause(a, b.Negate(fac), c.Negate(fac), x.Negate(fac))
 	result.AddClause(a.Negate(fac), b, c.Negate(fac), x.Negate(fac))
@@ -83,7 +83,7 @@ func faSum(result Result, a, b, c f.Literal) f.Literal {
 
 func faCarry(result Result, a, b, c f.Literal) f.Literal {
 	fac := result.Factory()
-	x := result.NewPbVariable().AsLiteral()
+	x := result.NewAuxVar(f.AuxPBC).AsLiteral()
 	result.AddClause(b, c, x.Negate(fac))
 	result.AddClause(a, c, x.Negate(fac))
 	result.AddClause(a, b, x.Negate(fac))
@@ -105,7 +105,7 @@ func faExtra(result Result, xc, xs, a, b, c f.Literal) {
 
 func haSum(result Result, a, b f.Literal) f.Literal {
 	fac := result.Factory()
-	x := result.NewPbVariable().AsLiteral()
+	x := result.NewAuxVar(f.AuxPBC).AsLiteral()
 	result.AddClause(a.Negate(fac), b.Negate(fac), x.Negate(fac))
 	result.AddClause(a, b, x.Negate(fac))
 	result.AddClause(a.Negate(fac), b, x)
@@ -115,7 +115,7 @@ func haSum(result Result, a, b f.Literal) f.Literal {
 
 func haCarry(result Result, a, b f.Literal) f.Literal {
 	fac := result.Factory()
-	x := result.NewPbVariable().AsLiteral()
+	x := result.NewAuxVar(f.AuxPBC).AsLiteral()
 	result.AddClause(a, x.Negate(fac))
 	result.AddClause(b, x.Negate(fac))
 	result.AddClause(a.Negate(fac), b.Negate(fac), x)

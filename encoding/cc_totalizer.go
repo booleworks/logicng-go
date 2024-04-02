@@ -59,7 +59,7 @@ func initializeConstraint(result Result, vars []f.Variable) *totalizerVars {
 	copy(invars, vars)
 	outvars := make([]f.Variable, len(vars))
 	for i := 0; i < len(vars); i++ {
-		outvars[i] = result.NewCcVariable()
+		outvars[i] = result.NewAuxVar(f.AuxCC)
 	}
 	return &totalizerVars{&invars, &outvars}
 }
@@ -74,14 +74,14 @@ func toCNF(result Result, tv *totalizerVars, rhs int, bound bound) {
 				left = append(left, (*tv.invars)[len(*tv.invars)-1])
 				*tv.invars = (*tv.invars)[:len(*tv.invars)-1]
 			} else {
-				left = append(left, result.NewCcVariable())
+				left = append(left, result.NewAuxVar(f.AuxCC))
 			}
 		} else {
 			if len(*tv.outvars)-split == 1 {
 				right = append(right, (*tv.invars)[len(*tv.invars)-1])
 				*tv.invars = (*tv.invars)[:len(*tv.invars)-1]
 			} else {
-				right = append(right, result.NewCcVariable())
+				right = append(right, result.NewAuxVar(f.AuxCC))
 			}
 		}
 	}

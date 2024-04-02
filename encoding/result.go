@@ -13,8 +13,7 @@ import (
 // a SAT solver, where the clauses are added directly to the solver.
 type Result interface {
 	AddClause(literals ...f.Literal)
-	NewCcVariable() f.Variable
-	NewPbVariable() f.Variable
+	NewAuxVar(sort f.AuxVarSort) f.Variable
 	Factory() f.Factory
 	Formulas() []f.Formula
 }
@@ -38,18 +37,13 @@ func (r *FormulaEncoding) AddClause(literals ...f.Literal) {
 	r.result = append(r.result, r.fac.Clause(literals...))
 }
 
-// NewCcVariable returns a new cardinality constraints auxiliary variable from
-// the formula factory.
-func (r *FormulaEncoding) NewCcVariable() f.Variable {
-	return r.fac.NewCCVariable()
-}
-
-// NewPbVariable returns a new pseudo-Boolean auxiliary variable from the
+// NewAuxVar returns a new auxiliary variable of the given sort from the
 // formula factory.
-func (r *FormulaEncoding) NewPbVariable() f.Variable {
-	return r.fac.NewPBCVariable()
+func (r *FormulaEncoding) NewAuxVar(sort f.AuxVarSort) f.Variable {
+	return r.fac.NewAuxVar(sort)
 }
 
+// formula factory.
 // Factory returns the backing formula factory from the encoding result.
 func (r *FormulaEncoding) Factory() f.Factory {
 	return r.fac

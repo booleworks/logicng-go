@@ -48,12 +48,7 @@ type Factory interface {
 	PBCOps(formula Formula) (comparator CSort, rhs int, literals []Literal, coefficients []int, found bool)
 	Operands(formula Formula) []Formula
 
-	NewCNFVariable() Variable
-	NewCCVariable() Variable
-	NewPBCVariable() Variable
-	CNFPrefix() string
-	CCPrefix() string
-	PBPrefix() string
+	NewAuxVar(sort AuxVarSort) Variable
 	IsAuxVar(variable Variable) bool
 
 	transformationCacheEntry(entry TransformationCacheSort) *map[Formula]Formula
@@ -110,12 +105,7 @@ type CachingFactory struct {
 	predicateCache      map[PredicateCacheSort]map[Formula]bool
 	functionCache       map[FunctionCacheSort]map[Formula]any
 
-	cnfPrefix  string
-	ccPrefix   string
-	pbPrefix   string
-	cnfCounter int
-	ccCounter  int
-	pbCounter  int
+	auxVarCounters map[AuxVarSort]int
 
 	configurations map[configuration.Sort]configuration.Config
 	symbols        *PrintSymbols
@@ -155,12 +145,7 @@ func NewFactory(conserveVars ...bool) Factory {
 		transformationCache: make(map[TransformationCacheSort]map[Formula]Formula),
 		predicateCache:      make(map[PredicateCacheSort]map[Formula]bool),
 		functionCache:       make(map[FunctionCacheSort]map[Formula]any),
-		cnfPrefix:           "@RESERVED_CNF_",
-		ccPrefix:            "@RESERVED_CC_",
-		pbPrefix:            "@RESERVED_PB_",
-		cnfCounter:          0,
-		ccCounter:           0,
-		pbCounter:           0,
+		auxVarCounters:      make(map[AuxVarSort]int),
 		configurations:      make(map[configuration.Sort]configuration.Config),
 		symbols:             DefaultSymbols(),
 		conserveVars:        conserveVars != nil && conserveVars[0],
@@ -981,44 +966,12 @@ func (fac *CachingFactory) getPBCUnsafe(formula Formula) pbc {
 	}
 }
 
-// NewCNFVariable generates and returns a new auxiliary variable for CNF
-// encodings.
-func (fac *CachingFactory) NewCNFVariable() Variable {
-	variable := fac.Var(fmt.Sprintf("%s%d", fac.cnfPrefix, fac.cnfCounter))
-	fac.cnfCounter++
+// NewAuxVariable generates and returns a new auxiliary variable of the given
+// sort.
+func (fac *CachingFactory) NewAuxVar(sort AuxVarSort) Variable {
+	variable := fac.Var(fmt.Sprintf("%s%d", sort, fac.auxVarCounters[sort]))
+	fac.auxVarCounters[sort]++
 	return variable
-}
-
-// NewCCVariable generates and returns a new auxiliary variable for cardinality
-// constraint encodings.
-func (fac *CachingFactory) NewCCVariable() Variable {
-	variable := fac.Var(fmt.Sprintf("%s%d", fac.ccPrefix, fac.ccCounter))
-	fac.ccCounter++
-	return variable
-}
-
-// NewPBCVariable generates and returns a new auxiliary variable for
-// pseudo-Boolean constraint encodings.
-func (fac *CachingFactory) NewPBCVariable() Variable {
-	variable := fac.Var(fmt.Sprintf("%s%d", fac.pbPrefix, fac.pbCounter))
-	fac.pbCounter++
-	return variable
-}
-
-// CNFPrefix returns the prefix for CNF auxiliary variables.
-func (fac *CachingFactory) CNFPrefix() string {
-	return fac.cnfPrefix
-}
-
-// CCPrefix returns the prefix for cardinality constraint auxiliary variables.
-func (fac *CachingFactory) CCPrefix() string {
-	return fac.ccPrefix
-}
-
-// PBPrefix returns the prefix for pseudo-Boolean constraint auxiliary
-// variables.
-func (fac *CachingFactory) PBPrefix() string {
-	return fac.pbPrefix
 }
 
 // IsAuxVar returns if the given variable is a generated auxiliary variable.
@@ -1027,9 +980,12 @@ func (fac *CachingFactory) IsAuxVar(variable Variable) bool {
 	if !ok {
 		return false
 	}
-	return strings.HasPrefix(name, fac.cnfPrefix) ||
-		strings.HasPrefix(name, fac.ccPrefix) ||
-		strings.HasPrefix(name, fac.pbPrefix)
+	for k := range fac.auxVarCounters {
+		if strings.HasPrefix(name, string(k)) {
+			return true
+		}
+	}
+	return false
 }
 
 func (fac *CachingFactory) transformationCacheEntry(entry TransformationCacheSort) *map[Formula]Formula {

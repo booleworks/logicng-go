@@ -50,11 +50,11 @@ func initialize(result Result, rhs, n int, state *mtstate) int {
 	mod := int(math.Ceil(math.Sqrt(float64(rhs) + 1.0)))
 	state.cardinalityUpOutvars = make([]f.Literal, n/mod)
 	for i := 0; i < n/mod; i++ {
-		state.cardinalityUpOutvars[i] = result.NewCcVariable().AsLiteral()
+		state.cardinalityUpOutvars[i] = result.NewAuxVar(f.AuxCC).AsLiteral()
 	}
 	state.cardinalityLwOutvars = make([]f.Literal, mod-1)
 	for i := 0; i < mod-1; i++ {
-		state.cardinalityLwOutvars[i] = result.NewCcVariable().AsLiteral()
+		state.cardinalityLwOutvars[i] = result.NewAuxVar(f.AuxCC).AsLiteral()
 	}
 	state.inlits = make([]f.Literal, n)
 	state.currentCardinalityRhs = rhs + 1
@@ -80,14 +80,14 @@ func mtToCNF(result Result, mod int, ubvars, lwvars *[]f.Literal, rhs int, state
 	} else {
 		left = split / mod
 		for i := 0; i < left; i++ {
-			lupper = append(lupper, result.NewCcVariable().AsLiteral())
+			lupper = append(lupper, result.NewAuxVar(f.AuxCC).AsLiteral())
 		}
 		limit := mod - 1
 		if left%mod == 0 && split < mod-1 {
 			limit = split
 		}
 		for i := 0; i < limit; i++ {
-			llower = append(llower, result.NewCcVariable().AsLiteral())
+			llower = append(llower, result.NewAuxVar(f.AuxCC).AsLiteral())
 		}
 	}
 	if rhs-split == 1 {
@@ -97,14 +97,14 @@ func mtToCNF(result Result, mod int, ubvars, lwvars *[]f.Literal, rhs int, state
 	} else {
 		right := (rhs - split) / mod
 		for i := 0; i < right; i++ {
-			rupper = append(rupper, result.NewCcVariable().AsLiteral())
+			rupper = append(rupper, result.NewAuxVar(f.AuxCC).AsLiteral())
 		}
 		limit := mod - 1
 		if right%mod == 0 && rhs-split < mod-1 {
 			limit = rhs - split
 		}
 		for i := 0; i < limit; i++ {
-			rlower = append(rlower, result.NewCcVariable().AsLiteral())
+			rlower = append(rlower, result.NewAuxVar(f.AuxCC).AsLiteral())
 		}
 	}
 	if len(lupper) == 0 {
@@ -128,7 +128,7 @@ func adder(result Result, mod int, upper, lower, lupper, llower, rupper, rlower 
 	fac := result.Factory()
 	carry := state.varUndef
 	if (*upper)[0] != state.h0.AsLiteral() {
-		carry = result.NewCcVariable()
+		carry = result.NewAuxVar(f.AuxCC)
 	}
 	for i := 0; i <= len(*llower); i++ {
 		for j := 0; j <= len(*rlower); j++ {

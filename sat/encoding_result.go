@@ -42,12 +42,8 @@ func (r *solverEncoding) addLiteral(clauseVec *[]int32, idx int, lit f.Literal) 
 	(*clauseVec)[idx] = litNum
 }
 
-func (r *solverEncoding) NewCcVariable() f.Variable {
-	return r.addVarToSolver(r.fac.NewCCVariable())
-}
-
-func (r *solverEncoding) NewPbVariable() f.Variable {
-	return r.addVarToSolver(r.fac.NewPBCVariable())
+func (r *solverEncoding) NewAuxVar(sort f.AuxVarSort) f.Variable {
+	return r.addVarToSolver(r.fac.NewAuxVar(sort))
 }
 
 func (r *solverEncoding) addVarToSolver(variable f.Variable) f.Variable {

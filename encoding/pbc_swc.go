@@ -13,7 +13,7 @@ func encodePBCSWC(result Result, lits []f.Literal, coeffs []int, rhs int) {
 	}
 	for i := 1; i <= n; i++ {
 		for j := 1; j <= rhs; j++ {
-			seqAuxiliary[i][j] = result.NewPbVariable().AsLiteral()
+			seqAuxiliary[i][j] = result.NewAuxVar(f.AuxPBC).AsLiteral()
 		}
 	}
 	for i := 1; i <= n; i++ {

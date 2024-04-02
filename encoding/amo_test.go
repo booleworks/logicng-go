@@ -43,6 +43,6 @@ func TestAMOOne(t *testing.T) {
 		assert.Nil(err)
 		assert.Equal(0, len(cnf))
 	}
-	name, _ := fac.VarName(fac.NewCCVariable())
+	name, _ := fac.VarName(fac.NewAuxVar(f.AuxCC))
 	assert.True(strings.HasSuffix(name, "_0"))
 }

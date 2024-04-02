@@ -82,7 +82,7 @@ func binaryMerge(
 	newLessThen := int(float64(m) * math.Pow(2, float64(p)))
 	t := int(float64(m)*math.Pow(2, float64(p)) - float64(lessThen))
 
-	trueLit := result.NewPbVariable().AsLiteral()
+	trueLit := result.NewAuxVar(f.AuxPBC).AsLiteral()
 	result.AddClause(trueLit)
 	buckets := make([][]f.Literal, p+1)
 	bit := 1
@@ -167,7 +167,7 @@ func totalizer(result Result, x, ux *[]f.Literal) {
 		*ux = append(*ux, (*x)[0])
 	} else {
 		for i := 0; i < len(*x); i++ {
-			*ux = append(*ux, result.NewPbVariable().AsLiteral())
+			*ux = append(*ux, result.NewAuxVar(f.AuxPBC).AsLiteral())
 		}
 		x1 := make([]f.Literal, len(*x)/2)
 		x2 := make([]f.Literal, len(*x)-(len(*x)/2))
@@ -200,7 +200,7 @@ func unaryAdder(result Result, u, v, w *[]f.Literal) {
 		}
 	} else {
 		for i := 0; i < len(*u)+len(*v); i++ {
-			*w = append(*w, result.NewPbVariable().AsLiteral())
+			*w = append(*w, result.NewAuxVar(f.AuxPBC).AsLiteral())
 		}
 		for a := 0; a < len(*u); a++ {
 			for b := 0; b < len(*v); b++ {

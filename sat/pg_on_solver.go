@@ -329,7 +329,7 @@ func (p *pgOnSolver) solverLiteral(name string, phase bool) int32 {
 
 func (p *pgOnSolver) newSolverVariable() int32 {
 	index := p.solver.NewVar(!p.initialPhase, true)
-	name := fmt.Sprintf("%sSOLVER_%d", p.fac.CNFPrefix(), index)
+	name := fmt.Sprintf("%sSOLVER_%d", f.AuxCNF, index)
 	p.solver.addName(name, index)
 	return index * 2
 }

@@ -135,9 +135,9 @@ func sort(m int, input, output *[]f.Literal, result Result, direction dir) {
 	}
 	if n == 2 {
 		clear(*output)
-		o1 := result.NewCcVariable().AsLiteral()
+		o1 := result.NewAuxVar(f.AuxCC).AsLiteral()
 		if m2 == 2 {
-			o2 := result.NewCcVariable().AsLiteral()
+			o2 := result.NewAuxVar(f.AuxCC).AsLiteral()
 			comparator4((*input)[0], (*input)[1], o1, o2, result, direction)
 			*output = append(*output, o1, o2)
 		} else {
@@ -212,7 +212,7 @@ func counterSorter(k int, x, output *[]f.Literal, result Result, direction dir) 
 
 	for j := 0; j < k; j++ {
 		for i := j; i < n; i++ {
-			auxVars[i][j] = result.NewCcVariable().AsLiteral()
+			auxVars[i][j] = result.NewAuxVar(f.AuxCC).AsLiteral()
 		}
 	}
 	if direction == inputToOutput || direction == both {
@@ -243,7 +243,7 @@ func directSorter(m int, input, output *[]f.Literal, result Result) {
 	clause := make([]f.Literal, 0)
 	clear(*output)
 	for i := 0; i < m; i++ {
-		*output = append(*output, result.NewCcVariable().AsLiteral())
+		*output = append(*output, result.NewAuxVar(f.AuxCC).AsLiteral())
 	}
 	for bitmask < int(math.Pow(2, float64(n))) {
 		count := 0
@@ -305,14 +305,14 @@ func recursiveMerger(
 		b2 = c
 	}
 	if c == 1 {
-		y := result.NewCcVariable().AsLiteral()
+		y := result.NewAuxVar(f.AuxCC).AsLiteral()
 		comparator3((*inputA)[0], (*inputB)[0], y, result, direction)
 		*output = append(*output, y)
 		return
 	}
 	if a2 == 1 && b2 == 1 {
-		y1 := result.NewCcVariable().AsLiteral()
-		y2 := result.NewCcVariable().AsLiteral()
+		y1 := result.NewAuxVar(f.AuxCC).AsLiteral()
+		y2 := result.NewAuxVar(f.AuxCC).AsLiteral()
 		comparator4((*inputA)[0], (*inputB)[0], y1, y2, result, direction)
 		*output = append(*output, y1, y2)
 		return
@@ -346,15 +346,15 @@ func recursiveMerger(
 	for {
 		if i < len(oddMerge) && j < len(evenMerge) {
 			if len(*output)+2 <= c {
-				z0 := result.NewCcVariable().AsLiteral()
-				z1 := result.NewCcVariable().AsLiteral()
+				z0 := result.NewAuxVar(f.AuxCC).AsLiteral()
+				z1 := result.NewAuxVar(f.AuxCC).AsLiteral()
 				comparator4(oddMerge[i], evenMerge[j], z0, z1, result, direction)
 				*output = append(*output, z0, z1)
 				if len(*output) == c {
 					break
 				}
 			} else if len(*output)+1 == c {
-				z0 := result.NewCcVariable().AsLiteral()
+				z0 := result.NewAuxVar(f.AuxCC).AsLiteral()
 				comparator3(oddMerge[i], evenMerge[j], z0, result, direction)
 				*output = append(*output, z0)
 				break
@@ -378,7 +378,7 @@ func directMerger(m int, inputA, inputB, output *[]f.Literal, result Result) {
 	a := len(*inputA)
 	b := len(*inputB)
 	for i := 0; i < m; i++ {
-		*output = append(*output, result.NewCcVariable().AsLiteral())
+		*output = append(*output, result.NewAuxVar(f.AuxCC).AsLiteral())
 	}
 	j := min(m, a)
 	for i := 0; i < j; i++ {

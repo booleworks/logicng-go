@@ -20,7 +20,7 @@ func amoLadder(result Result, vars []f.Variable) {
 	fac := result.Factory()
 	seqAuxiliary := make([]f.Variable, len(vars)-1)
 	for i := 0; i < len(vars)-1; i++ {
-		seqAuxiliary[i] = result.NewCcVariable()
+		seqAuxiliary[i] = result.NewAuxVar(f.AuxCC)
 	}
 	for i := 0; i < len(vars); i++ {
 		if i == 0 {
@@ -45,11 +45,11 @@ func amoProduct(result Result, recursiveBound int, vars []f.Variable) {
 	q := int(math.Ceil(float64(n) / float64(p)))
 	us := make([]f.Variable, p)
 	for i := 0; i < len(us); i++ {
-		us[i] = result.NewCcVariable()
+		us[i] = result.NewAuxVar(f.AuxCC)
 	}
 	vs := make([]f.Variable, q)
 	for i := 0; i < len(vs); i++ {
-		vs[i] = result.NewCcVariable()
+		vs[i] = result.NewAuxVar(f.AuxCC)
 	}
 	if len(us) <= recursiveBound {
 		buildPure(result, us)
@@ -109,7 +109,7 @@ func amoNested(result Result, groupSize int, vars []f.Literal) {
 		for ; i < len(vars); i++ {
 			l2 = append(l2, vars[i])
 		}
-		newVariable := result.NewCcVariable()
+		newVariable := result.NewAuxVar(f.AuxCC)
 		l1 = append(l1, newVariable.AsLiteral())
 		l2 = append(l2, newVariable.Negate(fac))
 		amoNested(result, groupSize, l1)
@@ -130,7 +130,7 @@ func amoCommander(result Result, groupSize int, vars []f.Literal) {
 			literals = append(literals, vars[i])
 			if i%groupSize == groupSize-1 || i == len(vars)-1 {
 				buildPureLit(result, literals)
-				literals = append(literals, result.NewCcVariable().AsLiteral())
+				literals = append(literals, result.NewAuxVar(f.AuxCC).AsLiteral())
 				nextLiterals = append(nextLiterals, literals[len(literals)-1].Negate(fac))
 				if isExactlyOne && len(literals) > 0 {
 					result.AddClause(literals...)
@@ -157,7 +157,7 @@ func amoBinary(result Result, vars []f.Variable) {
 	k := (twoPowNBits - len(vars)) * 2
 	bits := make([]f.Variable, numberOfBits)
 	for i := 0; i < numberOfBits; i++ {
-		bits[i] = result.NewCcVariable()
+		bits[i] = result.NewAuxVar(f.AuxCC)
 	}
 	var grayCode, nextGray int
 	i := 0
@@ -252,7 +252,7 @@ func initializeBits(result Result, groupSize int) *bimanderbits {
 	bits.twoPowNBits = int(math.Pow(2, float64(bits.numberOfBits)))
 	bits.k = (bits.twoPowNBits - groupSize) * 2
 	for i := 0; i < bits.numberOfBits; i++ {
-		bits.bits = append(bits.bits, result.NewCcVariable().AsLiteral())
+		bits.bits = append(bits.bits, result.NewAuxVar(f.AuxCC).AsLiteral())
 	}
 	return bits
 }

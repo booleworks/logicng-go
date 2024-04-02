@@ -283,3 +283,12 @@ func Comparator(a, b interface{}) int {
 		return 0
 	}
 }
+
+// AuxVarSort encodes the auxiliary variable sort.
+type AuxVarSort string
+
+const (
+	AuxCNF = "@RESERVED_CNF_"
+	AuxCC  = "@RESERVED_CC_"
+	AuxPBC = "@RESERVED_PBC_"
+)
