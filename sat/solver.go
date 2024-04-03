@@ -267,18 +267,6 @@ func (s *Solver) AddIncrementalCC(cc f.Formula) (*encoding.CCIncrementalData, er
 	return encoding.EncodeIncremental(s.fac, cc, result)
 }
 
-// KnownVariables returns the variables currently known by the solver.
-func (s *Solver) KnownVariables() *f.VarSet {
-	result := f.NewVarSet()
-	nVars := s.core.NVars()
-	for k, v := range s.core.name2idx {
-		if v < nVars {
-			result.Add(s.fac.Var(k))
-		}
-	}
-	return result
-}
-
 // SetResult can be used to set the solver's result from outside.  You should
 // never have a reason to use this from the outside except you develop your own
 // solver functions.

@@ -1331,6 +1331,15 @@ func (m *CoreSolver) CreateModel(fac f.Factory, mVec []bool, relevantIndices []i
 	return mdl
 }
 
+// KnownVariables returns the variables currently known by the solver.
+func (m *CoreSolver) KnownVariables(fac f.Factory) *f.VarSet {
+	result := f.NewVarSet()
+	for name := range m.name2idx {
+		result.Add(fac.Var(name))
+	}
+	return result
+}
+
 func shrinkTo[T any](slice *[]T, newSize int) {
 	if newSize < len(*slice) {
 		*slice = (*slice)[:newSize]

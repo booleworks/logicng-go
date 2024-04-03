@@ -36,16 +36,15 @@ func (m *ModelIterator[R]) Iterate(
 	newCollector func(fac f.Factory, knownVars, dontCareVars, additionalVars *f.VarSet) Collector[R],
 ) (R, bool) {
 	handler.Start(m.handler)
-	knownVariables := solver.KnownVariables()
+	knownVariables := solver.CoreSolver().KnownVariables(solver.Factory())
 	additionalVarsNotOnSolver := difference(m.additionalVars, knownVariables)
 	dontCareVariablesNotOnSolver := difference(m.vars, knownVariables)
 	collector := newCollector(solver.Factory(), knownVariables, dontCareVariablesNotOnSolver, additionalVarsNotOnSolver)
-	iterVars := m.getIterVars(solver.Factory(), knownVariables)
 	initialSplitVars := f.NewVarSet()
-	if vars := m.strategy.SplitVarsForRecursionDepth(iterVars, solver, 0); vars.Size() > 0 {
+	if vars := m.strategy.SplitVarsForRecursionDepth(m.vars, solver, 0); vars.Size() > 0 {
 		initialSplitVars.AddAll(vars)
 	}
-	m.iterRecursive(collector, solver, []f.Literal{}, iterVars, initialSplitVars, 0)
+	m.iterRecursive(collector, solver, []f.Literal{}, m.vars, initialSplitVars, 0)
 	return collector.Result(), !handler.Aborted(m.handler)
 }
 
@@ -160,16 +159,6 @@ func iterate[R any](
 		panic(err)
 	}
 	return true
-}
-
-func (m *ModelIterator[R]) getIterVars(fac f.Factory, knownVariables *f.VarSet) *f.VarSet {
-	result := f.NewVarSet()
-	for _, v := range knownVariables.Content() {
-		if !fac.IsAuxVar(v) && (m.vars == nil || m.vars.Contains(v)) {
-			result.Add(v)
-		}
-	}
-	return result
 }
 
 func iterSATCall(solver *sat.Solver, handler Handler) bool {
