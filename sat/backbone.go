@@ -148,7 +148,7 @@ func (m *CoreSolver) createInitialCandidates(variables []int32, bbSort BackboneS
 			modelPhase := m.model[vari]
 			if isBothOrNegative(bbSort) && !modelPhase || isBothOrPositive(bbSort) && modelPhase {
 				lit := MkLit(vari, !modelPhase)
-				if !m.llConfig.BBInitialUBCheckForRotatableLiterals || !m.isRotatable(lit) {
+				if !m.isRotatable(lit) {
 					m.backboneCandidates = append(m.backboneCandidates, lit)
 				}
 			}
@@ -164,9 +164,9 @@ func (m *CoreSolver) refineUpperBound() {
 		if m.isUpZeroLit(vari) {
 			removeFromSlice(&m.backboneCandidates, lit)
 			m.addBackboneLiteral(lit)
-		} else if m.llConfig.BBCheckForComplementModelLiterals && m.model[vari] == Sign(lit) {
+		} else if m.model[vari] == Sign(lit) {
 			removeFromSlice(&m.backboneCandidates, lit)
-		} else if m.llConfig.BBCheckForRotatableLiterals && m.isRotatable(lit) {
+		} else if m.isRotatable(lit) {
 			removeFromSlice(&m.backboneCandidates, lit)
 		}
 	}

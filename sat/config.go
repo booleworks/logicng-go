@@ -104,38 +104,31 @@ type LowLevelConfig struct {
 	ReduceOnSize           bool
 	ReduceOnSizeSize       int
 	MaxVarDecay            float64
-
-	BBInitialUBCheckForRotatableLiterals bool
-	BBCheckForComplementModelLiterals    bool
-	BBCheckForRotatableLiterals          bool
 }
 
 // DefaultLowLevelConfig returns a new default configuration of the low-level
 // parameters of the SAT solver.
 func DefaultLowLevelConfig() *LowLevelConfig {
 	return &LowLevelConfig{
-		VarDecay:                             0.95,
-		VarInc:                               1.0,
-		RestartFirst:                         100,
-		RestartInc:                           2.0,
-		ClauseDecay:                          0.999,
-		LearntsizeFactor:                     1.0 / 3.0,
-		LearntsizeInc:                        1.1,
-		LBLBDMinimizingClause:                6,
-		LBLBDFrozenClause:                    30,
-		LBSizeMinimizingClause:               30,
-		FirstReduceDB:                        2000,
-		SpecialIncReduceDB:                   1000,
-		IncReduceDB:                          300,
-		FactorK:                              0.8,
-		FactorR:                              1.4,
-		SizeLBDQueue:                         50,
-		SizeTrailQueue:                       5000,
-		ReduceOnSize:                         false,
-		ReduceOnSizeSize:                     12,
-		MaxVarDecay:                          0.95,
-		BBInitialUBCheckForRotatableLiterals: true,
-		BBCheckForComplementModelLiterals:    true,
-		BBCheckForRotatableLiterals:          true,
+		VarDecay:               0.95,
+		VarInc:                 1.0,
+		RestartFirst:           100,
+		RestartInc:             2.0,
+		ClauseDecay:            0.999,
+		LearntsizeFactor:       1.0 / 3.0,
+		LearntsizeInc:          1.1,
+		LBLBDMinimizingClause:  6,
+		LBLBDFrozenClause:      30,
+		LBSizeMinimizingClause: 30,
+		FirstReduceDB:          2000,
+		SpecialIncReduceDB:     1000,
+		IncReduceDB:            300,
+		FactorK:                0.8,
+		FactorR:                1.4,
+		SizeLBDQueue:           50,
+		SizeTrailQueue:         5000,
+		ReduceOnSize:           false,
+		ReduceOnSizeSize:       12,
+		MaxVarDecay:            0.95,
 	}
 }
