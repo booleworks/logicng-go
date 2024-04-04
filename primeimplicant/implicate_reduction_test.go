@@ -114,7 +114,7 @@ func testPrimeImplicateProperty(t *testing.T, fac f.Factory, formula f.Formula, 
 	}
 	assert.False(solver.Sat(negatedLiterals...))
 	for _, lit := range negatedLiterals {
-		reducedNegatedLiterals := f.NewLitSet(negatedLiterals...)
+		reducedNegatedLiterals := f.NewMutableLitSet(negatedLiterals...)
 		reducedNegatedLiterals.Remove(lit)
 		assert.True(solver.Sat(reducedNegatedLiterals.Content()...))
 	}

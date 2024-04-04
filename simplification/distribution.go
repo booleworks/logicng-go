@@ -38,11 +38,11 @@ func distributeNary(fac f.Factory, formula f.Formula) f.Formula {
 	outerSort := formula.Sort()
 	innerSort, _ := f.DualSort(outerSort)
 	ops, _ := fac.NaryOperands(formula)
-	operands := f.NewFormulaSet()
+	operands := f.NewMutableFormulaSet()
 	for _, op := range ops {
 		operands.Add(Distribute(fac, op))
 	}
-	part2Operands := make(map[f.Formula]*f.FormulaSet)
+	part2Operands := make(map[f.Formula]*f.MutableFormulaSet)
 	mostCommon := fac.Falsum()
 	mostCommonAmount := 0
 	for _, op := range operands.Content() {
@@ -50,7 +50,7 @@ func distributeNary(fac f.Factory, formula f.Formula) f.Formula {
 			for _, part := range fac.Operands(op) {
 				partOperands, ok := part2Operands[part]
 				if !ok {
-					partOperands = f.NewFormulaSet()
+					partOperands = f.NewMutableFormulaSet()
 					part2Operands[part] = partOperands
 				}
 				partOperands.Add(op)
@@ -65,7 +65,7 @@ func distributeNary(fac f.Factory, formula f.Formula) f.Formula {
 		result, _ = fac.NaryOperator(outerSort, operands.Content()...)
 		return result
 	}
-	operands.RemoveAll(part2Operands[mostCommon])
+	operands.RemoveAll(part2Operands[mostCommon].AsImmutable())
 	relevantFormulas := make([]f.Formula, 0)
 	part2Operands[mostCommon].Each(func(_ int, preRelevantFormula f.Formula) {
 		relevantParts := make([]f.Formula, 0)

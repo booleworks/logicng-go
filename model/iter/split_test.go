@@ -1,9 +1,10 @@
 package iter
 
 import (
-	"github.com/booleworks/logicng-go/sat"
 	"strings"
 	"testing"
+
+	"github.com/booleworks/logicng-go/sat"
 
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/parser"
@@ -185,9 +186,9 @@ func TestMostCommonVarsProvider(t *testing.T) {
 
 func varSet(fac f.Factory, varString string) *f.VarSet {
 	tokens := strings.Split(varString, " ")
-	vars := f.NewVarSet()
+	vars := f.NewMutableVarSet()
 	for _, t := range tokens {
 		vars.Add(fac.Var(t))
 	}
-	return vars
+	return vars.AsImmutable()
 }

@@ -12,9 +12,9 @@ import f "github.com/booleworks/logicng-go/formula"
 func (s *Solver) VarOccurrences(variables *f.VarSet) map[f.Variable]int {
 	fac := s.fac
 	solver := s.core
-	var relevantVars *f.VarSet
+	var relevantVars *f.MutableVarSet
 	if variables != nil {
-		relevantVars = f.NewVarSet()
+		relevantVars = f.NewMutableVarSet()
 		relevantVars.AddAll(variables)
 	}
 	counts := initResultMap(fac, solver, relevantVars)
@@ -33,7 +33,7 @@ func (s *Solver) VarOccurrences(variables *f.VarSet) map[f.Variable]int {
 	return result
 }
 
-func initResultMap(fac f.Factory, solver *CoreSolver, relevantVars *f.VarSet) map[string]int {
+func initResultMap(fac f.Factory, solver *CoreSolver, relevantVars *f.MutableVarSet) map[string]int {
 	counts := make(map[string]int)
 	if relevantVars != nil {
 		for _, v := range relevantVars.Content() {

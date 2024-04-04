@@ -45,7 +45,7 @@ type dtreeNode struct {
 	right               dtree
 	sz                  int32
 	solver              sat.DnnfSatSolver
-	statVariableSet     *f.VarSet
+	statVariableSet     *f.MutableVarSet
 	statSeparatorBitSet *bitset
 	statClauseIds       []int32
 	dpth                int
@@ -135,7 +135,7 @@ func newDtreeNode(fac f.Factory, left, right dtree) *dtreeNode {
 	node.lvs = append(node.lvs, node.leftLeaves...)
 	node.lvs = append(node.lvs, node.rightLeaves...)
 
-	node.statVariableSet = f.NewVarSet()
+	node.statVariableSet = f.NewMutableVarSet()
 	node.statVariableSet.AddAll(left.staticVariableSet(fac))
 	node.statVariableSet.AddAll(right.staticVariableSet(fac))
 	node.statSeparatorBitSet = newBitset()
@@ -188,7 +188,7 @@ func (n *dtreeNode) depth() int                 { return n.dpth }
 func (n *dtreeNode) widestSeparator() int       { return n.wSeparator }
 
 func (n *dtreeNode) staticVariableSet(_ f.Factory) *f.VarSet {
-	return n.statVariableSet
+	return n.statVariableSet.AsImmutable()
 }
 
 func (n *dtreeNode) dynamicSeparator() *bitset {

@@ -28,7 +28,7 @@ func Compile(fac f.Factory, formula f.Formula) *DNNF {
 // handler can be used to abort the DNNF compilation.  If the DNNF compilation
 // was aborted, the ok flag is false.
 func CompileWithHandler(fac f.Factory, formula f.Formula, dnnfHandler Handler) (dnnf *DNNF, ok bool) {
-	originalVariables := f.NewVarSet()
+	originalVariables := f.NewMutableVarSet()
 	originalVariables.AddAll(f.Variables(fac, formula))
 	cnf := normalform.CNF(fac, formula)
 	originalVariables.AddAll(f.Variables(fac, cnf))
@@ -38,7 +38,7 @@ func CompileWithHandler(fac f.Factory, formula f.Formula, dnnfHandler Handler) (
 	if !ok {
 		return nil, ok
 	} else {
-		return &DNNF{fac, dnnfFormula, originalVariables}, ok
+		return &DNNF{fac, dnnfFormula, originalVariables.AsImmutable()}, ok
 	}
 }
 

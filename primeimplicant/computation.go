@@ -233,7 +233,7 @@ func (p *primeReduction) reduceImplicant(
 	implicant []f.Literal, satHandler sat.Handler,
 ) ([]f.Literal, bool) {
 	handler.Start(satHandler)
-	primeImplicant := f.NewLitSet(implicant...)
+	primeImplicant := f.NewMutableLitSet(implicant...)
 	for _, lit := range implicant {
 		primeImplicant.Remove(lit)
 		sat, ok := p.implicantSolver.SatWithHandler(satHandler, primeImplicant.Content()...)
@@ -251,7 +251,7 @@ func (p *primeReduction) reduceImplicate(
 	fac f.Factory, implicate []f.Literal, satHandler sat.Handler,
 ) ([]f.Literal, bool) {
 	handler.Start(satHandler)
-	primeImplicate := f.NewLitSet(implicate...)
+	primeImplicate := f.NewMutableLitSet(implicate...)
 	for _, lit := range implicate {
 		primeImplicate.Remove(lit)
 		assumptions := make([]f.Literal, primeImplicate.Size())

@@ -119,7 +119,7 @@ func testPrimeImplicantProperty(t *testing.T, fac f.Factory, formula f.Formula, 
 	solver.Add(formula.Negate(fac))
 	assert.False(solver.Sat(primeImplicant...))
 	for _, lit := range primeImplicant {
-		reducedPrimeImplicant := f.NewLitSet(primeImplicant...)
+		reducedPrimeImplicant := f.NewMutableLitSet(primeImplicant...)
 		reducedPrimeImplicant.Remove(lit)
 		assert.True(solver.Sat(reducedPrimeImplicant.Content()...))
 	}

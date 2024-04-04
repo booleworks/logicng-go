@@ -134,7 +134,7 @@ func grow(growSolver *sat.Solver, h, variables []f.Variable, handler sat.Optimiz
 		return nil, true
 	} else {
 		growSolver.LoadState(solverState)
-		minimumCorrectionSet := f.NewVarSet(variables...)
+		minimumCorrectionSet := f.NewMutableVarSet(variables...)
 		posVars := maxModel.PosVars()
 		minimumCorrectionSet.RemoveAllElements(&posVars)
 		return minimumCorrectionSet.Content(), true

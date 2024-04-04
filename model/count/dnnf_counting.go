@@ -66,7 +66,7 @@ func encodeAsCNF(fac f.Factory, formulas []f.Formula) ([]f.Formula, error) {
 
 func simplify(fac f.Factory, formulas []f.Formula) *simplificationResult {
 	simpleBackbone := assignment.Empty()
-	backboneVariables := f.NewVarSet()
+	backboneVariables := f.NewMutableVarSet()
 	for _, formula := range formulas {
 		if formula.Sort() == f.SortLiteral {
 			literal := f.Literal(formula)
@@ -105,8 +105,8 @@ type simplificationResult struct {
 }
 
 func (s *simplificationResult) getDontCareVariables(variables *f.VarSet) *f.VarSet {
-	dontCareVariables := f.NewVariableSetCopy(variables)
+	dontCareVariables := f.NewMutableVarSetCopy(variables)
 	dontCareVariables.RemoveAll(f.Variables(s.fac, s.simplifiedFormulas...))
 	dontCareVariables.RemoveAllElements(&s.backboneVariables)
-	return dontCareVariables
+	return dontCareVariables.AsImmutable()
 }

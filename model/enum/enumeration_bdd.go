@@ -75,7 +75,7 @@ func generateModelCollector(
 		if variables != nil {
 			sortedVariables = f.NewVarSet(variables...)
 		} else {
-			sortedVariables = f.NewVariableSetCopy(knownVariables)
+			sortedVariables = f.NewVarSetCopy(knownVariables)
 		}
 		numVars := sortedVariables.Size()
 		kernel := bdd.NewKernelWithOrdering(fac, sortedVariables.Content(), int32(numVars*30), int32(numVars*50))

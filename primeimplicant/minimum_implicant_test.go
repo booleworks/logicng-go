@@ -123,7 +123,7 @@ func TestMinimumPrimeImplicantLargeExamples(t *testing.T) {
 func isPrimeImplicant(t *testing.T, fac f.Factory, formula f.Formula, pi []f.Literal) {
 	assert.True(t, sat.Implies(fac, fac.And(f.LiteralsAsFormulas(pi)...), formula))
 	for _, literal := range pi {
-		newSet := f.NewLitSet(pi...)
+		newSet := f.NewMutableLitSet(pi...)
 		newSet.Remove(literal)
 		if !newSet.Empty() {
 			assert.False(t, sat.Implies(fac, fac.And(f.LiteralsAsFormulas(newSet.Content())...), formula))

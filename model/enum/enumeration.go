@@ -77,7 +77,7 @@ func newModelEnumCollector(
 	fac f.Factory, _, dontCaresNotOnSolver, additionalVarsNotOnSolver *f.VarSet,
 ) iter.Collector[[]*model.Model] {
 	baseModels := getCartesianProduct(fac, dontCaresNotOnSolver)
-	addVars := f.NewLitSet()
+	addVars := f.NewMutableLitSet()
 	for _, v := range additionalVarsNotOnSolver.Content() {
 		addVars.Add(v.Negate(fac))
 	}
@@ -85,7 +85,7 @@ func newModelEnumCollector(
 		committedModels:                []*model.Model{},
 		uncommittedModels:              [][]f.Literal{},
 		baseModels:                     baseModels,
-		additionalVariablesNotOnSolver: addVars,
+		additionalVariablesNotOnSolver: addVars.AsImmutable(),
 	}
 }
 

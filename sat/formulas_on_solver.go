@@ -17,7 +17,7 @@ import f "github.com/booleworks/logicng-go/formula"
 // Also note that formulas are not added to the solver as soon as the solver is
 // known be unsatisfiable.
 func (s *Solver) FormulasOnSolver() []f.Formula {
-	formulas := f.NewFormulaSet()
+	formulas := f.NewMutableFormulaSet()
 	for _, clause := range s.core.clauses {
 		lits := make([]f.Literal, clause.size())
 		for i := 0; i < clause.size(); i++ {

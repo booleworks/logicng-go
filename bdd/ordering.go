@@ -134,7 +134,7 @@ func occurenceOrder(fac f.Factory, formula f.Formula, min2max bool) []f.Variable
 // variables and/or the formula caches in the factory.
 func ForceOrder(fac f.Factory, formula f.Formula) []f.Variable {
 	vars := f.Variables(fac, formula)
-	originalVariables := f.NewVarSet()
+	originalVariables := f.NewMutableVarSet()
 	originalVariables.AddAll(vars)
 	nnf := normalform.NNF(fac, formula)
 	originalVariables.AddAll(f.Variables(fac, nnf))

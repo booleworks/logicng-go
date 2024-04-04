@@ -55,7 +55,7 @@ func (s *Solver) optimize(
 	additionalVariables []f.Variable,
 ) (*model.Model, bool) {
 	initialState := s.SaveState()
-	resultModelVariables := f.NewVarSet(additionalVariables...)
+	resultModelVariables := f.NewMutableVarSet(additionalVariables...)
 	for _, lit := range literals {
 		variable := lit.Variable()
 		resultModelVariables.Add(variable)

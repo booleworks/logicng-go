@@ -126,7 +126,7 @@ func TestOptimizerFunctionIncMinMax(t *testing.T) {
 	parser := parser.New(fac)
 	for _, solver := range solvers(fac) {
 		formula := parser.ParseUnsafe("(a|b|c|d|e) & (p|q) & (x|y|z)")
-		variables := f.NewVariableSetCopy(f.Variables(fac, formula))
+		variables := f.NewMutableVarSetCopy(f.Variables(fac, formula))
 		vars := f.VariablesAsLiterals(variables.Content())
 		solver.Add(formula)
 

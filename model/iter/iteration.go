@@ -40,11 +40,11 @@ func (m *ModelIterator[R]) Iterate(
 	additionalVarsNotOnSolver := difference(m.additionalVars, knownVariables)
 	dontCareVariablesNotOnSolver := difference(m.vars, knownVariables)
 	collector := newCollector(solver.Factory(), knownVariables, dontCareVariablesNotOnSolver, additionalVarsNotOnSolver)
-	initialSplitVars := f.NewVarSet()
+	initialSplitVars := f.NewMutableVarSet()
 	if vars := m.strategy.SplitVarsForRecursionDepth(m.vars, solver, 0); vars.Size() > 0 {
 		initialSplitVars.AddAll(vars)
 	}
-	m.iterRecursive(collector, solver, []f.Literal{}, m.vars, initialSplitVars, 0)
+	m.iterRecursive(collector, solver, []f.Literal{}, m.vars, initialSplitVars.AsImmutable(), 0)
 	return collector.Result(), !handler.Aborted(m.handler)
 }
 
@@ -68,7 +68,7 @@ func (m *ModelIterator[R]) iterRecursive(
 			}
 			return
 		}
-		newSplitVars := f.NewVariableSetCopy(splitVars)
+		newSplitVars := f.NewVarSetCopy(splitVars)
 		maxModelsForSplitAssignments := m.strategy.MaxModelsForSplitAssignments(recursionDepth)
 		for !iterate(collector, solver, newSplitVars, nil, maxModelsForSplitAssignments, m.handler) {
 			if !collector.Rollback(m.handler) {
@@ -85,14 +85,14 @@ func (m *ModelIterator[R]) iterRecursive(
 			return
 		}
 
-		remainingVars := f.NewVariableSetCopy(iterVars)
+		remainingVars := f.NewMutableVarSetCopy(iterVars)
 		remainingVars.RemoveAll(newSplitVars)
 		for _, literal := range splitModel {
 			remainingVars.Remove(literal.Variable())
 		}
 
 		newSplitAssignments := collector.RollbackAndReturnModels(solver, m.handler)
-		recursiveSplitVars := m.strategy.SplitVarsForRecursionDepth(remainingVars, solver, recursionDepth+1)
+		recursiveSplitVars := m.strategy.SplitVarsForRecursionDepth(remainingVars.AsImmutable(), solver, recursionDepth+1)
 		for _, newSplitAssignment := range newSplitAssignments {
 			recursiveSplitAssignment := make([]f.Literal, newSplitAssignment.Size())
 			copy(recursiveSplitAssignment, newSplitAssignment.Literals)
@@ -221,7 +221,7 @@ func relevantAllIndicesFromSolver(
 ) []int32 {
 	fac := solver.Factory()
 	var relevantAllIndices []int32
-	uniqueAdditionalVariables := f.NewVarSet()
+	uniqueAdditionalVariables := f.NewMutableVarSet()
 	if additionalVariables != nil && additionalVariables.Size() > 0 {
 		uniqueAdditionalVariables.AddAll(additionalVariables)
 	}
@@ -245,12 +245,12 @@ func relevantAllIndicesFromSolver(
 }
 
 func difference(col1, col2 *f.VarSet) *f.VarSet {
-	result := f.NewVarSet()
+	result := f.NewMutableVarSet()
 	if col1 != nil {
 		result.AddAll(col1)
 	}
 	if col2 != nil {
 		result.RemoveAll(col2)
 	}
-	return result
+	return result.AsImmutable()
 }

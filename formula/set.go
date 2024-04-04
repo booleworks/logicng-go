@@ -1,102 +1,96 @@
 package formula
 
 import (
-	"github.com/booleworks/logicng-go/errorx"
 	"slices"
+
+	"github.com/booleworks/logicng-go/errorx"
 )
 
 type (
-	VarSet     = fset[Variable]
-	LitSet     = fset[Literal]
-	FormulaSet = fset[Formula]
+	VarSet            = fset[Variable]        // Immutable set of variables
+	LitSet            = fset[Literal]         // Immutable set of literals
+	FormulaSet        = fset[Formula]         // Immutable set of formulas
+	MutableVarSet     = mutableFset[Variable] // Mutable set of variables
+	MutableLitSet     = mutableFset[Literal]  // Mutable set of literals
+	MutableFormulaSet = mutableFset[Formula]  // Mutable set of formulas
 )
 
-// FormulaSet represents a set of formulas/variables/literals.  In a formula
-// set the contained formulas are unique.  The order within the set is not
-// deterministic.  When using the Content method, the formulas sorted by their
-// unique ID and are therefore deterministic.
 type fset[T Formula | Variable | Literal] struct {
 	elements map[T]present
+	content  []T
+}
+
+type mutableFset[T Formula | Variable | Literal] struct {
+	*fset[T]
 }
 
 // NewFormulaSet generates a new formula set with the given formulas as
 // content.
 func NewFormulaSet(formula ...Formula) *FormulaSet {
-	fs := &FormulaSet{make(map[Formula]present, len(formula))}
+	fs := &FormulaSet{make(map[Formula]present, len(formula)), nil}
 	for _, f := range formula {
 		fs.elements[f] = present{}
 	}
+	fs.setContent()
 	return fs
 }
 
 // NewVarSet generates a new variable set with the given variables as
 // content.
 func NewVarSet(variable ...Variable) *VarSet {
-	fs := &VarSet{make(map[Variable]present, len(variable))}
+	fs := &VarSet{make(map[Variable]present, len(variable)), nil}
 	for _, f := range variable {
 		fs.elements[f] = present{}
 	}
+	fs.setContent()
 	return fs
 }
 
 // NewLitSet generates a new literal set with the given literal as content.
 func NewLitSet(literal ...Literal) *LitSet {
-	fs := &LitSet{make(map[Literal]present, len(literal))}
+	fs := &LitSet{make(map[Literal]present, len(literal)), nil}
 	for _, f := range literal {
 		fs.elements[f] = present{}
 	}
+	fs.setContent()
 	return fs
 }
 
-// NewVariableSetCopy returns a new variable set with the content of all the
-// given variable sets as content.
-func NewVariableSetCopy(variableSet ...*VarSet) *VarSet {
-	fs := &VarSet{make(map[Variable]present)}
+// NewVarSetCopy returns a new variable set with the content of all the given
+// variable sets as content.
+func NewVarSetCopy(variableSet ...*VarSet) *VarSet {
+	fs := &VarSet{make(map[Variable]present), nil}
 	for _, set := range variableSet {
 		for f := range set.elements {
 			fs.elements[f] = present{}
 		}
 	}
+	fs.setContent()
 	return fs
 }
 
-// Add adds a new element to the set.
-func (f *fset[T]) Add(element T) {
-	f.elements[element] = present{}
+// NewMutableFormulaSet generates a new mutable formula set with the given
+// formulas as content.
+func NewMutableFormulaSet(formula ...Formula) *MutableFormulaSet {
+	return &MutableFormulaSet{NewFormulaSet(formula...)}
 }
 
-// AddAll adds the content of the given other set to the set.
-func (f *fset[T]) AddAll(other *fset[T]) {
-	for formula := range other.elements {
-		f.elements[formula] = present{}
-	}
+// NewMutableVarSet generates a new mutable variable set with the given
+// variables as content.
+func NewMutableVarSet(variable ...Variable) *MutableVarSet {
+	return &MutableVarSet{NewVarSet(variable...)}
 }
 
-// AddAllElements adds the other elements to the set.
-func (f *fset[T]) AddAllElements(elements *[]T) {
-	for _, e := range *elements {
-		f.elements[e] = present{}
-	}
+// NewMutableLitSet generates a new mutable literal set with the given literal
+// as content.
+func NewMutableLitSet(literal ...Literal) *MutableLitSet {
+	return &MutableLitSet{NewLitSet(literal...)}
 }
 
-// Remove removes the given element from the set.
-func (f *fset[T]) Remove(element T) {
-	delete(f.elements, element)
-}
-
-// RemoveAll removes all the content from the other given set from the other
-// set from the set.
-func (f *fset[T]) RemoveAll(elements *fset[T]) {
-	for formula := range elements.elements {
-		delete(f.elements, formula)
-	}
-}
-
-// RemoveAllElements removes the content of the other set from the set.
-func (f *fset[T]) RemoveAllElements(elements *[]T) {
-	for _, formula := range *elements {
-		delete(f.elements, formula)
-	}
+// NewMutableVarSetCopy returns a new mutable variable set with the
+// content of all the given variable sets as content.
+func NewMutableVarSetCopy(variableSet ...*VarSet) *MutableVarSet {
+	return &MutableVarSet{NewVarSetCopy(variableSet...)}
 }
 
 // Each takes a function which is executed on each element of the set.
@@ -148,14 +142,70 @@ func (f *fset[T]) ContainsAll(elements *fset[T]) bool {
 
 // Content returns the content of the set as a sorted (by ID) slice.
 func (f *fset[T]) Content() []T {
-	slice := make([]T, len(f.elements))
+	if f.content == nil {
+		f.setContent()
+	}
+	return f.content
+}
+
+// Add adds a new element to the set.
+func (f *mutableFset[T]) Add(element T) {
+	f.elements[element] = present{}
+	f.content = nil
+}
+
+// AddAll adds the content of the given other set to the set.
+func (f *mutableFset[T]) AddAll(other *fset[T]) {
+	for formula := range other.elements {
+		f.elements[formula] = present{}
+	}
+	f.content = nil
+}
+
+// AddAllElements adds the other elements to the set.
+func (f *mutableFset[T]) AddAllElements(elements *[]T) {
+	for _, e := range *elements {
+		f.elements[e] = present{}
+	}
+	f.content = nil
+}
+
+// Remove removes the given element from the set.
+func (f *mutableFset[T]) Remove(element T) {
+	delete(f.elements, element)
+	f.content = nil
+}
+
+// RemoveAll removes all the content from the other given set from the other
+// set from the set.
+func (f *mutableFset[T]) RemoveAll(elements *fset[T]) {
+	for formula := range elements.elements {
+		delete(f.elements, formula)
+	}
+	f.content = nil
+}
+
+// RemoveAllElements removes the content of the other set from the set.
+func (f *mutableFset[T]) RemoveAllElements(elements *[]T) {
+	for _, formula := range *elements {
+		delete(f.elements, formula)
+	}
+	f.content = nil
+}
+
+// AsImmutable returns the mutable set as an immutable set.
+func (f *mutableFset[T]) AsImmutable() *fset[T] {
+	return f.fset
+}
+
+func (f *fset[T]) setContent() {
+	f.content = make([]T, len(f.elements))
 	i := 0
 	for k := range f.elements {
-		slice[i] = k
+		f.content[i] = k
 		i++
 	}
-	slices.Sort(slice)
-	return slice
+	slices.Sort(f.content)
 }
 
 // Variables returns all variables of the given formula as a variable set.
@@ -163,11 +213,11 @@ func Variables(fac Factory, formula ...Formula) *VarSet {
 	if len(formula) == 1 {
 		return variables(fac, formula[0])
 	}
-	result := NewVarSet()
+	result := NewMutableVarSet()
 	for _, f := range formula {
 		result.AddAll(variables(fac, f))
 	}
-	return result
+	return result.AsImmutable()
 }
 
 func variables(fac Factory, formula Formula) *VarSet {
@@ -176,34 +226,35 @@ func variables(fac Factory, formula Formula) *VarSet {
 		return cached.(*VarSet)
 	}
 
-	result := NewVarSet()
+	vars := NewMutableVarSet()
 	switch fsort := formula.Sort(); fsort {
 	case SortFalse, SortTrue:
 		break
 	case SortLiteral:
 		variable := Literal(formula).Variable()
-		result.Add(variable)
+		vars.Add(variable)
 	case SortNot:
 		op, _ := fac.NotOperand(formula)
-		result.AddAll(Variables(fac, op))
+		vars.AddAll(Variables(fac, op))
 	case SortImpl, SortEquiv:
 		left, right, _ := fac.BinaryLeftRight(formula)
-		result.AddAll(Variables(fac, left))
-		result.AddAll(Variables(fac, right))
+		vars.AddAll(Variables(fac, left))
+		vars.AddAll(Variables(fac, right))
 	case SortOr, SortAnd:
 		ops, _ := fac.NaryOperands(formula)
 		for _, op := range ops {
-			result.AddAll(Variables(fac, op))
+			vars.AddAll(Variables(fac, op))
 		}
 	case SortCC, SortPBC:
 		_, _, lits, _, _ := fac.PBCOps(formula)
 		for _, lit := range lits {
 			variable := lit.Variable()
-			result.Add(variable)
+			vars.Add(variable)
 		}
 	default:
 		panic(errorx.UnknownEnumValue(fsort))
 	}
+	result := vars.AsImmutable()
 	SetFunctionCache(fac, FuncVariables, formula, result)
 	return result
 }
@@ -215,32 +266,33 @@ func Literals(fac Factory, formula Formula) *LitSet {
 		return cached.(*LitSet)
 	}
 
-	result := NewLitSet()
+	lits := NewMutableLitSet()
 	switch fsort := formula.Sort(); fsort {
 	case SortFalse, SortTrue:
 		break
 	case SortLiteral:
-		result.Add(Literal(formula))
+		lits.Add(Literal(formula))
 	case SortNot:
 		op, _ := fac.NotOperand(formula)
-		result.AddAll(Literals(fac, op))
+		lits.AddAll(Literals(fac, op))
 	case SortImpl, SortEquiv:
 		left, right, _ := fac.BinaryLeftRight(formula)
-		result.AddAll(Literals(fac, left))
-		result.AddAll(Literals(fac, right))
+		lits.AddAll(Literals(fac, left))
+		lits.AddAll(Literals(fac, right))
 	case SortOr, SortAnd:
 		ops, _ := fac.NaryOperands(formula)
 		for _, op := range ops {
-			result.AddAll(Literals(fac, op))
+			lits.AddAll(Literals(fac, op))
 		}
 	case SortCC, SortPBC:
-		_, _, lits, _, _ := fac.PBCOps(formula)
-		for _, lit := range lits {
-			result.Add(lit)
+		_, _, lts, _, _ := fac.PBCOps(formula)
+		for _, lit := range lts {
+			lits.Add(lit)
 		}
 	default:
 		panic(errorx.UnknownEnumValue(fsort))
 	}
+	result := lits.AsImmutable()
 	SetFunctionCache(fac, FuncLiterals, formula, result)
 	return result
 }
