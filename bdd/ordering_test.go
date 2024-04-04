@@ -147,12 +147,12 @@ func TestBDDOrderings(t *testing.T) {
 	p := parser.New(fac)
 	formula := p.ParseUnsafe("(A => ~B) & ((A & C) | (D & ~C)) & (A | Y | X) & (Y <=> (X | (W + A + F < 1)))")
 
-	bddNoOrder := Build(fac, formula)
-	bddBfs := BuildWithVarOrder(fac, formula, BFSOrder(fac, formula))
-	bddDfs := BuildWithVarOrder(fac, formula, DFSOrder(fac, formula))
-	bddMin2Max := BuildWithVarOrder(fac, formula, MinToMaxOrder(fac, formula))
-	bddMax2Min := BuildWithVarOrder(fac, formula, MaxToMinOrder(fac, formula))
-	bddForce := BuildWithVarOrder(fac, formula, ForceOrder(fac, formula))
+	bddNoOrder := Compile(fac, formula)
+	bddBfs := CompileWithVarOrder(fac, formula, BFSOrder(fac, formula))
+	bddDfs := CompileWithVarOrder(fac, formula, DFSOrder(fac, formula))
+	bddMin2Max := CompileWithVarOrder(fac, formula, MinToMaxOrder(fac, formula))
+	bddMax2Min := CompileWithVarOrder(fac, formula, MaxToMinOrder(fac, formula))
+	bddForce := CompileWithVarOrder(fac, formula, ForceOrder(fac, formula))
 
 	assert.Equal(13, bddNoOrder.NodeCount())
 	assert.Equal(14, bddBfs.NodeCount())

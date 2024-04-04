@@ -37,19 +37,19 @@ func TestBddSmallFormulas(t *testing.T) {
 
 	for _, formula := range formulas {
 		start = time.Now()
-		bddNoOrder := bdd.Build(fac, formula)
+		bddNoOrder := bdd.Compile(fac, formula)
 		timeNoOrder := time.Since(start).Nanoseconds()
 		start = time.Now()
-		bddBfs := bdd.BuildWithVarOrder(fac, formula, bdd.BFSOrder(fac, formula))
+		bddBfs := bdd.CompileWithVarOrder(fac, formula, bdd.BFSOrder(fac, formula))
 		timeBfs := time.Since(start).Nanoseconds()
 		start = time.Now()
-		bddDfs := bdd.BuildWithVarOrder(fac, formula, bdd.DFSOrder(fac, formula))
+		bddDfs := bdd.CompileWithVarOrder(fac, formula, bdd.DFSOrder(fac, formula))
 		timeDfs := time.Since(start).Nanoseconds()
 		start = time.Now()
-		bddMax2Min := bdd.BuildWithVarOrder(fac, formula, bdd.MaxToMinOrder(fac, formula))
+		bddMax2Min := bdd.CompileWithVarOrder(fac, formula, bdd.MaxToMinOrder(fac, formula))
 		timeMax2Min := time.Since(start).Nanoseconds()
 		start = time.Now()
-		bddForce := bdd.BuildWithVarOrder(fac, formula, bdd.ForceOrder(fac, formula))
+		bddForce := bdd.CompileWithVarOrder(fac, formula, bdd.ForceOrder(fac, formula))
 		timeForce := time.Since(start).Nanoseconds()
 
 		nodesNoOrder := bddNoOrder.NodeCount()
@@ -125,7 +125,7 @@ func TestBddMidFormula(t *testing.T) {
 	order := bdd.DFSOrder(fac, cnf)
 	kernel := bdd.NewKernelWithOrdering(fac, order, 100000, 200000)
 	start := time.Now()
-	bdd := bdd.BuildWithKernel(fac, cnf, kernel)
+	bdd := bdd.CompileWithKernel(fac, cnf, kernel)
 	elapsed := time.Since(start) / 1_000_000
 	t.Logf("#Nodes: %d\n", bdd.NodeCount())
 	t.Logf("Time:   %d ms\n", elapsed)

@@ -79,7 +79,7 @@ func generateModelCollector(
 		}
 		numVars := sortedVariables.Size()
 		kernel := bdd.NewKernelWithOrdering(fac, sortedVariables.Content(), int32(numVars*30), int32(numVars*50))
-		committedModels := bdd.BuildWithKernel(fac, fac.Falsum(), kernel)
+		committedModels := bdd.CompileWithKernel(fac, fac.Falsum(), kernel)
 		dontCareFactor := int(math.Pow(2, float64(dontCaresNotOnSolver.Size())))
 		return &modelEnumBddCollector{
 			kernel:            kernel,
@@ -105,7 +105,7 @@ func (c *modelEnumBddCollector) AddModel(
 func (c *modelEnumBddCollector) Commit(handler iter.Handler) bool {
 	for _, uncommittedModel := range c.uncommittedModels {
 		modelFormula := uncommittedModel.Formula(c.kernel.Factory())
-		modelBdd := bdd.BuildWithKernel(c.kernel.Factory(), modelFormula, c.kernel)
+		modelBdd := bdd.CompileWithKernel(c.kernel.Factory(), modelFormula, c.kernel)
 		c.committedModels = c.committedModels.Or(modelBdd)
 	}
 	c.uncommittedModels = make([]*model.Model, 0)

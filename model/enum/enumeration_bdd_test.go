@@ -21,7 +21,7 @@ func TestBDDMEContradiction(t *testing.T) {
 		solver.Add(fac.Literal("A", false))
 		result, _ := ToBDDOnSolverWithConfig(solver, []f.Variable{}, cfg)
 		kernel := result.Kernel
-		exp := bdd.BuildWithKernel(fac, fac.Falsum(), kernel)
+		exp := bdd.CompileWithKernel(fac, fac.Falsum(), kernel)
 		assert.Equal(exp, result)
 	}
 }
@@ -33,7 +33,7 @@ func TestBDDMETautology(t *testing.T) {
 		solver := sat.NewSolver(fac)
 		result, _ := ToBDDOnSolverWithConfig(solver, []f.Variable{}, cfg)
 		kernel := result.Kernel
-		exp := bdd.BuildWithKernel(fac, fac.Verum(), kernel)
+		exp := bdd.CompileWithKernel(fac, fac.Verum(), kernel)
 		assert.Equal(exp, result)
 	}
 }
@@ -48,7 +48,7 @@ func TestBDDMEEmptyVars(t *testing.T) {
 		solver.Add(formula)
 		result, _ := ToBDDOnSolverWithConfig(solver, nil, cfg)
 		kernel := result.Kernel
-		exp := bdd.BuildWithKernel(fac, fac.Verum(), kernel)
+		exp := bdd.CompileWithKernel(fac, fac.Verum(), kernel)
 		assert.Equal(exp, result)
 	}
 }
@@ -61,13 +61,13 @@ func TestBDDMESimple1OnFormula(t *testing.T) {
 	for _, cfg := range cfgs {
 		result, _ := ToBDDOnFormulaWithConfig(fac, formula, fac.Vars("A", "B", "C"), cfg)
 		kernel := result.Kernel
-		exp := bdd.BuildWithKernel(fac, formula, kernel)
+		exp := bdd.CompileWithKernel(fac, formula, kernel)
 		assert.Equal(exp, result)
 	}
 
 	result := ToBDDOnFormula(fac, formula, fac.Vars("A", "B", "C"))
 	kernel := result.Kernel
-	exp := bdd.BuildWithKernel(fac, formula, kernel)
+	exp := bdd.CompileWithKernel(fac, formula, kernel)
 	assert.Equal(exp, result)
 }
 

@@ -93,6 +93,6 @@ func countWithBDD(fac f.Factory, formula f.Formula) *big.Int {
 	}
 	order := bdd.ForceOrder(fac, formula)
 	kernel := bdd.NewKernelWithOrdering(fac, order, 100000, 1000000)
-	bdd := bdd.BuildWithKernel(fac, formula, kernel)
+	bdd := bdd.CompileWithKernel(fac, formula, kernel)
 	return bdd.ModelCount()
 }

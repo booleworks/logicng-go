@@ -38,7 +38,7 @@ func compute(fac f.Factory, formula f.Formula, cnf bool) f.Formula {
 		return cached
 	}
 	order := ForceOrder(fac, formula)
-	bdd := BuildWithVarOrder(fac, formula, order)
+	bdd := CompileWithVarOrder(fac, formula, order)
 	var normalForm f.Formula
 	if cnf {
 		normalForm = bdd.CNF()

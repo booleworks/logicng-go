@@ -37,7 +37,7 @@ func TestBDDSwapping(t *testing.T) {
 
 	kernel := NewKernelWithOrdering(fac, order, 100, 100)
 	formula := p.ParseUnsafe("a | b | c")
-	bdd := BuildWithKernel(fac, formula, kernel)
+	bdd := CompileWithKernel(fac, formula, kernel)
 	assert.Equal([]f.Variable{a, b, c}, bdd.VariableOrder())
 	kernel.SwapVariables(a, b)
 	assert.Equal([]f.Variable{b, a, c}, bdd.VariableOrder())
@@ -64,8 +64,8 @@ func TestBDDSwappingMultipleBdds(t *testing.T) {
 	kernel := NewKernelWithOrdering(fac, order, 100, 100)
 	formula1 := p.ParseUnsafe("a | b | c")
 	formula2 := p.ParseUnsafe("a & b")
-	bdd1 := BuildWithKernel(fac, formula1, kernel)
-	bdd2 := BuildWithKernel(fac, formula2, kernel)
+	bdd1 := CompileWithKernel(fac, formula1, kernel)
+	bdd2 := CompileWithKernel(fac, formula2, kernel)
 	assert.Equal([]f.Variable{a, b, c}, bdd1.VariableOrder())
 	assert.Equal([]f.Variable{a, b, c}, bdd2.VariableOrder())
 	kernel.SwapVariables(a, b)
@@ -128,7 +128,7 @@ func performReorder(
 	assert := assert.New(t)
 	order := order(fac, formula)
 	kernel := NewKernelWithOrdering(fac, order, 1000, 10000)
-	bdd := BuildWithKernel(fac, formula, kernel)
+	bdd := CompileWithKernel(fac, formula, kernel)
 	count := bdd.ModelCount()
 	usedBefore := bdd.NodeCount()
 	start := time.Now()
@@ -164,7 +164,7 @@ func testReorderOnBuild(t *testing.T, minVars, maxVars int, verbose bool, stats 
 			}
 			order := order(fac, formula)
 			kernel := NewKernelWithOrdering(fac, order, 1000, 10000)
-			bdd := BuildWithKernel(fac, formula, kernel)
+			bdd := CompileWithKernel(fac, formula, kernel)
 			nodeCount := bdd.NodeCount()
 			modelCount := bdd.ModelCount()
 			for _, method := range reorderMethods {
@@ -192,7 +192,7 @@ func reorderOnBuild(
 	addVariableBlocks(len(order), withBlocks, kernel)
 	kernel.reordering.setReorderDuringConstruction(method, 10000)
 	start := time.Now()
-	bdd := BuildWithKernel(fac, formula, kernel)
+	bdd := CompileWithKernel(fac, formula, kernel)
 	duration := time.Since(start) / 1_000_000
 	usedAfter := bdd.NodeCount()
 	verifyVariableBlocks(t, fac, formula, withBlocks, bdd)

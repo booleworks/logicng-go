@@ -18,7 +18,7 @@ import (
 func TestBDDTrue(t *testing.T) {
 	assert := assert.New(t)
 	fac := f.NewFactory()
-	bdd := Build(fac, fac.Verum())
+	bdd := Compile(fac, fac.Verum())
 	assert.True(bdd.IsTautology())
 	assert.False(bdd.IsContradiction())
 	assert.Equal(fac.Verum(), bdd.CNF())
@@ -30,7 +30,7 @@ func TestBDDTrue(t *testing.T) {
 func TestBDDFalse(t *testing.T) {
 	assert := assert.New(t)
 	fac := f.NewFactory()
-	bdd := Build(fac, fac.Falsum())
+	bdd := Compile(fac, fac.Falsum())
 	assert.False(bdd.IsTautology())
 	assert.True(bdd.IsContradiction())
 	assert.Equal(fac.Falsum(), bdd.CNF())
@@ -44,7 +44,7 @@ func TestBDDVariable(t *testing.T) {
 	fac := f.NewFactory()
 	va := fac.Var("A")
 
-	bdd := Build(fac, fac.Variable("A"))
+	bdd := Compile(fac, fac.Variable("A"))
 	assert.False(bdd.IsTautology())
 	assert.False(bdd.IsContradiction())
 	assert.Equal(fac.Variable("A"), bdd.CNF())
@@ -60,7 +60,7 @@ func TestBDDNegativeVariable(t *testing.T) {
 	va := fac.Var("A")
 	vna := fac.Lit("A", false)
 
-	bdd := Build(fac, fac.Literal("A", false))
+	bdd := Compile(fac, fac.Literal("A", false))
 	assert.False(bdd.IsTautology())
 	assert.False(bdd.IsContradiction())
 	assert.Equal(fac.Literal("A", false), bdd.CNF())
@@ -79,7 +79,7 @@ func TestBDDImplication(t *testing.T) {
 	vnb := fac.Lit("B", false)
 
 	p := parser.New(fac)
-	bdd := Build(fac, p.ParseUnsafe("A => ~B"))
+	bdd := Compile(fac, p.ParseUnsafe("A => ~B"))
 	assert.False(bdd.IsTautology())
 	assert.False(bdd.IsContradiction())
 	assert.Equal(p.ParseUnsafe("~A | ~B"), bdd.CNF())
@@ -98,7 +98,7 @@ func TestBDDEquivalence(t *testing.T) {
 	assert := assert.New(t)
 	fac := f.NewFactory()
 	p := parser.New(fac)
-	bdd := Build(fac, p.ParseUnsafe("A <=> ~B"))
+	bdd := Compile(fac, p.ParseUnsafe("A <=> ~B"))
 	va := fac.Var("A")
 	vna := fac.Lit("A", false)
 	vb := fac.Var("B")
@@ -121,7 +121,7 @@ func TestBDDOr(t *testing.T) {
 	assert := assert.New(t)
 	fac := f.NewFactory()
 	p := parser.New(fac)
-	bdd := Build(fac, p.ParseUnsafe("A | B | ~C"))
+	bdd := Compile(fac, p.ParseUnsafe("A | B | ~C"))
 	va := fac.Var("A")
 	vna := fac.Lit("A", false)
 	vb := fac.Var("B")
@@ -152,7 +152,7 @@ func TestBDDAnd(t *testing.T) {
 	assert := assert.New(t)
 	fac := f.NewFactory()
 	p := parser.New(fac)
-	bdd := Build(fac, p.ParseUnsafe("A & B & ~C"))
+	bdd := Compile(fac, p.ParseUnsafe("A & B & ~C"))
 	va := fac.Var("A")
 	vb := fac.Var("B")
 	vc := fac.Var("C")
@@ -177,7 +177,7 @@ func TestBDDFormula(t *testing.T) {
 	vc := fac.Var("C")
 	p := parser.New(fac)
 	formula := p.ParseUnsafe("(A => ~C) | (B & ~C)")
-	bdd := Build(fac, formula)
+	bdd := Compile(fac, formula)
 
 	assert.False(bdd.IsTautology())
 	assert.False(bdd.IsContradiction())
@@ -201,7 +201,7 @@ func TestBDDCC(t *testing.T) {
 	vnc := fac.Lit("C", false)
 	p := parser.New(fac)
 	formula := p.ParseUnsafe("A + B + C = 1")
-	bdd := Build(fac, formula)
+	bdd := Compile(fac, formula)
 
 	assert.False(bdd.IsTautology())
 	assert.False(bdd.IsContradiction())
@@ -243,7 +243,7 @@ func testPigeonHole(t *testing.T, fac f.Factory, size int) {
 	pigeon := sat.GeneratePigeonHole(fac, size)
 	numVars := f.Variables(fac, pigeon).Size()
 	kernel := NewKernel(fac, int32(numVars), 10000, 10000)
-	bdd := BuildWithKernel(fac, pigeon, kernel)
+	bdd := CompileWithKernel(fac, pigeon, kernel)
 	assert.True(t, bdd.IsContradiction())
 }
 
@@ -260,10 +260,10 @@ func testQueens(t *testing.T, fac f.Factory, size, models int) {
 	queens := sat.GenerateNQueens(fac, size)
 	numVars := f.Variables(fac, queens).Size()
 	kernel := NewKernel(fac, int32(numVars), 10000, 10000)
-	bdd := BuildWithKernel(fac, queens, kernel)
+	bdd := CompileWithKernel(fac, queens, kernel)
 	cnf := bdd.CNF()
 	assert.True(t, normalform.IsCNF(fac, cnf))
-	cnfBdd := BuildWithKernel(fac, cnf, kernel)
+	cnfBdd := CompileWithKernel(fac, cnf, kernel)
 	assert.Equal(t, bdd.Index, cnfBdd.Index)
 	assert.Equal(t, *big.NewInt(int64(models)), *bdd.ModelCount())
 	assert.Equal(t, numVars, len(bdd.Support()))
@@ -286,14 +286,14 @@ func testData(fac f.Factory) testBDDs {
 	kernel := NewKernel(fac, 3, 100, 100)
 	return testBDDs{
 		kernel:    kernel,
-		bddVerum:  BuildWithKernel(fac, fac.Verum(), kernel),
-		bddFalsum: BuildWithKernel(fac, fac.Falsum(), kernel),
-		bddPosLit: BuildWithKernel(fac, fac.Literal("A", true), kernel),
-		bddNegLit: BuildWithKernel(fac, fac.Literal("A", false), kernel),
-		bddImpl:   BuildWithKernel(fac, parser.ParseUnsafe("A => ~B"), kernel),
-		bddEquiv:  BuildWithKernel(fac, parser.ParseUnsafe("A <=> ~B"), kernel),
-		bddOr:     BuildWithKernel(fac, parser.ParseUnsafe("A | B | ~C"), kernel),
-		bddAnd:    BuildWithKernel(fac, parser.ParseUnsafe("A & B & ~C"), kernel),
+		bddVerum:  CompileWithKernel(fac, fac.Verum(), kernel),
+		bddFalsum: CompileWithKernel(fac, fac.Falsum(), kernel),
+		bddPosLit: CompileWithKernel(fac, fac.Literal("A", true), kernel),
+		bddNegLit: CompileWithKernel(fac, fac.Literal("A", false), kernel),
+		bddImpl:   CompileWithKernel(fac, parser.ParseUnsafe("A => ~B"), kernel),
+		bddEquiv:  CompileWithKernel(fac, parser.ParseUnsafe("A <=> ~B"), kernel),
+		bddOr:     CompileWithKernel(fac, parser.ParseUnsafe("A | B | ~C"), kernel),
+		bddAnd:    CompileWithKernel(fac, parser.ParseUnsafe("A & B & ~C"), kernel),
 	}
 }
 
@@ -316,7 +316,7 @@ func TestBDDToFormulaStyles(t *testing.T) {
 	fac := f.NewFactory()
 	assert := assert.New(t)
 	p := parser.New(fac)
-	bdd := Build(fac, p.ParseUnsafe("~A | ~B | ~C"))
+	bdd := Compile(fac, p.ParseUnsafe("~A | ~B | ~C"))
 	expFollowPathsToTrue := p.ParseUnsafe("~A | A & (~B | B & ~C)")
 	assert.True(sat.IsEquivalent(fac, bdd.ToFormula(fac), expFollowPathsToTrue))
 	assert.True(sat.IsEquivalent(fac, bdd.ToFormula(fac, true), expFollowPathsToTrue))
@@ -332,7 +332,7 @@ func TestBDDToFormulaRandom(t *testing.T) {
 	for i := 0; i < numTests; i++ {
 		rand := randomizer.NewWithSeed(fac, int64(i))
 		formula := rand.Formula(5)
-		bdd := Build(fac, formula)
+		bdd := Compile(fac, formula)
 		compareFormula(t, fac, bdd, formula)
 	}
 }
@@ -358,18 +358,18 @@ func TestRestriction(t *testing.T) {
 	equalRestrict(t, d.bddFalsum, d.bddNegLit, a)
 	equalRestrict(t, d.bddVerum, d.bddNegLit, na)
 	equalRestrict(t, d.bddFalsum, d.bddNegLit, a, b)
-	equalRestrict(t, BuildWithKernel(fac, nb.AsFormula(), d.kernel), d.bddImpl, a)
+	equalRestrict(t, CompileWithKernel(fac, nb.AsFormula(), d.kernel), d.bddImpl, a)
 	equalRestrict(t, d.bddVerum, d.bddImpl, na)
 	equalRestrict(t, d.bddFalsum, d.bddImpl, a, b)
-	equalRestrict(t, BuildWithKernel(fac, nb.AsFormula(), d.kernel), d.bddEquiv, a)
-	equalRestrict(t, BuildWithKernel(fac, b.AsFormula(), d.kernel), d.bddEquiv, na)
+	equalRestrict(t, CompileWithKernel(fac, nb.AsFormula(), d.kernel), d.bddEquiv, a)
+	equalRestrict(t, CompileWithKernel(fac, b.AsFormula(), d.kernel), d.bddEquiv, na)
 	equalRestrict(t, d.bddFalsum, d.bddEquiv, a, b)
 	equalRestrict(t, d.bddVerum, d.bddOr, a)
-	equalRestrict(t, BuildWithKernel(fac, p.ParseUnsafe("B | ~C"), d.kernel), d.bddOr, na)
+	equalRestrict(t, CompileWithKernel(fac, p.ParseUnsafe("B | ~C"), d.kernel), d.bddOr, na)
 	equalRestrict(t, d.bddVerum, d.bddOr, a, b)
-	equalRestrict(t, BuildWithKernel(fac, p.ParseUnsafe("B & ~C"), d.kernel), d.bddAnd, a)
+	equalRestrict(t, CompileWithKernel(fac, p.ParseUnsafe("B & ~C"), d.kernel), d.bddAnd, a)
 	equalRestrict(t, d.bddFalsum, d.bddAnd, na)
-	equalRestrict(t, BuildWithKernel(fac, fac.Literal("C", false), d.kernel), d.bddAnd, a, b)
+	equalRestrict(t, CompileWithKernel(fac, fac.Literal("C", false), d.kernel), d.bddAnd, a, b)
 }
 
 func equalRestrict(t *testing.T, expected, bdd *BDD, vars ...f.Literal) {
@@ -398,8 +398,8 @@ func TestBDDExistentialQuantification(t *testing.T) {
 	equalExistential(t, d.bddVerum, d.bddEquiv, a, b)
 	equalExistential(t, d.bddVerum, d.bddOr, a)
 	equalExistential(t, d.bddVerum, d.bddOr, a, b)
-	equalExistential(t, BuildWithKernel(fac, p.ParseUnsafe("B & ~C"), d.kernel), d.bddAnd, a)
-	equalExistential(t, BuildWithKernel(fac, p.ParseUnsafe("~C"), d.kernel), d.bddAnd, a, b)
+	equalExistential(t, CompileWithKernel(fac, p.ParseUnsafe("B & ~C"), d.kernel), d.bddAnd, a)
+	equalExistential(t, CompileWithKernel(fac, p.ParseUnsafe("~C"), d.kernel), d.bddAnd, a, b)
 }
 
 func equalExistential(t *testing.T, expected, bdd *BDD, vars ...f.Variable) {
@@ -422,12 +422,12 @@ func TestBDDUniversalQuantification(t *testing.T) {
 	equalForAll(t, d.bddFalsum, d.bddPosLit, a, b)
 	equalForAll(t, d.bddFalsum, d.bddNegLit, a)
 	equalForAll(t, d.bddFalsum, d.bddNegLit, a, b)
-	equalForAll(t, BuildWithKernel(fac, p.ParseUnsafe("~B"), d.kernel), d.bddImpl, a)
+	equalForAll(t, CompileWithKernel(fac, p.ParseUnsafe("~B"), d.kernel), d.bddImpl, a)
 	equalForAll(t, d.bddFalsum, d.bddImpl, a, b)
 	equalForAll(t, d.bddFalsum, d.bddEquiv, a)
 	equalForAll(t, d.bddFalsum, d.bddEquiv, a, b)
-	equalForAll(t, BuildWithKernel(fac, p.ParseUnsafe("B | ~C"), d.kernel), d.bddOr, a)
-	equalForAll(t, BuildWithKernel(fac, p.ParseUnsafe("~C"), d.kernel), d.bddOr, a, b)
+	equalForAll(t, CompileWithKernel(fac, p.ParseUnsafe("B | ~C"), d.kernel), d.bddOr, a)
+	equalForAll(t, CompileWithKernel(fac, p.ParseUnsafe("~C"), d.kernel), d.bddOr, a, b)
 	equalForAll(t, d.bddFalsum, d.bddAnd, a)
 	equalForAll(t, d.bddFalsum, d.bddAnd, a, b)
 }
@@ -674,31 +674,31 @@ func TestBDDConstruction(t *testing.T) {
 	kernel := NewKernelWithOrdering(fac, variables, 1000, 10000)
 	initFormula := p.ParseUnsafe("(a & b) => (c | d & ~e)")
 	secondFormula := p.ParseUnsafe("(g & f) <=> (c | ~a | ~d)")
-	initBdd := BuildWithKernel(fac, initFormula, kernel)
-	secondBdd := BuildWithKernel(fac, secondFormula, kernel)
+	initBdd := CompileWithKernel(fac, initFormula, kernel)
+	secondBdd := CompileWithKernel(fac, secondFormula, kernel)
 
 	negation := initBdd.Negate()
-	expected := BuildWithKernel(fac, initFormula.Negate(fac), kernel)
+	expected := CompileWithKernel(fac, initFormula.Negate(fac), kernel)
 	assert.Equal(expected, negation)
 
 	implication := initBdd.Implies(secondBdd)
-	expected = BuildWithKernel(fac, fac.Implication(initFormula, secondFormula), kernel)
+	expected = CompileWithKernel(fac, fac.Implication(initFormula, secondFormula), kernel)
 	assert.Equal(expected, implication)
 
 	implication = initBdd.ImpliedBy(secondBdd)
-	expected = BuildWithKernel(fac, fac.Implication(secondFormula, initFormula), kernel)
+	expected = CompileWithKernel(fac, fac.Implication(secondFormula, initFormula), kernel)
 	assert.Equal(expected, implication)
 
 	equivalence := initBdd.Equivalence(secondBdd)
-	expected = BuildWithKernel(fac, fac.Equivalence(secondFormula, initFormula), kernel)
+	expected = CompileWithKernel(fac, fac.Equivalence(secondFormula, initFormula), kernel)
 	assert.Equal(expected, equivalence)
 
 	and := initBdd.And(secondBdd)
-	expected = BuildWithKernel(fac, fac.And(secondFormula, initFormula), kernel)
+	expected = CompileWithKernel(fac, fac.And(secondFormula, initFormula), kernel)
 	assert.Equal(expected, and)
 
 	or := initBdd.Or(secondBdd)
-	expected = BuildWithKernel(fac, fac.Or(secondFormula, initFormula), kernel)
+	expected = CompileWithKernel(fac, fac.Or(secondFormula, initFormula), kernel)
 	assert.Equal(expected, or)
 }
 
@@ -723,7 +723,7 @@ func TestBDDModelEnumerationQueens(t *testing.T) {
 
 	for i := 0; i < len(formulas); i++ {
 		kernel := NewKernel(fac, int32(variables[i].Size()), 10000, 10000)
-		bdd := BuildWithKernel(fac, formulas[i], kernel)
+		bdd := CompileWithKernel(fac, formulas[i], kernel)
 		models := bdd.ModelEnumeration(variables[i].Content()...)
 		assert.Equal(expected[i].Int64(), int64(len(models)))
 		for _, model := range models {
@@ -740,7 +740,7 @@ func TestBDDModelCountExo(t *testing.T) {
 	constraint := normalform.NNF(fac, fac.EXO(vars...))
 	numVars := f.Variables(fac, constraint).Size()
 	kernel := NewKernel(fac, int32(numVars), 100000, 1000000)
-	bdd := BuildWithKernel(fac, constraint, kernel)
+	bdd := CompileWithKernel(fac, constraint, kernel)
 	assert.Equal(big.NewInt(100), bdd.ModelCount())
 	assert.Equal(100, len(bdd.ModelEnumeration(vars...)))
 }
@@ -752,7 +752,7 @@ func TestBDDModelCountExk(t *testing.T) {
 	constraint := normalform.NNF(fac, fac.CC(f.EQ, 8, vars...))
 	numVars := f.Variables(fac, constraint).Size()
 	kernel := NewKernel(fac, int32(numVars), 100000, 1000000)
-	bdd := BuildWithKernel(fac, constraint, kernel)
+	bdd := CompileWithKernel(fac, constraint, kernel)
 	assert.Equal(big.NewInt(6435), bdd.ModelCount())
 	assert.Equal(6435, len(bdd.ModelEnumeration(vars...)))
 }
@@ -764,7 +764,7 @@ func TestBDDModelCountAmo(t *testing.T) {
 	constraint := normalform.NNF(fac, fac.AMO(vars...))
 	numVars := f.Variables(fac, constraint).Size()
 	kernel := NewKernel(fac, int32(numVars), 100000, 1000000)
-	bdd := BuildWithKernel(fac, constraint, kernel)
+	bdd := CompileWithKernel(fac, constraint, kernel)
 	assert.Equal(big.NewInt(221), bdd.ModelCount())
 	assert.Equal(101, len(bdd.ModelEnumeration(vars...)))
 }

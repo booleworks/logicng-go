@@ -17,16 +17,16 @@ func TestWriteGraphicalBDDFormulas(t *testing.T) {
 	ordering := []f.Variable{fac.Var("A"), fac.Var("B"), fac.Var("C"), fac.Var("D")}
 	kernel := NewKernelWithOrdering(fac, ordering, 1000, 1000)
 
-	testFiles(t, "false", GenerateGraphical(BuildWithKernel(fac, p.ParseUnsafe("$false"), kernel), DefaultGenerator()))
-	testFiles(t, "true", GenerateGraphical(BuildWithKernel(fac, p.ParseUnsafe("$true"), kernel), DefaultGenerator()))
-	testFiles(t, "a", GenerateGraphical(BuildWithKernel(fac, p.ParseUnsafe("A"), kernel), DefaultGenerator()))
-	testFiles(t, "not_a", GenerateGraphical(BuildWithKernel(fac, p.ParseUnsafe("~A"), kernel), DefaultGenerator()))
-	testFiles(t, "impl", GenerateGraphical(BuildWithKernel(fac, p.ParseUnsafe("A => ~C"), kernel), DefaultGenerator()))
-	testFiles(t, "equiv", GenerateGraphical(BuildWithKernel(fac, p.ParseUnsafe("A <=> ~C"), kernel), DefaultGenerator()))
-	testFiles(t, "or", GenerateGraphical(BuildWithKernel(fac, p.ParseUnsafe("A | B | ~C"), kernel), DefaultGenerator()))
-	testFiles(t, "and", GenerateGraphical(BuildWithKernel(fac, p.ParseUnsafe("A & B & ~C"), kernel), DefaultGenerator()))
-	testFiles(t, "not", GenerateGraphical(BuildWithKernel(fac, p.ParseUnsafe("~(A & B & ~C)"), kernel), DefaultGenerator()))
-	bdd := BuildWithKernel(fac, p.ParseUnsafe("(A => (B|~C)) & (B => C & D) & (D <=> A)"), kernel)
+	testFiles(t, "false", GenerateGraphical(CompileWithKernel(fac, p.ParseUnsafe("$false"), kernel), DefaultGenerator()))
+	testFiles(t, "true", GenerateGraphical(CompileWithKernel(fac, p.ParseUnsafe("$true"), kernel), DefaultGenerator()))
+	testFiles(t, "a", GenerateGraphical(CompileWithKernel(fac, p.ParseUnsafe("A"), kernel), DefaultGenerator()))
+	testFiles(t, "not_a", GenerateGraphical(CompileWithKernel(fac, p.ParseUnsafe("~A"), kernel), DefaultGenerator()))
+	testFiles(t, "impl", GenerateGraphical(CompileWithKernel(fac, p.ParseUnsafe("A => ~C"), kernel), DefaultGenerator()))
+	testFiles(t, "equiv", GenerateGraphical(CompileWithKernel(fac, p.ParseUnsafe("A <=> ~C"), kernel), DefaultGenerator()))
+	testFiles(t, "or", GenerateGraphical(CompileWithKernel(fac, p.ParseUnsafe("A | B | ~C"), kernel), DefaultGenerator()))
+	testFiles(t, "and", GenerateGraphical(CompileWithKernel(fac, p.ParseUnsafe("A & B & ~C"), kernel), DefaultGenerator()))
+	testFiles(t, "not", GenerateGraphical(CompileWithKernel(fac, p.ParseUnsafe("~(A & B & ~C)"), kernel), DefaultGenerator()))
+	bdd := CompileWithKernel(fac, p.ParseUnsafe("(A => (B|~C)) & (B => C & D) & (D <=> A)"), kernel)
 	testFiles(t, "formula", GenerateGraphical(bdd, DefaultGenerator()))
 }
 
@@ -35,7 +35,7 @@ func TestWriteGraphicalBDDFixedStyle(t *testing.T) {
 	p := parser.New(fac)
 	ordering := []f.Variable{fac.Var("A"), fac.Var("B"), fac.Var("C"), fac.Var("D")}
 	kernel := NewKernelWithOrdering(fac, ordering, 1000, 1000)
-	bdd := BuildWithKernel(fac, p.ParseUnsafe("(A => (B|~C)) & (B => C & D) & (D <=> A)"), kernel)
+	bdd := CompileWithKernel(fac, p.ParseUnsafe("(A => (B|~C)) & (B => C & D) & (D <=> A)"), kernel)
 
 	defaultNodeStyle := graphical.Circle(graphical.ColorOrange, graphical.ColorBlack, graphical.ColorOrange)
 	positiveNodeStyle := graphical.Rectangle(graphical.ColorCyan, graphical.ColorWhite, graphical.ColorCyan)
