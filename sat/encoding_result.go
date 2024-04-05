@@ -22,7 +22,6 @@ func (r *solverEncoding) AddClause(literals ...f.Literal) {
 		r.addLiteral(&clause, i, literal)
 	}
 	r.solver.core.AddClause(clause, r.proposition)
-	r.solver.result = f.TristateUndef
 }
 
 func (r *solverEncoding) addLiteral(clauseVec *[]int32, idx int, lit f.Literal) {

@@ -18,11 +18,12 @@ func TestTimeoutHandlerWithDuration(t *testing.T) {
 	duration, _ := time.ParseDuration("500ms")
 	satHandler := HandlerWithTimeout(*handler.NewTimeoutWithDuration(duration))
 
-	sat, ok := solver.SatWithHandler(satHandler)
+	sResult := solver.Call(Params().Handler(satHandler))
 
-	assert.False(ok)
+	assert.False(sResult.OK())
+	assert.True(sResult.Aborted())
 	assert.True(satHandler.Aborted())
-	assert.False(sat)
+	assert.False(sResult.Sat())
 
 	ph = GeneratePigeonHole(fac, 2)
 	solver = NewSolver(fac)
@@ -30,11 +31,12 @@ func TestTimeoutHandlerWithDuration(t *testing.T) {
 	duration, _ = time.ParseDuration("2s")
 	satHandler = HandlerWithTimeout(*handler.NewTimeoutWithDuration(duration))
 
-	sat, ok = solver.SatWithHandler(satHandler)
+	sResult = solver.Call(Params().Handler(satHandler))
 
-	assert.True(ok)
+	assert.True(sResult.OK())
+	assert.False(sResult.Aborted())
 	assert.False(satHandler.Aborted())
-	assert.False(sat)
+	assert.False(sResult.Sat())
 }
 
 func TestTimeoutHandlerWithEnd(t *testing.T) {
@@ -47,11 +49,11 @@ func TestTimeoutHandlerWithEnd(t *testing.T) {
 	end := time.Now().Add(duration)
 	handler := HandlerWithTimeout(*handler.NewTimeoutWithEnd(end))
 
-	sat, ok := solver.SatWithHandler(handler)
+	sResult := solver.Call(Params().Handler(handler))
 
-	assert.False(ok)
+	assert.False(sResult.OK())
 	assert.True(handler.Aborted())
-	assert.False(sat)
+	assert.False(sResult.Sat())
 }
 
 func TestOptimizationTimeoutHandler(t *testing.T) {

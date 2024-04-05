@@ -95,6 +95,9 @@ func (l Literal) Negate(fac Factory) Literal {
 
 // VariablesAsLiterals returns a list of variables as a list of literals.
 func VariablesAsLiterals(variables []Variable) []Literal {
+	if variables == nil {
+		return nil
+	}
 	literals := make([]Literal, len(variables))
 	for i, v := range variables {
 		literals[i] = Literal(v)
@@ -104,6 +107,9 @@ func VariablesAsLiterals(variables []Variable) []Literal {
 
 // VariablesAsFormulas returns a list of variables as a list of formulas.
 func VariablesAsFormulas(variables []Variable) []Formula {
+	if variables == nil {
+		return nil
+	}
 	literals := make([]Formula, len(variables))
 	for i, v := range variables {
 		literals[i] = Formula(v)
@@ -114,6 +120,9 @@ func VariablesAsFormulas(variables []Variable) []Formula {
 // LiteralsAsVariables returns a list of literals as a list of variables or
 // returns an error if there is a negative literal in the list.
 func LiteralsAsVariables(literals []Literal) ([]Variable, error) {
+	if literals == nil {
+		return nil, nil
+	}
 	variables := make([]Variable, len(literals))
 	for i, l := range literals {
 		if l.IsNeg() {
@@ -126,11 +135,14 @@ func LiteralsAsVariables(literals []Literal) ([]Variable, error) {
 
 // LiteralsAsFormulas returns a list of literals as a list of formulas.
 func LiteralsAsFormulas(literals []Literal) []Formula {
-	formuals := make([]Formula, len(literals))
-	for i, l := range literals {
-		formuals[i] = Formula(l)
+	if literals == nil {
+		return nil
 	}
-	return formuals
+	formulas := make([]Formula, len(literals))
+	for i, l := range literals {
+		formulas[i] = Formula(l)
+	}
+	return formulas
 }
 
 // AsVariable returns the current formula as a variable type or returns an

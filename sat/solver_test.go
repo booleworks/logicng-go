@@ -51,14 +51,14 @@ func TestSolverLiterals(t *testing.T) {
 	a := fac.Lit("a", true)
 	for _, s := range getSolvers(fac) {
 		s.Add(p.ParseUnsafe("a"))
-		assert.True(s.Sat())
-		mdl, _ := s.Model(fac.Vars("a"))
-		assert.Equal(model.New(a), mdl)
+		sResult := s.Call(Params().ModelIfSat(fac.Vars("a")))
+		assert.True(sResult.Sat())
+		assert.Equal(model.New(a), sResult.Model())
 
 		s.Add(p.ParseUnsafe("~a"))
-		assert.False(s.Sat())
-		_, err := s.Model(fac.Vars("a"))
-		assert.NotNil(err)
+		sResult = s.Call(Params().ModelIfSat(fac.Vars("a")))
+		assert.False(sResult.Sat())
+		assert.Nil(sResult.Model())
 	}
 }
 
@@ -70,14 +70,14 @@ func TestSolverAnd1(t *testing.T) {
 	b := fac.Lit("b", true)
 	for _, s := range getSolvers(fac) {
 		s.Add(p.ParseUnsafe("a & b"))
-		assert.True(s.Sat())
-		mdl, _ := s.Model(fac.Vars("a", "b"))
-		assert.Equal(model.New(a, b), mdl)
+		sResult := s.Call(Params().ModelIfSat(fac.Vars("a", "b")))
+		assert.True(sResult.Sat())
+		assert.Equal(model.New(a, b), sResult.Model())
 
 		s.Add(p.ParseUnsafe("~a"))
-		assert.False(s.Sat())
-		_, err := s.Model(fac.Vars("a", "b"))
-		assert.NotNil(err)
+		sResult = s.Call(Params().ModelIfSat(fac.Vars("a", "b")))
+		assert.False(sResult.Sat())
+		assert.Nil(sResult.Model())
 	}
 }
 
@@ -92,14 +92,14 @@ func TestSolverAnd2(t *testing.T) {
 
 	for _, s := range getSolvers(fac) {
 		s.Add(p.ParseUnsafe("a & ~b & c & ~d"))
-		assert.True(s.Sat())
-		mdl, _ := s.Model(fac.Vars("a", "b", "c", "d"))
-		assert.Equal(model.New(a, nb, c, nd), mdl)
+		sResult := s.Call(Params().ModelIfSat(fac.Vars("a", "b", "c", "d")))
+		assert.True(sResult.Sat())
+		assert.Equal(model.New(a, nb, c, nd), sResult.Model())
 
 		s.Add(p.ParseUnsafe("d"))
-		assert.False(s.Sat())
-		_, err := s.Model(fac.Vars("a", "b", "c", "d"))
-		assert.NotNil(err)
+		sResult = s.Call(Params().ModelIfSat(fac.Vars("a", "b", "c", "d")))
+		assert.False(sResult.Sat())
+		assert.Nil(sResult.Model())
 	}
 }
 
@@ -117,14 +117,14 @@ func TestSolverAnd3(t *testing.T) {
 		s.Add(nb.AsFormula())
 		s.Add(c.AsFormula())
 		s.Add(nd.AsFormula())
-		assert.True(s.Sat())
-		mdl, _ := s.Model(fac.Vars("a", "b", "c", "d"))
-		assert.Equal(model.New(a, nb, c, nd), mdl)
+		sResult := s.Call(Params().ModelIfSat(fac.Vars("a", "b", "c", "d")))
+		assert.True(sResult.Sat())
+		assert.Equal(model.New(a, nb, c, nd), sResult.Model())
 
 		s.Add(p.ParseUnsafe("d"))
-		assert.False(s.Sat())
-		_, err := s.Model(fac.Vars("a", "b", "c", "d"))
-		assert.NotNil(err)
+		sResult = s.Call(Params().ModelIfSat(fac.Vars("a", "b", "c", "d")))
+		assert.False(sResult.Sat())
+		assert.Nil(sResult.Model())
 	}
 }
 
@@ -138,14 +138,14 @@ func TestSolverFormula1(t *testing.T) {
 
 	for _, s := range getSolvers(fac) {
 		s.Add(p.ParseUnsafe("(x => y) & (~x => y) & (y => z) & (z => ~x)"))
-		assert.True(s.Sat())
-		mdl, _ := s.Model(fac.Vars("x", "y", "z"))
-		assert.Equal(model.New(nx, y, z), mdl)
+		sResult := s.Call(Params().ModelIfSat(fac.Vars("x", "y", "z")))
+		assert.True(sResult.Sat())
+		assert.Equal(model.New(nx, y, z), sResult.Model())
 
 		s.Add(p.ParseUnsafe("~y"))
-		assert.False(s.Sat())
-		_, err := s.Model(fac.Vars("x", "y", "z"))
-		assert.NotNil(err)
+		sResult = s.Call(Params().ModelIfSat(fac.Vars("x", "y", "z")))
+		assert.False(sResult.Sat())
+		assert.Nil(sResult.Model())
 	}
 }
 

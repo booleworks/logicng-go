@@ -16,13 +16,11 @@ import (
 // solving them, extracting models, generating proofs for unsatisfiable
 // formulas, computing backbones, or optimize the formula on the solver.
 type Solver struct {
-	fac                            f.Factory
-	result                         f.Tristate
-	config                         Config
-	core                           *CoreSolver
-	lastComputationWithAssumptions bool
-	pgTransformation               *pgOnSolver
-	fullPgTransformation           *pgOnSolver
+	fac                  f.Factory
+	config               Config
+	core                 *CoreSolver
+	pgTransformation     *pgOnSolver
+	fullPgTransformation *pgOnSolver
 }
 
 // A SolverState can be extracted from the solver by the SaveState method and be
@@ -40,7 +38,6 @@ func newSolver(fac f.Factory, config *Config) *Solver {
 		fac:                  fac,
 		config:               *config,
 		core:                 solver,
-		result:               f.TristateUndef,
 		pgTransformation:     newPGOnSolver(fac, true, solver, config.InitialPhase),
 		fullPgTransformation: newPGOnSolver(fac, false, solver, config.InitialPhase),
 	}
@@ -85,7 +82,6 @@ func (s *Solver) AddProposition(propositions ...f.Proposition) {
 }
 
 func (s *Solver) addWithProp(formula f.Formula, proposition f.Proposition) {
-	s.result = f.TristateUndef
 	if formula.Sort() == f.SortCC {
 		if s.config.UseAtMostClauses {
 			comparator, rhs, literals, _, _ := s.fac.PBCOps(formula)
@@ -111,13 +107,6 @@ func (s *Solver) addWithProp(formula f.Formula, proposition f.Proposition) {
 		}
 	} else {
 		s.addFormulaAsCNF(formula, proposition)
-	}
-	s.addAllOriginalVars(formula)
-}
-
-func (s *Solver) addAllOriginalVars(originalFormula f.Formula) {
-	for _, v := range f.Variables(s.fac, originalFormula).Content() {
-		s.getOrAddIndex(v.AsLiteral())
 	}
 }
 
@@ -154,7 +143,6 @@ func (s *Solver) addClauseSet(formula f.Formula, proposition f.Proposition) {
 }
 
 func (s *Solver) addClause(formula f.Formula, proposition f.Proposition) {
-	s.result = f.TristateUndef
 	ps := s.generateClauseVector(f.Literals(s.fac, formula).Content())
 	s.core.AddClause(ps, proposition)
 }
@@ -187,57 +175,8 @@ func (s *Solver) getOrAddIndex(lit f.Literal) int32 {
 }
 
 // Sat solves the formula on the solver and returns whether it is satisfiable.
-// If assumptions are given,  they are assumed before solving the formula.  In
-// this case the satisfiable result has to be interpreted with regard to the
-// assumptions.
-func (s *Solver) Sat(assumptions ...f.Literal) bool {
-	result, _ := s.SatWithHandler(nil, assumptions...)
-	return result
-}
-
-// SatWithHandler solves the formula on the solver and returns whether it is
-// satisfiable. If assumptions are given,  they are assumed before solving the
-// formula.  In this case the satisfiable result has to be interpreted with
-// regard to the assumptions.  The handler can be used to abort the solving
-// process.  If the computation was aborted, the ok flag will be false.
-func (s *Solver) SatWithHandler(handler Handler, assumptions ...f.Literal) (result, ok bool) {
-	if len(assumptions) == 0 {
-		if s.lastResultIsUsable() {
-			return s.result == f.TristateTrue, true
-		}
-		s.result, ok = s.core.Solve(handler)
-	} else {
-		assVec := s.generateClauseVector(assumptions)
-		s.result, ok = s.core.SolveWithAssumptions(handler, assVec)
-	}
-	s.lastComputationWithAssumptions = len(assumptions) > 0
-	return s.result == f.TristateTrue, ok
-}
-
-func (s *Solver) lastResultIsUsable() bool {
-	return s.result != f.TristateUndef && !s.lastComputationWithAssumptions
-}
-
-// Model returns a model of the formula currently on the solver.  The model
-// will include only the given variables.  Returns with an error if the solver
-// was not yet solved or the formula was unsatisfiable.
-func (s *Solver) Model(variables []f.Variable) (*model.Model, error) {
-	if s.result == f.TristateUndef {
-		return nil, errorx.IllegalState("SAT solver is not yet solved")
-	}
-	var relevantIndices []int32
-	if variables != nil {
-		relevantIndices = make([]int32, len(variables))
-		for i, v := range variables {
-			name, _ := s.fac.VarName(v)
-			relevantIndices[i] = s.core.IdxForName(name)
-		}
-	}
-	if s.result == f.TristateTrue {
-		return s.core.CreateModel(s.fac, s.core.model, relevantIndices), nil
-	} else {
-		return nil, errorx.IllegalState("SAT problem was not satisfiable")
-	}
+func (s *Solver) Sat() bool {
+	return s.Call().satisfiable
 }
 
 // SaveState saves and returns the current solver state.
@@ -252,7 +191,6 @@ func (s *Solver) LoadState(state *SolverState) error {
 	if err != nil {
 		return err
 	}
-	s.result = f.TristateUndef
 	s.pgTransformation.clearCache()
 	s.fullPgTransformation.clearCache()
 	return nil
@@ -267,13 +205,6 @@ func (s *Solver) AddIncrementalCC(cc f.Formula) (*encoding.CCIncrementalData, er
 	return encoding.EncodeIncremental(s.fac, cc, result)
 }
 
-// SetResult can be used to set the solver's result from outside.  You should
-// never have a reason to use this from the outside except you develop your own
-// solver functions.
-func (s *Solver) SetResult(result f.Tristate) {
-	s.result = result
-}
-
 // Factory returns the solver's formula factory.
 func (s *Solver) Factory() f.Factory {
 	return s.fac
@@ -286,9 +217,29 @@ func (s *Solver) CoreSolver() *CoreSolver {
 
 // Reset resets the solver to its initial state.
 func (s *Solver) Reset() {
-	s.result = f.TristateUndef
 	s.core.reset()
-	s.lastComputationWithAssumptions = false
 	s.pgTransformation.clearCache()
 	s.fullPgTransformation.clearCache()
+}
+
+func (s *Solver) computeModel(variables []f.Variable) *model.Model {
+	var relevantIndices []int32
+	if variables != nil {
+		relevantIndices = make([]int32, len(variables))
+		for i, v := range variables {
+			name, _ := s.fac.VarName(v)
+			relevantIndices[i] = s.core.IdxForName(name)
+		}
+	}
+	return s.core.CreateModel(s.fac, s.core.model, relevantIndices)
+}
+
+func (s *Solver) computeUpZeroLits() []f.Literal {
+	litIdxs := s.core.upZeroLiterals()
+	lits := make([]f.Literal, len(litIdxs))
+	for i, lit := range litIdxs {
+		name := s.core.idx2name[Vari(lit)]
+		lits[i] = s.fac.Lit(name, !Sign(lit))
+	}
+	return lits
 }

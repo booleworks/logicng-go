@@ -54,6 +54,7 @@ type CoreSolver struct {
 	satHandler        Handler
 	canceledByHandler bool
 
+	assumptionProps   []f.Proposition
 	pgOriginalClauses []proofInformation
 	pgProof           [][]int32
 
@@ -62,13 +63,12 @@ type CoreSolver struct {
 	backboneMap         map[int32]f.Tristate
 	computingBackbone   bool
 
-	varDecay                   float64
-	varInc                     float64
-	learntsizeAdjustConfl      float64
-	learntsizeAdjustCnt        int
-	learntsizeAdjustStartConfl int
-	learntsizeAdjustInc        float64
-	maxLearnts                 float64
+	varDecay              float64
+	varInc                float64
+	learntsizeAdjustConfl float64
+	learntsizeAdjustCnt   int
+	learntsizeAdjustInc   float64
+	maxLearnts            float64
 
 	watchesBin            [][]*watcher
 	permDiff              []int
@@ -85,6 +85,7 @@ type CoreSolver struct {
 
 	stateId     int32
 	validStates []int32
+	inSatCall   bool
 
 	enqueueFunction func(m *CoreSolver, lit int32, reason *clause)
 }
@@ -170,6 +171,7 @@ func initialize(m *CoreSolver, config *Config) {
 	m.idx2name = make(map[int32]string)
 	m.canceledByHandler = false
 	if m.config.ProofGeneration {
+		m.assumptionProps = []f.Proposition{}
 		m.pgOriginalClauses = []proofInformation{}
 		m.pgProof = [][]int32{}
 	}
@@ -179,7 +181,6 @@ func initialize(m *CoreSolver, config *Config) {
 	m.varDecay = m.llConfig.VarDecay
 	m.learntsizeAdjustConfl = 0
 	m.learntsizeAdjustCnt = 0
-	m.learntsizeAdjustStartConfl = 100
 	m.learntsizeAdjustInc = 1.5
 	m.maxLearnts = 0
 
@@ -201,6 +202,22 @@ func initialize(m *CoreSolver, config *Config) {
 
 	m.stateId = 0
 	m.validStates = []int32{}
+	m.inSatCall = false
+}
+
+func (m *CoreSolver) assertNotInCall() {
+	if m.inSatCall {
+		panic(errorx.IllegalState("sat call is already running on this solver"))
+	}
+}
+
+func (m *CoreSolver) startCall() {
+	m.assertNotInCall()
+	m.inSatCall = true
+}
+
+func (m *CoreSolver) finishCall() {
+	m.inSatCall = false
 }
 
 func (m *CoreSolver) v(lit int32) *variable {
@@ -489,9 +506,20 @@ func (m *CoreSolver) search() (f.Tristate, bool) {
 				if m.value(p) == f.TristateTrue {
 					m.trailLim = append(m.trailLim, len(m.trail))
 				} else if m.value(p) == f.TristateFalse {
+					if m.config.ProofGeneration {
+						drupLit := (Vari(p) + 1) * (-2*signAsInt(p) + 1)
+						pi := proofInformation{[]int32{1, drupLit}, m.assumptionProps[m.decisionLevel()]}
+						m.pgOriginalClauses = append(m.pgOriginalClauses, pi)
+					}
+					// analyzeFinal(not(p), conflict);
 					m.analyzeFinal(Not(p))
 					return f.TristateFalse, true
 				} else {
+					if m.config.ProofGeneration {
+						drupLit := (Vari(p) + 1) * (-2*signAsInt(p) + 1)
+						pi := proofInformation{[]int32{1, drupLit}, m.assumptionProps[m.decisionLevel()]}
+						m.pgOriginalClauses = append(m.pgOriginalClauses, pi)
+					}
 					next = p
 					break
 				}

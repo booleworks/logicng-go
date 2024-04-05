@@ -149,7 +149,6 @@ func iterate[R any](
 		if len(modelFromSolver) > 0 {
 			blockingClause := generateBlockingClause(modelFromSolver, relevantIndices)
 			solver.CoreSolver().AddClause(blockingClause, nil)
-			solver.SetResult(f.TristateUndef)
 		} else {
 			break
 		}
@@ -166,8 +165,8 @@ func iterSATCall(solver *sat.Solver, handler Handler) bool {
 	if handler != nil {
 		satHandler = handler.SatHandler()
 	}
-	sat, ok := solver.SatWithHandler(satHandler)
-	return ok && sat
+	sResult := solver.Call(sat.Params().Handler(satHandler))
+	return sResult.OK() && sResult.Sat()
 }
 
 func generateBlockingClause(modelFromSolver []bool, relevantVars []int32) []int32 {

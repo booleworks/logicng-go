@@ -87,11 +87,11 @@ func ComputeWithHandler(
 	if optimizationHandler != nil {
 		satHandler = optimizationHandler.SatHandler()
 	}
-	satisfiable, ok := growSolver.SatWithHandler(satHandler, f.VariablesAsLiterals(assumptions)...)
-	if !ok {
+	sResult := growSolver.Call(sat.Params().Handler(satHandler).Variable(assumptions...))
+	if sResult.Aborted() {
 		return nil, false
 	}
-	if satisfiable {
+	if sResult.Sat() {
 		return nil, true
 	}
 	hSolver := sat.NewSolver(fac)

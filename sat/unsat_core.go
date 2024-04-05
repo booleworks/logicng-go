@@ -9,23 +9,7 @@ import (
 	f "github.com/booleworks/logicng-go/formula"
 )
 
-// ComputeUnsatCore computes an unsatisfiable core of the formula on the
-// solver.  If the solver is not yet solved, or the last computation was with
-// assumptions, an error is returned.
-func (s *Solver) ComputeUnsatCore() (*e.UnsatCore, error) {
-	if !s.config.ProofGeneration {
-		return nil, errorx.IllegalState("proof generation is not turned on")
-	}
-	if s.result == f.TristateTrue {
-		return nil, errorx.IllegalState("formula is satisfiable")
-	}
-	if s.result == f.TristateUndef {
-		return nil, errorx.IllegalState("SAT solver not yet solved")
-	}
-	if s.lastComputationWithAssumptions {
-		return nil, errorx.IllegalState("last computation was with assumptions")
-	}
-
+func (s *Solver) computeUnsatCore() *e.UnsatCore {
 	clause2proposition := make(map[f.Formula]f.Proposition, 0)
 	clauses := make([][]int32, len(s.core.pgOriginalClauses))
 
@@ -41,13 +25,13 @@ func (s *Solver) ComputeUnsatCore() (*e.UnsatCore, error) {
 
 	if containsEmptyClause(&clauses) {
 		emptyClause := clause2proposition[s.fac.Falsum()]
-		return e.NewUnsatCore([]f.Proposition{emptyClause}, true), nil
+		return e.NewUnsatCore([]f.Proposition{emptyClause}, true)
 	}
 
 	result := drupCompute(&clauses, &s.core.pgProof)
 
 	if result.trivialUnsat {
-		return handleTrivialCase(s), nil
+		return handleTrivialCase(s)
 	}
 
 	props := make(map[f.Proposition]present, 0)
@@ -58,7 +42,7 @@ func (s *Solver) ComputeUnsatCore() (*e.UnsatCore, error) {
 	for prop := range props {
 		propositions = append(propositions, prop)
 	}
-	return e.NewUnsatCore(propositions, false), nil
+	return e.NewUnsatCore(propositions, false)
 }
 
 func getFormulaForVector(solver *Solver, slice []int32) f.Formula {

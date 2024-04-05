@@ -135,11 +135,15 @@ func computeGeneric(
 		if optimizationHandler != nil {
 			satHandler = optimizationHandler.SatHandler()
 		}
-		fSat, ok := fSolver.SatWithHandler(satHandler, fModel.Literals...)
-		if !ok {
+		params := sat.Params().
+			Handler(satHandler).
+			ModelIfSat(f.Variables(fac, formula).Content()).
+			Literal(fModel.Literals...)
+		fResult := fSolver.Call(params)
+		if fResult.Aborted() {
 			return nil, nil, false
 		}
-		if !fSat {
+		if !fResult.Sat() {
 			var primeImplicant []f.Literal
 			var ok bool
 			if maximize {
@@ -161,8 +165,7 @@ func computeGeneric(
 			if maximize {
 				ls = fModel.Literals
 			} else {
-				mdl, _ := fSolver.Model(f.Variables(fac, formula).Content())
-				ls = mdl.Literals
+				ls = fResult.Model().Literals
 			}
 			implicate := make([]f.Literal, len(ls))
 			for i, lit := range ls {
@@ -236,11 +239,11 @@ func (p *primeReduction) reduceImplicant(
 	primeImplicant := f.NewMutableLitSet(implicant...)
 	for _, lit := range implicant {
 		primeImplicant.Remove(lit)
-		sat, ok := p.implicantSolver.SatWithHandler(satHandler, primeImplicant.Content()...)
-		if !ok {
+		sResult := p.implicantSolver.Call(sat.Params().Handler(satHandler).Literal(primeImplicant.Content()...))
+		if sResult.Aborted() {
 			return nil, false
 		}
-		if sat {
+		if sResult.Sat() {
 			primeImplicant.Add(lit)
 		}
 	}
@@ -258,11 +261,11 @@ func (p *primeReduction) reduceImplicate(
 		for i, lit := range primeImplicate.Content() {
 			assumptions[i] = lit.Negate(fac)
 		}
-		sat, ok := p.implicateSolver.SatWithHandler(satHandler, assumptions...)
-		if !ok {
+		sResult := p.implicateSolver.Call(sat.Params().Handler(satHandler).Literal(assumptions...))
+		if sResult.Aborted() {
 			return nil, false
 		}
-		if sat {
+		if sResult.Sat() {
 			primeImplicate.Add(lit)
 		}
 	}

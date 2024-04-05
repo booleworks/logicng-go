@@ -101,27 +101,28 @@ func (s *Solver) maximize(
 		}
 	}
 
-	sat, ok := s.SatWithHandler(satHandler(optimizationHandler))
-	if !ok {
+	params := Params().Handler(satHandler(optimizationHandler)).ModelIfSat(selectors)
+	sResult := s.Call(params)
+	if sResult.Aborted() {
 		return nil, false
 	}
-	if !sat {
+	if !sResult.Sat() {
 		return nil, true
 	}
 	internalModel := s.core.Model()
-	currentModel, _ := s.Model(selectors)
+	currentModel := sResult.Model()
 	currentBound := len(currentModel.PosVars())
 
 	if currentBound == 0 {
 		s.Add(fac.CC(f.GE, 1, selectors...))
-		sat, ok = s.SatWithHandler(satHandler(optimizationHandler))
-		if !ok {
+		sResult = s.Call(params)
+		if sResult.Aborted() {
 			return nil, false
-		} else if !sat {
+		} else if !sResult.Sat() {
 			return s.core.CreateModel(s.fac, internalModel, relevantIndices), true
 		} else {
 			internalModel = s.core.Model()
-			currentModel, _ = s.Model(selectors)
+			currentModel = sResult.Model()
 			currentBound = len(currentModel.PosVars())
 		}
 	} else if currentBound == len(selectors) {
@@ -131,26 +132,26 @@ func (s *Solver) maximize(
 	cc := fac.CC(f.GE, uint32(currentBound+1), selectors...)
 
 	incrementalData, _ := s.AddIncrementalCC(cc)
-	sat, ok = s.SatWithHandler(satHandler(optimizationHandler))
-	if !ok {
+	sResult = s.Call(params)
+	if sResult.Aborted() {
 		optimizationHandler.SetModel(s.core.CreateModel(s.fac, internalModel, relevantIndices))
 		return nil, false
 	}
 
-	for sat {
+	for sResult.Sat() {
 		internalModel = s.core.Model()
 		if optimizationHandler != nil &&
 			!optimizationHandler.FoundBetterBound(s.core.CreateModel(s.fac, internalModel, relevantIndices)) {
 			return nil, false
 		}
-		currentModel, _ = s.Model(selectors)
+		currentModel = sResult.Model()
 		currentBound = len(currentModel.PosVars())
 		if currentBound == len(selectors) {
 			return s.core.CreateModel(s.fac, internalModel, relevantIndices), true
 		}
 		incrementalData.NewLowerBoundForSolver(currentBound + 1)
-		sat, ok = s.SatWithHandler(satHandler(optimizationHandler))
-		if !ok {
+		sResult = s.Call(params)
+		if sResult.Aborted() {
 			optimizationHandler.SetModel(s.core.CreateModel(s.fac, internalModel, relevantIndices))
 			return nil, false
 		}

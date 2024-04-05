@@ -49,7 +49,6 @@ type Factory interface {
 	Operands(formula Formula) []Formula
 
 	NewAuxVar(sort AuxVarSort) Variable
-	IsAuxVar(variable Variable) bool
 
 	transformationCacheEntry(entry TransformationCacheSort) *map[Formula]Formula
 	predicateCacheEntry(entry PredicateCacheSort) *map[Formula]bool
@@ -972,20 +971,6 @@ func (fac *CachingFactory) NewAuxVar(sort AuxVarSort) Variable {
 	variable := fac.Var(fmt.Sprintf("%s%d", sort, fac.auxVarCounters[sort]))
 	fac.auxVarCounters[sort]++
 	return variable
-}
-
-// IsAuxVar returns if the given variable is a generated auxiliary variable.
-func (fac *CachingFactory) IsAuxVar(variable Variable) bool {
-	name, ok := fac.VarName(variable)
-	if !ok {
-		return false
-	}
-	for k := range fac.auxVarCounters {
-		if strings.HasPrefix(name, string(k)) {
-			return true
-		}
-	}
-	return false
 }
 
 func (fac *CachingFactory) transformationCacheEntry(entry TransformationCacheSort) *map[Formula]Formula {

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/booleworks/logicng-go/model/enum"
+	"github.com/booleworks/logicng-go/sat"
 
 	"github.com/booleworks/logicng-go/assignment"
 	f "github.com/booleworks/logicng-go/formula"
@@ -210,8 +211,8 @@ func TestPbOnSolverLarge(t *testing.T) {
 	lits := f.VariablesAsLiterals(vars)
 	pbc := fac.PBC(f.GE, 5000, lits, coeffs)
 	solver.Add(pbc)
-	assert.True(solver.Sat())
-	model, _ := solver.Model(vars)
-	ass, _ := model.Assignment(fac)
+	sResult := solver.Call(sat.Params().ModelIfSat(vars))
+	assert.True(sResult.Sat())
+	ass, _ := sResult.Model().Assignment(fac)
 	assert.True(assignment.Evaluate(fac, pbc, ass))
 }

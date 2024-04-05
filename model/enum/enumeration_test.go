@@ -293,7 +293,7 @@ func TestMERandom(t *testing.T) {
 
 			models, _ := OnSolverWithConfig(solver, pmeVars, cfg)
 			for _, m := range models {
-				assert.True(solver.Sat(m.Literals...))
+				assert.True(solver.Call(sat.Params().Literal(m.Literals...)).Sat())
 			}
 		}
 	}
@@ -323,7 +323,7 @@ func TestMERandomAdditionalVars(t *testing.T) {
 			for _, m := range models {
 				vars := f.Variables(fac, m.Formula(fac))
 				assert.True(vars.ContainsAll(f.NewVarSet(additionalVars...)))
-				assert.True(solver.Sat(m.Literals...))
+				assert.True(solver.Call(sat.Params().Literal(m.Literals...)).Sat())
 			}
 		}
 	}

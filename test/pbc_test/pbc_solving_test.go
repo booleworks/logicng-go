@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/booleworks/logicng-go/model/enum"
+	"github.com/booleworks/logicng-go/sat"
 
 	"github.com/booleworks/logicng-go/assignment"
 	e "github.com/booleworks/logicng-go/encoding"
@@ -290,9 +291,9 @@ func TestPbEncodingLarge(t *testing.T) {
 		encoding, err := e.EncodePBC(fac, pbc, &config)
 		assert.Nil(err)
 		solver.Add(encoding...)
-		assert.True(solver.Sat())
-		model, _ := solver.Model(vars)
-		ass, _ := model.Assignment(fac)
+		sResult := solver.Call(sat.Params().ModelIfSat(vars))
+		assert.True(sResult.Sat())
+		ass, _ := sResult.Model().Assignment(fac)
 		assert.True(assignment.Evaluate(fac, pbc, ass))
 	}
 }

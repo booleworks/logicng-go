@@ -150,21 +150,21 @@ func verifyBackbone(fac f.Factory, bb *Backbone, formula f.Formula, variables []
 	solver := NewSolver(fac)
 	solver.Add(formula)
 	for _, bbVar := range bb.Positive {
-		if solver.Sat(bbVar.Negate(fac)) {
+		if solver.Call(Params().Literal(bbVar.Negate(fac))).Sat() {
 			return false
 		}
 	}
 	for _, bbVar := range bb.Negative {
-		if solver.Sat(bbVar.AsLiteral()) {
+		if solver.Call(Params().Variable(bbVar)).Sat() {
 			return false
 		}
 	}
 	for _, variable := range variables {
 		if !sliceContains(bb.Positive, variable) && !sliceContains(bb.Negative, variable) {
-			if !solver.Sat(variable.AsLiteral()) {
+			if !solver.Call(Params().Variable(variable)).Sat() {
 				return false
 			}
-			if !solver.Sat(variable.Negate(fac)) {
+			if !solver.Call(Params().Literal(variable.Negate(fac))).Sat() {
 				return false
 			}
 		}
