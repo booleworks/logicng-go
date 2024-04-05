@@ -536,10 +536,6 @@ func (m *CoreSolver) search() (f.Tristate, bool) {
 	}
 }
 
-func (m *CoreSolver) reset() {
-	initialize(m, m.config)
-}
-
 func (m *CoreSolver) saveState() *SolverState {
 	state := make([]int, 6)
 	if m.ok {

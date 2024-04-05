@@ -60,6 +60,13 @@ func (c *Config) ClauseMin(clauseMin ClauseMinimization) *Config {
 	return c
 }
 
+// InitPhase sets the initial phase on this configuration and returns the
+// config.
+func (c *Config) InitPhase(initPhase bool) *Config {
+	c.InitialPhase = initPhase
+	return c
+}
+
 // UseAtMost sets the flat whether at-most clauses should be used and returns
 // the config.
 func (c *Config) UseAtMost(useAtMost bool) *Config {

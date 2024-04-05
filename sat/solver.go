@@ -215,13 +215,6 @@ func (s *Solver) CoreSolver() *CoreSolver {
 	return s.core
 }
 
-// Reset resets the solver to its initial state.
-func (s *Solver) Reset() {
-	s.core.reset()
-	s.pgTransformation.clearCache()
-	s.fullPgTransformation.clearCache()
-}
-
 func (s *Solver) computeModel(variables []f.Variable) *model.Model {
 	var relevantIndices []int32
 	if variables != nil {

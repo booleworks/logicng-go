@@ -15,28 +15,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func solvers(fac f.Factory) []*Solver {
-	solvers := make([]*Solver, 4)
-
-	mc := DefaultConfig()
-	mc.InitialPhase = true
-	solvers[0] = NewSolver(fac, mc)
-
-	mc = DefaultConfig()
-	mc.InitialPhase = false
-	solvers[1] = NewSolver(fac, mc)
-
-	mc = DefaultConfig()
-	mc.InitialPhase = false
-	mc.UseAtMostClauses = true
-	solvers[2] = NewSolver(fac, mc)
-
-	mc = DefaultConfig()
-	mc.InitialPhase = true
-	mc.UseAtMostClauses = true
-	solvers[3] = NewSolver(fac, mc)
-
-	return solvers
+func configs() []*Config {
+	configs := make([]*Config, 4)
+	configs[0] = DefaultConfig().InitPhase(true).UseAtMost(false)
+	configs[1] = DefaultConfig().InitPhase(false).UseAtMost(false)
+	configs[2] = DefaultConfig().InitPhase(false).UseAtMost(true)
+	configs[3] = DefaultConfig().InitPhase(true).UseAtMost(true)
+	return configs
 }
 
 func TestOptimizerFunctionUnsat(t *testing.T) {
@@ -46,10 +31,10 @@ func TestOptimizerFunctionUnsat(t *testing.T) {
 	formula := parser.ParseUnsafe("a & b & (a => ~b)")
 	vars := f.VariablesAsLiterals(f.Variables(fac, formula).Content())
 
-	for _, solver := range solvers(fac) {
-		minimumModel := optimize([]f.Formula{formula}, vars, []f.Variable{}, false, solver)
+	for _, config := range configs() {
+		minimumModel := optimize(fac, []f.Formula{formula}, vars, []f.Variable{}, false, config)
 		assert.Nil(minimumModel)
-		maximumModel := optimize([]f.Formula{formula}, vars, []f.Variable{}, true, solver)
+		maximumModel := optimize(fac, []f.Formula{formula}, vars, []f.Variable{}, true, config)
 		assert.Nil(maximumModel)
 	}
 }
@@ -60,10 +45,10 @@ func TestOptimizerFunctionSingleModel(t *testing.T) {
 	formula := parser.ParseUnsafe("~a & ~b & ~c")
 	vars := f.VariablesAsLiterals(f.Variables(fac, formula).Content())
 
-	for _, solver := range solvers(fac) {
-		minimumModel := optimize([]f.Formula{formula}, vars, []f.Variable{}, false, solver)
+	for _, config := range configs() {
+		minimumModel := optimize(fac, []f.Formula{formula}, vars, []f.Variable{}, false, config)
 		testMinimumModel(t, fac, formula, minimumModel, vars)
-		maximumModel := optimize([]f.Formula{formula}, vars, []f.Variable{}, true, solver)
+		maximumModel := optimize(fac, []f.Formula{formula}, vars, []f.Variable{}, true, config)
 		testMaximumModel(t, fac, formula, maximumModel, vars)
 	}
 }
@@ -74,10 +59,10 @@ func TestOptimizerFunctionEXOModel(t *testing.T) {
 	formula := parser.ParseUnsafe("a + b + c = 1")
 	vars := f.VariablesAsLiterals(f.Variables(fac, formula).Content())
 
-	for _, solver := range solvers(fac) {
-		minimumModel := optimize([]f.Formula{formula}, vars, []f.Variable{}, false, solver)
+	for _, config := range configs() {
+		minimumModel := optimize(fac, []f.Formula{formula}, vars, []f.Variable{}, false, config)
 		testMinimumModel(t, fac, formula, minimumModel, vars)
-		maximumModel := optimize([]f.Formula{formula}, vars, []f.Variable{}, true, solver)
+		maximumModel := optimize(fac, []f.Formula{formula}, vars, []f.Variable{}, true, config)
 		testMaximumModel(t, fac, formula, maximumModel, vars)
 	}
 }
@@ -87,11 +72,9 @@ func TestOptimizerFunctionCornerCases(t *testing.T) {
 	for _, formula := range f.NewCornerCases(fac) {
 		vars := f.Variables(fac, formula).Content()
 		targetLits := f.VariablesAsLiterals(vars)
-		solver := NewSolver(fac)
-		solver.Add(formula)
-		minModel := optimize([]f.Formula{formula}, targetLits, []f.Variable{}, false, solver)
+		minModel := optimize(fac, []f.Formula{formula}, targetLits, []f.Variable{}, false, DefaultConfig())
 		testMinimumModel(t, fac, formula, minModel, targetLits)
-		maxModel := optimize([]f.Formula{formula}, targetLits, []f.Variable{}, true, solver)
+		maxModel := optimize(fac, []f.Formula{formula}, targetLits, []f.Variable{}, true, DefaultConfig())
 		testMaximumModel(t, fac, formula, maxModel, targetLits)
 	}
 }
@@ -111,10 +94,10 @@ func TestOptimizerFunctionRandomSmall(t *testing.T) {
 		targetLiterals := randomTargetLiterals(fac, randomSubset(literals, min(len(literals), 5)))
 		additionalVariables := randomSubset(variables, min(len(variables), 3))
 
-		for _, solver := range solvers(fac) {
-			minimumModel := optimize([]f.Formula{formula}, targetLiterals, additionalVariables, false, solver)
+		for _, config := range configs() {
+			minimumModel := optimize(fac, []f.Formula{formula}, targetLiterals, additionalVariables, false, config)
 			testMinimumModel(t, fac, formula, minimumModel, targetLiterals)
-			maximumModel := optimize([]f.Formula{formula}, targetLiterals, additionalVariables, true, solver)
+			maximumModel := optimize(fac, []f.Formula{formula}, targetLiterals, additionalVariables, true, config)
 			testMaximumModel(t, fac, formula, maximumModel, targetLiterals)
 		}
 	}
@@ -124,7 +107,8 @@ func TestOptimizerFunctionIncMinMax(t *testing.T) {
 	assert := assert.New(t)
 	fac := f.NewFactory()
 	parser := parser.New(fac)
-	for _, solver := range solvers(fac) {
+	for _, config := range configs() {
+		solver := NewSolver(fac, config)
 		formula := parser.ParseUnsafe("(a|b|c|d|e) & (p|q) & (x|y|z)")
 		variables := f.NewMutableVarSetCopy(f.Variables(fac, formula))
 		vars := f.VariablesAsLiterals(variables.Content())
@@ -186,7 +170,7 @@ func TestOptimizerAdditionalVariables(t *testing.T) {
 	assert := assert.New(t)
 	fac := f.NewFactory()
 	parser := parser.New(fac)
-	for _, solver := range solvers(fac) {
+	for _, config := range configs() {
 		va := fac.Var("a")
 		vc := fac.Var("c")
 		vy := fac.Var("y")
@@ -202,18 +186,18 @@ func TestOptimizerAdditionalVariables(t *testing.T) {
 		formula := parser.ParseUnsafe("(a|b) & (~a => c) & (x|y)")
 
 		literalsANBX := []f.Literal{a, nb, x}
-		minimumModel := optimize([]f.Formula{formula}, literalsANBX, []f.Variable{}, false, solver)
+		minimumModel := optimize(fac, []f.Formula{formula}, literalsANBX, []f.Variable{}, false, config)
 		assert.True(slices.Contains(minimumModel.Literals, na))
 		assert.True(slices.Contains(minimumModel.Literals, b))
 		assert.True(slices.Contains(minimumModel.Literals, nx))
 
-		minimumModelWithY := optimize([]f.Formula{formula}, literalsANBX, []f.Variable{vy}, false, solver)
+		minimumModelWithY := optimize(fac, []f.Formula{formula}, literalsANBX, []f.Variable{vy}, false, config)
 		assert.True(slices.Contains(minimumModelWithY.Literals, na))
 		assert.True(slices.Contains(minimumModelWithY.Literals, b))
 		assert.True(slices.Contains(minimumModelWithY.Literals, nx))
 		assert.True(slices.Contains(minimumModelWithY.Literals, y))
 
-		minimumModelWithCY := optimize([]f.Formula{formula}, literalsANBX, []f.Variable{vc, vy}, false, solver)
+		minimumModelWithCY := optimize(fac, []f.Formula{formula}, literalsANBX, []f.Variable{vc, vy}, false, config)
 		assert.True(slices.Contains(minimumModelWithCY.Literals, na))
 		assert.True(slices.Contains(minimumModelWithCY.Literals, b))
 		assert.True(slices.Contains(minimumModelWithCY.Literals, nx))
@@ -221,14 +205,14 @@ func TestOptimizerAdditionalVariables(t *testing.T) {
 		assert.True(slices.Contains(minimumModelWithCY.Literals, c))
 
 		literalsNBNX := []f.Literal{na, nx}
-		maximumModel := optimize([]f.Formula{formula}, literalsNBNX, []f.Variable{}, true, solver)
+		maximumModel := optimize(fac, []f.Formula{formula}, literalsNBNX, []f.Variable{}, true, config)
 		assert.True(slices.Contains(maximumModel.Literals, na))
 		assert.True(slices.Contains(maximumModel.Literals, nx))
-		maximumModelWithC := optimize([]f.Formula{formula}, literalsNBNX, []f.Variable{vc}, true, solver)
+		maximumModelWithC := optimize(fac, []f.Formula{formula}, literalsNBNX, []f.Variable{vc}, true, config)
 		assert.True(slices.Contains(maximumModelWithC.Literals, na))
 		assert.True(slices.Contains(maximumModelWithC.Literals, nx))
 		assert.True(slices.Contains(maximumModelWithC.Literals, c))
-		maximumModelWithACY := optimize([]f.Formula{formula}, literalsNBNX, []f.Variable{va, vc, vy}, true, solver)
+		maximumModelWithACY := optimize(fac, []f.Formula{formula}, literalsNBNX, []f.Variable{va, vc, vy}, true, config)
 		assert.True(slices.Contains(maximumModelWithACY.Literals, na))
 		assert.True(slices.Contains(maximumModelWithACY.Literals, c))
 		assert.True(slices.Contains(maximumModelWithACY.Literals, nx))
@@ -240,8 +224,8 @@ func TestOptimizerFunctionLargeFormulaMinimize(t *testing.T) {
 	fac := f.NewFactory()
 	formula, _ := io.ReadFormula(fac, "../test/data/formulas/large2.txt")
 	vars := f.VariablesAsLiterals(f.Variables(fac, formula).Content())
-	for _, solver := range solvers(fac) {
-		minimumModel := optimize([]f.Formula{formula}, vars, []f.Variable{}, false, solver)
+	for _, config := range configs() {
+		minimumModel := optimize(fac, []f.Formula{formula}, vars, []f.Variable{}, false, config)
 		assert.Equal(t, 25, len(minimumModel.PosVars()))
 		testMinimumModel(t, fac, formula, minimumModel, vars)
 	}
@@ -251,8 +235,8 @@ func TestOptimizerFunctionLargeFormulaMaximize(t *testing.T) {
 	fac := f.NewFactory()
 	formula, _ := io.ReadFormula(fac, "../test/data/formulas/large2.txt")
 	vars := f.VariablesAsLiterals(f.Variables(fac, formula).Content())
-	for _, solver := range solvers(fac) {
-		minimumModel := optimize([]f.Formula{formula}, vars, []f.Variable{}, true, solver)
+	for _, config := range configs() {
+		minimumModel := optimize(fac, []f.Formula{formula}, vars, []f.Variable{}, true, config)
 		assert.Equal(t, 162, len(minimumModel.PosVars()))
 		testMaximumModel(t, fac, formula, minimumModel, vars)
 	}
@@ -266,8 +250,8 @@ func TestOptimizerFunctionLargerFormulaMinimize(t *testing.T) {
 	fac := f.NewFactory()
 	formula, _ := io.ReadFormula(fac, "../test/data/formulas/small_formulas.txt")
 	vars := f.VariablesAsLiterals(f.Variables(fac, formula).Content())
-	for _, solver := range solvers(fac) {
-		minimumModel := optimize([]f.Formula{formula}, vars, []f.Variable{}, false, solver)
+	for _, config := range configs() {
+		minimumModel := optimize(fac, []f.Formula{formula}, vars, []f.Variable{}, false, config)
 		assert.Equal(t, 50, len(minimumModel.PosVars()))
 		testMinimumModel(t, fac, formula, minimumModel, vars)
 	}
@@ -281,21 +265,22 @@ func TestOptimizerFunctionLargerFormulaMaximize(t *testing.T) {
 	fac := f.NewFactory()
 	formula, _ := io.ReadFormula(fac, "../test/data/formulas/small_formulas.txt")
 	vars := f.VariablesAsLiterals(f.Variables(fac, formula).Content())
-	for _, solver := range solvers(fac) {
-		minimumModel := optimize([]f.Formula{formula}, vars, []f.Variable{}, true, solver)
+	for _, config := range configs() {
+		minimumModel := optimize(fac, []f.Formula{formula}, vars, []f.Variable{}, true, config)
 		assert.Equal(t, 270, len(minimumModel.PosVars()))
 		testMaximumModel(t, fac, formula, minimumModel, vars)
 	}
 }
 
 func optimize(
+	fac f.Factory,
 	formulas []f.Formula,
 	literals []f.Literal,
 	additionalVariables []f.Variable,
 	maximize bool,
-	solver *Solver,
+	config *Config,
 ) *model.Model {
-	solver.Reset()
+	solver := NewSolver(fac, config)
 	solver.Add(formulas...)
 	if maximize {
 		return solver.Maximize(literals, additionalVariables...)
