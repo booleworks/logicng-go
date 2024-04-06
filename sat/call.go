@@ -59,6 +59,16 @@ func WithAssumptions(literals []f.Literal) *CallParams {
 	return params
 }
 
+// WithHandler generates a new parameter struct with the following setting:
+//   - use the given handler
+//   - no unsat core computation for unsatisfiable formulas
+//   - no model generation for satisfiable formulas
+//   - no additional assumption literals for the SAT call
+//   - no computation of propagated literals at decision level 0
+func WithHandler(handler Handler) *CallParams {
+	return &CallParams{handler: handler}
+}
+
 // Handler sets a handler for the SAT call
 func (p *CallParams) Handler(handler Handler) *CallParams {
 	p.handler = handler
@@ -122,7 +132,7 @@ func (p *CallParams) Formula(formula ...f.Formula) *CallParams {
 // Proposition sets additional propositions which will be added to the SAT solver
 // before solving.  Results like satisfiability, model, or unsat core are with
 // respect to these additional propositions.
-func (p *CallParams) Proposition(proposition []f.Proposition) *CallParams {
+func (p *CallParams) Proposition(proposition ...f.Proposition) *CallParams {
 	p.addProps = append(p.addProps, proposition...)
 	return p
 }
@@ -216,7 +226,6 @@ type call struct {
 
 func initCall(solver *Solver, handler Handler, addProps []f.Proposition) *call {
 	c := call{solver: solver}
-	c.solver.core.startCall()
 	if c.solver.config.ProofGeneration {
 		c.pgOriginalClauses = len(c.solver.core.pgOriginalClauses)
 	}
@@ -231,6 +240,7 @@ func initCall(solver *Solver, handler Handler, addProps []f.Proposition) *call {
 			c.solver.AddProposition(p)
 		}
 	}
+	c.solver.core.startCall()
 	res, ok := c.solver.core.Solve(handler)
 	c.ok = ok
 	c.sat = res == f.TristateTrue
