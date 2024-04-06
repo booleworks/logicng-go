@@ -293,7 +293,7 @@ func TestPbEncodingLarge(t *testing.T) {
 		encoding, err := e.EncodePBC(fac, pbc, &config)
 		assert.Nil(err)
 		solver.Add(encoding...)
-		sResult := solver.Call(s.Params().ModelIfSat(vars))
+		sResult := solver.Call(s.WithModel(vars))
 		assert.True(sResult.Sat())
 		ass, _ := sResult.Model().Assignment(fac)
 		assert.True(assignment.Evaluate(fac, pbc, ass))

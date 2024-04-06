@@ -137,7 +137,7 @@ func computeGeneric(
 		}
 		params := sat.Params().
 			Handler(satHandler).
-			ModelIfSat(f.Variables(fac, formula).Content()).
+			WithModel(f.Variables(fac, formula).Content()).
 			Literal(fModel.Literals...)
 		fResult := fSolver.Call(params)
 		if fResult.Aborted() {

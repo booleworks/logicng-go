@@ -107,7 +107,10 @@ func (s *drupSolver) parse() bool {
 	clauseNr := 0
 	for {
 		fileSwitchFlag = nZeros <= 0
-		clause := currentFile[clauseNr]
+		var clause []int32
+		if clauseNr < len(currentFile) {
+			clause = currentFile[clauseNr]
+		}
 		clauseNr++
 		if clause == nil {
 			s.lemmas = len(s.db) + 1

@@ -101,7 +101,7 @@ func (s *Solver) maximize(
 		}
 	}
 
-	params := Params().Handler(satHandler(optimizationHandler)).ModelIfSat(selectors)
+	params := Params().Handler(satHandler(optimizationHandler)).WithModel(selectors)
 	sResult := s.Call(params)
 	if sResult.Aborted() {
 		return nil, false

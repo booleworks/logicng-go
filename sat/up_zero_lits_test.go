@@ -18,7 +18,7 @@ func TestUpZerLiterals(t *testing.T) {
 	solver.Add(formula)
 	sat := solver.Sat()
 	assert.True(sat)
-	result := solver.Call(Params().UpZeroIfSat())
+	result := solver.Call(Params().WithUPZeros())
 	assert.True(result.OK())
 	assert.Equal(3, len(result.UpZeroLits()))
 	assert.True(slices.Contains(result.UpZeroLits(), fac.Lit("b", false)))

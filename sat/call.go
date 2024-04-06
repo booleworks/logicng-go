@@ -1,6 +1,7 @@
 package sat
 
 import (
+	"github.com/booleworks/logicng-go/errorx"
 	"github.com/booleworks/logicng-go/explanation"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/model"
@@ -26,32 +27,64 @@ func Params() *CallParams {
 	return &CallParams{}
 }
 
+// WithModel generates a new parameter struct with the following setting:
+//   - model generation for satisfiable formulas for the given variables
+//   - no handler
+//   - no additional formulas or propositions for the SAT call
+//   - no unsat core computation for unsatisfiable formulas
+//   - no computation of propagated literals at decision level 0
+func WithModel(variables []f.Variable) *CallParams {
+	return &CallParams{modelIfSat: true, modelVars: variables}
+}
+
+// WithCore generates a new parameter struct with the following setting:
+//   - unsat core computation for unsatisfiable formulas
+//   - no handler
+//   - no additional formulas or propositions for the SAT call
+//   - no model generation for satisfiable formulas
+//   - no computation of propagated literals at decision level 0
+func WithCore() *CallParams {
+	return &CallParams{coreIfUnsat: true}
+}
+
+// WithAssumptions generates a new parameter struct with the following setting:
+//   - additional assumption literals for the SAT call
+//   - no unsat core computation for unsatisfiable formulas
+//   - no handler
+//   - no model generation for satisfiable formulas
+//   - no computation of propagated literals at decision level 0
+func WithAssumptions(literals []f.Literal) *CallParams {
+	params := &CallParams{}
+	params.Literal(literals...)
+	return params
+}
+
 // Handler sets a handler for the SAT call
 func (p *CallParams) Handler(handler Handler) *CallParams {
 	p.handler = handler
 	return p
 }
 
-// ModelIfSat activates model generation after the SAT solver call.  The model
+// WithModel activates model generation after the SAT solver call.  The model
 // will be generated only for the given variables.  If the solver is
 // unsatisfiable, no model will be generated.
-func (p *CallParams) ModelIfSat(variables []f.Variable) *CallParams {
+func (p *CallParams) WithModel(variables []f.Variable) *CallParams {
 	p.modelIfSat = true
 	p.modelVars = variables
 	return p
 }
 
-// CoreIfUnsat activates an unsat core computation after the SAT solver call.
+// WithCore activates an unsat core computation after the SAT solver call.
 // If the solver is satisfiable, no core will be computed.
-func (p *CallParams) CoreIfUnsat() *CallParams {
+func (p *CallParams) WithCore() *CallParams {
 	p.coreIfUnsat = true
 	return p
 }
 
-// UpZeroIfSat activates computation of literals propagated at decision level 0
+// WithUPZeros activates computation of literals propagated at decision level 0
 // after the SAT solver call.  If the solver is unsatisfiable, no literals will
 // be computed.
-func (p *CallParams) UpZeroIfSat() *CallParams {
+func (p *CallParams) WithUPZeros() *CallParams {
 	p.upZeroIfSat = true
 	return p
 }
@@ -155,6 +188,9 @@ func (s *Solver) Call(params ...*CallParams) CallResult {
 		param = Params()
 	} else {
 		param = params[0]
+	}
+	if param.coreIfUnsat && !s.config.ProofGeneration {
+		panic(errorx.IllegalState("core computation on a SAT solver without proof tracing"))
 	}
 	call := initCall(s, param.handler, param.addProps)
 	if call.ok && call.sat && param.modelIfSat {

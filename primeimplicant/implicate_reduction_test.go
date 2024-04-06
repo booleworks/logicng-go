@@ -79,7 +79,7 @@ func testImplicateFormulaDetail(t *testing.T, fac f.Factory, formula f.Formula, 
 	assert := assert.New(t)
 	solver := sat.NewSolver(fac)
 	solver.Add(formula.Negate(fac))
-	result := solver.Call(sat.Params().ModelIfSat(f.Variables(fac, formula).Content()))
+	result := solver.Call(sat.WithModel(f.Variables(fac, formula).Content()))
 	if !result.Sat() {
 		return
 	}
@@ -112,10 +112,10 @@ func testPrimeImplicateProperty(t *testing.T, fac f.Factory, formula f.Formula, 
 	for i, lit := range primeImplicate {
 		negatedLiterals[i] = lit.Negate(fac)
 	}
-	assert.False(solver.Call(sat.Params().Literal(negatedLiterals...)).Sat())
+	assert.False(solver.Call(sat.WithAssumptions(negatedLiterals)).Sat())
 	for _, lit := range negatedLiterals {
 		reducedNegatedLiterals := f.NewMutableLitSet(negatedLiterals...)
 		reducedNegatedLiterals.Remove(lit)
-		assert.True(solver.Call(sat.Params().Literal(reducedNegatedLiterals.Content()...)).Sat())
+		assert.True(solver.Call(sat.WithAssumptions(reducedNegatedLiterals.Content())).Sat())
 	}
 }

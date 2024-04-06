@@ -5,7 +5,6 @@ import (
 	e "github.com/booleworks/logicng-go/explanation"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/handler"
-	"github.com/booleworks/logicng-go/sat"
 	s "github.com/booleworks/logicng-go/sat"
 )
 
@@ -94,7 +93,7 @@ func ComputeDeletionBasedWithHandler(
 		solverStates[i] = solver.SaveState()
 		solver.AddProposition(p)
 	}
-	sResult := solver.Call(sat.Params().Handler(satHandler))
+	sResult := solver.Call(s.Params().Handler(satHandler))
 	if sResult.Aborted() {
 		return nil, false, nil
 	}
@@ -109,7 +108,7 @@ func ComputeDeletionBasedWithHandler(
 		for _, prop := range mus {
 			solver.AddProposition(prop)
 		}
-		sResult := solver.Call(sat.Params().Handler(satHandler))
+		sResult := solver.Call(s.Params().Handler(satHandler))
 		if sResult.Aborted() {
 			return nil, false, nil
 		}
@@ -121,6 +120,6 @@ func ComputeDeletionBasedWithHandler(
 }
 
 func shouldProceed(solver *s.Solver, handler s.Handler) bool {
-	sResult := solver.Call(sat.Params().Handler(handler))
+	sResult := solver.Call(s.Params().Handler(handler))
 	return sResult.OK() && sResult.Sat()
 }

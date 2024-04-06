@@ -215,7 +215,7 @@ func TestPbOnSolverLarge(t *testing.T) {
 	lits := f.VariablesAsLiterals(vars)
 	pbc := fac.PBC(f.GE, 5000, lits, coeffs)
 	solver.Add(pbc)
-	sResult := solver.Call(sat.Params().ModelIfSat(vars))
+	sResult := solver.Call(sat.WithModel(vars))
 	assert.True(sResult.Sat())
 	ass, _ := sResult.Model().Assignment(fac)
 	assert.True(assignment.Evaluate(fac, pbc, ass))

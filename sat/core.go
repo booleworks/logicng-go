@@ -261,6 +261,7 @@ func (m *CoreSolver) addUnitClause(lit int32, proposition f.Proposition) bool {
 
 // AddClause adds a new clause to the solver.
 func (m *CoreSolver) AddClause(ps []int32, proposition f.Proposition) bool {
+	m.assertNotInCall()
 	if m.config.ProofGeneration {
 		slice := make([]int32, len(ps))
 		for i := 0; i < len(ps); i++ {
@@ -508,16 +509,15 @@ func (m *CoreSolver) search() (f.Tristate, bool) {
 				} else if m.value(p) == f.TristateFalse {
 					if m.config.ProofGeneration {
 						drupLit := (Vari(p) + 1) * (-2*signAsInt(p) + 1)
-						pi := proofInformation{[]int32{1, drupLit}, m.assumptionProps[m.decisionLevel()]}
+						pi := proofInformation{[]int32{drupLit}, m.assumptionProps[m.decisionLevel()]}
 						m.pgOriginalClauses = append(m.pgOriginalClauses, pi)
 					}
-					// analyzeFinal(not(p), conflict);
 					m.analyzeFinal(Not(p))
 					return f.TristateFalse, true
 				} else {
 					if m.config.ProofGeneration {
 						drupLit := (Vari(p) + 1) * (-2*signAsInt(p) + 1)
-						pi := proofInformation{[]int32{1, drupLit}, m.assumptionProps[m.decisionLevel()]}
+						pi := proofInformation{[]int32{drupLit}, m.assumptionProps[m.decisionLevel()]}
 						m.pgOriginalClauses = append(m.pgOriginalClauses, pi)
 					}
 					next = p

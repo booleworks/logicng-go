@@ -1,8 +1,9 @@
 package maxsat
 
 import (
-	"github.com/booleworks/logicng-go/parser"
 	"testing"
+
+	"github.com/booleworks/logicng-go/parser"
 
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/stretchr/testify/assert"

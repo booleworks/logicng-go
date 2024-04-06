@@ -32,7 +32,7 @@ func TestSolverMidFormula(t *testing.T) {
 	t.Logf("Added to solver: %d ms", elapsed)
 
 	start = time.Now()
-	sat := solver.Call(sat.Params().ModelIfSat(f.Variables(fac, formula).Content()))
+	sat := solver.Call(sat.WithModel(f.Variables(fac, formula).Content()))
 	elapsed = time.Since(start) / 1_000_000
 	t.Logf("Solved: %d ms", elapsed)
 
@@ -58,11 +58,12 @@ func TestSolverLargeFormula(t *testing.T) {
 	t.Logf("Added to solver: %d ms", elapsed)
 
 	start = time.Now()
-	satResult := solver.Call(sat.Params().ModelIfSat(f.Variables(fac, formula).Content()))
+	satResult := solver.Call(sat.Params())
 	elapsed = time.Since(start) / 1_000_000
 	t.Logf("Solved: %d ms", elapsed)
 
 	assert.True(t, satResult.Sat())
+	satResult = solver.Call(sat.WithModel(f.Variables(fac, formula).Content()))
 	validateModel(t, fac, formula, satResult.Model())
 
 	if !testing.Short() {

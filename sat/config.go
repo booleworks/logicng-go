@@ -67,6 +67,12 @@ func (c *Config) InitPhase(initPhase bool) *Config {
 	return c
 }
 
+// Proofs sets whether proofs should be generated and returns the config.
+func (c *Config) Proofs(proofs bool) *Config {
+	c.ProofGeneration = proofs
+	return c
+}
+
 // UseAtMost sets the flat whether at-most clauses should be used and returns
 // the config.
 func (c *Config) UseAtMost(useAtMost bool) *Config {

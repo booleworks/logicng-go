@@ -10,7 +10,7 @@ import (
 )
 
 func (s *Solver) computeUnsatCore() *e.UnsatCore {
-	clause2proposition := make(map[f.Formula]f.Proposition, 0)
+	clause2proposition := make(map[f.Formula]f.Proposition)
 	clauses := make([][]int32, len(s.core.pgOriginalClauses))
 
 	for i, pi := range s.core.pgOriginalClauses {
@@ -34,7 +34,7 @@ func (s *Solver) computeUnsatCore() *e.UnsatCore {
 		return handleTrivialCase(s)
 	}
 
-	props := make(map[f.Proposition]present, 0)
+	props := make(map[f.Proposition]present)
 	for _, slice := range result.unsatCore {
 		props[clause2proposition[getFormulaForVector(s, slice)]] = present{}
 	}
