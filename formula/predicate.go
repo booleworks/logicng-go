@@ -1,5 +1,8 @@
 package formula
 
+// A Predicate is a function which maps a formula to a boolean value.
+type Predicate func(Factory, Formula) bool
+
 // PredicateCacheSort encodes a formula predicate sort for which the result can
 // be cached.
 type PredicateCacheSort byte

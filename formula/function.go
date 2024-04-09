@@ -1,5 +1,8 @@
 package formula
 
+// A Function is a function which maps a formula to an arbitrary value.
+type Function func(Factory, Formula) any
+
 // FunctionCacheSort encodes a formula function sort for which the result can
 // be cached.
 type FunctionCacheSort byte

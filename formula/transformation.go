@@ -1,5 +1,8 @@
 package formula
 
+// A Transformation is a function which maps a formula to another formula
+type Transformation func(Factory, Formula) Formula
+
 // TransformationCacheSort encodes a formula transformation sort for which the
 // result can be cached.
 type TransformationCacheSort byte
