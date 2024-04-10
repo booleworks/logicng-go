@@ -3,6 +3,7 @@ package enum
 import (
 	"testing"
 
+	"github.com/booleworks/logicng-go/model/iter"
 	"github.com/booleworks/logicng-go/sat"
 
 	"github.com/booleworks/logicng-go/errorx"
@@ -56,6 +57,16 @@ func TestCanonicalCNFRandom(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		testCNF(t, fac, randomizer.Formula(3))
 	}
+}
+
+func TestCanonicalCNFHandler(t *testing.T) {
+	fac := f.NewFactory()
+	formula := randomizer.New(fac).Formula(5)
+	handler := iter.HandlerWithLimit(1)
+	cnf, ok := CanonicalCNFWithHandler(fac, formula, handler)
+	assert.False(t, ok)
+	assert.True(t, handler.Aborted())
+	assert.Equal(t, fac.Falsum(), cnf)
 }
 
 func TestCanonicalDNFSimple(t *testing.T) {
@@ -158,4 +169,14 @@ func hasConstantTermSizeDNF(fac f.Factory, cnf f.Formula) bool {
 	default:
 		panic(errorx.BadFormulaSort(cnf.Sort()))
 	}
+}
+
+func TestCanonicalDNFHandler(t *testing.T) {
+	fac := f.NewFactory()
+	formula := randomizer.New(fac).Formula(5)
+	handler := iter.HandlerWithLimit(1)
+	dnf, ok := CanonicalDNFWithHandler(fac, formula, handler)
+	assert.False(t, ok)
+	assert.True(t, handler.Aborted())
+	assert.Equal(t, fac.Falsum(), dnf)
 }

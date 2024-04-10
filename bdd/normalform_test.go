@@ -21,6 +21,17 @@ func TestBddNormalformCnf(t *testing.T) {
 	}
 }
 
+func TestBddNormalformCnfWithHandler(t *testing.T) {
+	fac := f.NewFactory()
+	rand := randomizer.NewWithSeed(fac, int64(42))
+	formula := rand.Formula(5)
+	handler := HandlerWithNodes(5)
+	cnf, ok := CNFWithHandler(fac, formula, handler)
+	assert.False(t, ok)
+	assert.True(t, handler.Aborted())
+	assert.Equal(t, fac.Falsum(), cnf)
+}
+
 func TestBddNormalformDnf(t *testing.T) {
 	fac := f.NewFactory()
 	for i := 0; i < 100; i++ {
@@ -30,4 +41,15 @@ func TestBddNormalformDnf(t *testing.T) {
 		assert.True(t, normalform.IsDNF(fac, cnf))
 		assert.True(t, sat.IsEquivalent(fac, formula, cnf))
 	}
+}
+
+func TestBddNormalformDnfWithHandler(t *testing.T) {
+	fac := f.NewFactory()
+	rand := randomizer.NewWithSeed(fac, int64(42))
+	formula := rand.Formula(5)
+	handler := HandlerWithNodes(5)
+	dnf, ok := DNFWithHandler(fac, formula, handler)
+	assert.False(t, ok)
+	assert.True(t, handler.Aborted())
+	assert.Equal(t, fac.Falsum(), dnf)
 }
