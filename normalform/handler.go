@@ -61,3 +61,27 @@ func (h *CNFHandler) CreatedClause(clause f.Formula) bool {
 	h.aborted = h.clauseBoundary != -1 && h.currentClauses > h.clauseBoundary
 	return !h.aborted
 }
+
+// A TimeoutHandler can be used to abort a CNF factorization depending on a
+// timeout set beforehand.
+type TimeoutHandler struct {
+	handler.Timeout
+}
+
+// HandlerWithTimeout generates a new timeout handler with the given timeout.
+func HandlerWithTimeout(timeout handler.Timeout) *TimeoutHandler {
+	return &TimeoutHandler{timeout}
+}
+
+// PerformedDistribution is called each time a distribution during the
+// factorization is performed and returns true if the computation should be
+// continued.
+func (h *TimeoutHandler) PerformedDistribution() bool {
+	return !h.TimeLimitExceeded()
+}
+
+// CreatedClause is called each time a clause is created during the
+// factorization and returns true if the computation should be continued.
+func (h *TimeoutHandler) CreatedClause(clause f.Formula) bool {
+	return !h.TimeLimitExceeded()
+}
