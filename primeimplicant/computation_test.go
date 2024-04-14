@@ -1,7 +1,6 @@
 package primeimplicant
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -157,7 +156,6 @@ func testHandlerImplicant(t *testing.T, fac f.Factory, handler sat.OptimizationH
 		assert.False(ok)
 		assert.Nil(result)
 	} else {
-		fmt.Println(result)
 		assert.False(handler.Aborted())
 		assert.True(ok)
 		assert.NotNil(result)

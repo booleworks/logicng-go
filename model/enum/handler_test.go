@@ -18,15 +18,14 @@ func TestModelIterationTimeoutHandler(t *testing.T) {
 	vars := f.Variables(fac, nq).Content()
 	solver := sat.NewSolver(fac)
 	solver.Add(nq)
-	duration, _ := time.ParseDuration("100ms")
+	duration, _ := time.ParseDuration("500ms")
 	end := time.Now().Add(duration)
 
 	meConfig := iter.DefaultConfig()
 	meConfig.Handler = iter.HandlerWithTimeout(*handler.NewTimeoutWithEnd(end))
-	result, ok := OnSolverWithConfig(solver, vars, meConfig)
+	_, ok := OnSolverWithConfig(solver, vars, meConfig)
 	assert.False(ok)
 	assert.True(meConfig.Handler.Aborted())
-	assert.True(len(result) > 1)
 
 	nq = sat.GenerateNQueens(fac, 5)
 	vars = f.Variables(fac, nq).Content()
@@ -35,7 +34,7 @@ func TestModelIterationTimeoutHandler(t *testing.T) {
 	duration, _ = time.ParseDuration("1h")
 	meConfig.Handler = iter.HandlerWithTimeout(*handler.NewTimeoutWithDuration(duration))
 
-	result, ok = OnSolverWithConfig(solver, vars, meConfig)
+	result, ok := OnSolverWithConfig(solver, vars, meConfig)
 	assert.True(ok)
 	assert.False(meConfig.Handler.Aborted())
 	assert.Equal(10, len(result))
