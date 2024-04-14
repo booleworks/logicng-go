@@ -1,7 +1,15 @@
 package formula
 
+import "github.com/booleworks/logicng-go/handler"
+
 // A Transformation is a function which maps a formula to another formula
 type Transformation func(Factory, Formula) Formula
+
+// An AbortableTransformation is a function which maps a formula to another
+// formula.  It takes an handler which can be used to abort the computation.
+// If the computation is aborted by the handler, the ok flag in the response is
+// false.
+type AbortableTransformation func(Factory, Formula, handler.Handler) (Formula, bool)
 
 // TransformationCacheSort encodes a formula transformation sort for which the
 // result can be cached.

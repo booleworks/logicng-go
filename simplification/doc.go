@@ -22,6 +22,7 @@
 // - applying the distributive law
 // - factoring out common parts of the formula
 // - minimize negations
+// - subsumption on CNF and DNF formulas
 // - an advanced simplification combining various methods including minimal prime implicant covers
 // - a Quine-McCluskey implementation based on the advanced simplifier
 //

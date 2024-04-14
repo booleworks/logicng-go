@@ -8,5 +8,4 @@
 //   - substitution from literal to literal
 //   - pure expansion of AMO and EXO constraints
 //   - existential and universal quantifier elimination
-//   - CNF and DNF subsumption
 package transformation

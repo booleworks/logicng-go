@@ -1,4 +1,4 @@
-package transformation
+package simplification
 
 import (
 	"github.com/emirpasic/gods/lists/arraylist"

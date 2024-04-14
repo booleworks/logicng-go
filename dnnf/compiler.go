@@ -6,7 +6,6 @@ import (
 	"github.com/booleworks/logicng-go/normalform"
 	"github.com/booleworks/logicng-go/sat"
 	"github.com/booleworks/logicng-go/simplification"
-	"github.com/booleworks/logicng-go/transformation"
 	"github.com/emirpasic/gods/maps/treemap"
 )
 
@@ -57,7 +56,7 @@ type compiler struct {
 
 func simplifyFormula(fac f.Factory, formula f.Formula) f.Formula {
 	simp := simplification.SimplifyWithBackbone(fac, formula)
-	simp, _ = transformation.CNFSubsumption(fac, simp) // formula is in cnf - no error possible
+	simp, _ = simplification.CNFSubsumption(fac, simp) // formula is in cnf - no error possible
 	return simp
 }
 
