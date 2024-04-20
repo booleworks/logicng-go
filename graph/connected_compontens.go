@@ -50,7 +50,7 @@ func SplitFormulasByComponent(fac f.Factory, formulas []f.Formula, components []
 	for _, formula := range formulas {
 		variables := f.Variables(fac, formula)
 		if !variables.Empty() {
-			anyVar, _ := variables.Any()
+			anyVar := variables.Content()[0]
 			componentId, ok := varMap[anyVar]
 			if !ok {
 				panic(errorx.BadInput("no component for variable %s in the graph", anyVar.Sprint(fac)))

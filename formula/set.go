@@ -93,26 +93,6 @@ func NewMutableVarSetCopy(variableSet ...*VarSet) *MutableVarSet {
 	return &MutableVarSet{NewVarSetCopy(variableSet...)}
 }
 
-// Each takes a function which is executed on each element of the set.
-func (f *fset[T]) Each(function func(index int, element T)) {
-	count := 0
-	for element := range f.elements {
-		function(count, element)
-		count++
-	}
-}
-
-// Any return any element from the set or returns an error if the set is empty.
-func (f *fset[T]) Any() (T, error) {
-	if len(f.elements) == 0 {
-		return 0, errorx.BadInput("empty formula set")
-	}
-	for lit := range f.elements {
-		return lit, nil
-	}
-	return 0, nil
-}
-
 // Empty reports whether the set is empty.
 func (f *fset[T]) Empty() bool {
 	return len(f.elements) == 0

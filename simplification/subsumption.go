@@ -192,8 +192,8 @@ func (u *ubtree) getAllEndOfPathNodesRec(forest *treemap.Map, endOfPathNodes *[]
 
 func convertSet(formulas *f.LitSet) *treeset.Set {
 	set := treeset.NewWith(f.Comparator)
-	formulas.Each(func(_ int, formula f.Literal) {
+	for _, formula := range formulas.Content() {
 		set.Add(formula)
-	})
+	}
 	return set
 }
