@@ -68,7 +68,6 @@ func (s *Solver) optimize(
 			relevantIndices = append(relevantIndices, idx)
 		}
 	}
-
 	mdl, ok := s.maximize(maximize, literals, relevantIndices, optimizationHandler)
 	_ = s.LoadState(initialState)
 	return mdl, ok
@@ -91,7 +90,8 @@ func (s *Solver) maximize(
 		selectors[i] = selVar
 	}
 
-	for selVar, lit := range selectorMap {
+	for _, selVar := range selectors {
+		lit := selectorMap[selVar]
 		if maximize {
 			s.Add(fac.Clause(selVar.Negate(fac), lit))
 			s.Add(fac.Clause(lit.Negate(fac), selVar.AsLiteral()))

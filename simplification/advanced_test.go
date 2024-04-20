@@ -55,6 +55,22 @@ func TestAdvancedSimplifierTimeoutHandlerLarge(t *testing.T) {
 	testHandler(t, fac, handler, formula, true)
 }
 
+func TestAdvancedDeterministic(t *testing.T) {
+	for i := 0; i < 100; i++ {
+		fac := f.NewFactory()
+		p := parser.New(fac)
+		input := p.ParseUnsafe("A&B&F&D&E&~H&~C&~G&~I&~J|A&H&D&C&G&~B&~F&~E&~I&~J|A&D&C&~B&~F&~H&~E&~G&~I&~J|" +
+			"A&F&H&D&C&G&~B&~E&~I&~J|A&B&H&~F&~D&~C&~E&~G&~I&~J|A&B&H&D&G&~F&~C&~E&~I&~J|A&H&C&~B&~F&~D&~E&~G&~I&~J|" +
+			"A&B&G&~F&~H&~D&~C&~E&~I&~J|A&H&C&E&G&~B&~F&~D&~I&~J|A&C&G&~B&~F&~H&~D&~E&~I&~J|A&B&H&G&~F&~D&~C&~E&~I&~J|" +
+			"A&C&~B&~F&~H&~D&~E&~G&~I&~J|A&D&C&G&~B&~F&~H&~E&~I&~J|A&B&D&G&~F&~H&~C&~E&~I&~J|A&H&D&C&~B&~F&~E&~G&~I&~J|" +
+			"A&H&D&C&E&G&~B&~F&~I&~J|A&B&D&E&~F&~H&~C&~G&~I&~J|A&C&E&G&~B&~F&~H&~D&~I&~J")
+		simpl := Advanced(fac, input)
+		assert.Equal(t, "A & ~I & ~J & (~F & (~B & C & (~(E | G & H) | G & (~D & E | D & H)) | "+
+			"B & ~E & ~C & (G | ~D & H)) | D & (~B & ~E & H & C & G | B & E & ~H & ~C & ~G))", simpl.Sprint(fac))
+
+	}
+}
+
 func TestAdvancedSimplifierConfigs(t *testing.T) {
 	configs := []*Config{
 		{FactorOut: true, RestrictBackbone: true, SimplifyNegations: true, RatingFunction: DefaultRatingFunction},
