@@ -6,11 +6,11 @@ import (
 	"github.com/booleworks/logicng-go/sat"
 )
 
-// SimplifyWithBackbone simplifies the given formula by computing its backbone
-// and propagating it through the formula. E.g. in the formula A & B & (A | B |
-// C) & (~B | D) the backbone A, B is computed and propagated, yielding the
+// PropagateBackbone simplifies the given formula by computing its backbone and
+// propagating it through the formula. E.g. in the formula A & B & (A | B | C)
+// & (~B | D) the backbone A, B is computed and propagated, yielding the
 // simplified formula A & B & D.
-func SimplifyWithBackbone(fac f.Factory, formula f.Formula) f.Formula {
+func PropagateBackbone(fac f.Factory, formula f.Formula) f.Formula {
 	solver := sat.NewSolver(fac)
 	solver.Add(formula)
 	backbone := solver.ComputeBackbone(fac, f.Variables(fac, formula).Content())

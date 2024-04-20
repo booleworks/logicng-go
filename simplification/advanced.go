@@ -138,7 +138,7 @@ func AdvancedWithHandler(
 		simplified = fac.And(fac.Minterm(backboneLiterals...), simplified)
 	}
 	if cfg.SimplifyNegations {
-		negationSimplified := SimplifyNegations(fac, simplified)
+		negationSimplified := MinimizeNegations(fac, simplified)
 		simplified = simplifyWithRating(fac, simplified, negationSimplified, cfg)
 	}
 	return simplified, true

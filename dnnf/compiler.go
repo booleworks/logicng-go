@@ -55,7 +55,7 @@ type compiler struct {
 }
 
 func simplifyFormula(fac f.Factory, formula f.Formula) f.Formula {
-	simp := simplification.SimplifyWithBackbone(fac, formula)
+	simp := simplification.PropagateBackbone(fac, formula)
 	simp, _ = simplification.CNFSubsumption(fac, simp) // formula is in cnf - no error possible
 	return simp
 }

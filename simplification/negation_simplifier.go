@@ -6,7 +6,7 @@ import (
 	"github.com/booleworks/logicng-go/normalform"
 )
 
-// SimplifyNegations minimizes the number of negations of the given formula by
+// MinimizeNegations minimizes the number of negations of the given formula by
 // applying De Morgan's Law heuristically for a smaller formula. The resulting
 // formula is minimized for the length of its string representation (using the
 // string representation which is defined in the formula's formula factory).
@@ -14,7 +14,7 @@ import (
 // of same length as the initial formula), but the formula ~A & ~B & ~C & ~D is
 // being transformed to ~(A | B | C | D) since its length is 16 vs. 17 in the
 // un-simplified version.
-func SimplifyNegations(fac f.Factory, formula f.Formula) f.Formula {
+func MinimizeNegations(fac f.Factory, formula f.Formula) f.Formula {
 	nnf := normalform.NNF(fac, formula)
 	if nnf.IsAtomic() {
 		return getSmallestFormula(fac, true, formula, nnf)
