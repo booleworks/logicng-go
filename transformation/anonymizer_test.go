@@ -14,13 +14,13 @@ func TestAnonymizerWithoutPrefix(t *testing.T) {
 	p := parser.New(fac)
 
 	a1 := Anonymize(fac, p.ParseUnsafe("a & b & (a | b | c)"))
-	assert.Equal(p.ParseUnsafe("v1 & v2 & (v1 | v2 | v3)"), a1)
+	assert.Equal(p.ParseUnsafe("v0 & v1 & (v0 | v1 | v2)"), a1)
 
 	anonymizer := NewAnonymizer(fac)
 	a1 = anonymizer.Anonymize(p.ParseUnsafe("a & b & (a | b | c)"))
-	assert.Equal(p.ParseUnsafe("v1 & v2 & (v1 | v2 | v3)"), a1)
+	assert.Equal(p.ParseUnsafe("v0 & v1 & (v0 | v1 | v2)"), a1)
 	a1 = anonymizer.Anonymize(p.ParseUnsafe("a & ~c"))
-	assert.Equal(p.ParseUnsafe("v1 & ~v3"), a1)
+	assert.Equal(p.ParseUnsafe("v0 & ~v2"), a1)
 }
 
 func TestAnonymizerWithPrefix(t *testing.T) {
@@ -30,7 +30,7 @@ func TestAnonymizerWithPrefix(t *testing.T) {
 
 	anonymizer := NewAnonymizer(fac, "x")
 	a1 := anonymizer.Anonymize(p.ParseUnsafe("a & b & (a | b | c)"))
-	assert.Equal(p.ParseUnsafe("x1 & x2 & (x1 | x2 | x3)"), a1)
+	assert.Equal(p.ParseUnsafe("x0 & x1 & (x0 | x1 | x2)"), a1)
 	a1 = anonymizer.Anonymize(p.ParseUnsafe("a & ~c"))
-	assert.Equal(p.ParseUnsafe("x1 & ~x3"), a1)
+	assert.Equal(p.ParseUnsafe("x0 & ~x2"), a1)
 }

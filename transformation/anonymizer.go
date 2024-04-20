@@ -48,8 +48,8 @@ func (a *Anonymizer) Anonymize(formula f.Formula) f.Formula {
 	for _, variable := range vars.Content() {
 		_, ok := a.Substitution.subst[variable]
 		if !ok {
-			a.counter++
 			a.Substitution.AddVar(variable, a.fac.Variable(fmt.Sprintf("%s%d", a.prefix, a.counter)))
+			a.counter++
 		}
 	}
 	subst, _ := Substitute(a.fac, formula, a.Substitution)
