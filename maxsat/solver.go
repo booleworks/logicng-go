@@ -274,7 +274,12 @@ func (m *Solver) Model() (*model.Model, error) {
 
 // SupportsWeighted reports whether the solver supports weighted problems.
 func (m *Solver) SupportsWeighted() bool {
-	return m.algorithm == AlgIncWBO || m.algorithm == AlgWMSU3 || m.algorithm == AlgWBO || m.algorithm == AlgOLL
+	return m.algorithm != AlgLinearUS && m.algorithm != AlgMSU3
+}
+
+// SupportsUnweighted reports whether the solver supports unweighted problems.
+func (m *Solver) SupportsUnweighted() bool {
+	return m.algorithm != AlgWMSU3
 }
 
 func (m *Solver) createModel(vec []bool) *model.Model {
