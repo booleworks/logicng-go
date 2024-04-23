@@ -1,16 +1,15 @@
-package function
+package formula
 
 import (
 	"testing"
 
-	f "github.com/booleworks/logicng-go/formula"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNumberOfNodes(t *testing.T) {
 	assert := assert.New(t)
-	fac := f.NewFactory()
-	d := f.NewTestData(fac)
+	fac := NewFactory()
+	d := NewTestData(fac)
 
 	assert.Equal(1, NumberOfNodes(fac, d.False))
 	assert.Equal(1, NumberOfNodes(fac, d.True))

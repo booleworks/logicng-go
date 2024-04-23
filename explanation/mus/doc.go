@@ -1,5 +1,5 @@
 // Package mus provides data structures and algorithms for minimal
-// unsatisfiable sets (MUS).
+// unsatisfiable sets (MUS) in LogicNG.
 //
 // A MUS contains only those formulas which lead to the given set of formulas
 // being unsatisfiable. In other words: If you remove at least one of the

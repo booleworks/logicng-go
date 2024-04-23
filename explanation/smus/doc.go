@@ -1,5 +1,5 @@
 // Package smus provides an algorithm to compute a smallest minimal
-// unsatisfiable set (SMUS) of a set of propositions or formulas.
+// unsatisfiable set (SMUS) of a set of propositions or formulas in LogicNG.
 //
 // A smallest minimal unsatisfiable set (SMUS) is a smallest MUS based on the
 // number of formulas it contains. So in contrast to a regular MUS it is not

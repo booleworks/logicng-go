@@ -1,5 +1,5 @@
 // Package randomizer provides a formula randomizer which can be used for
-// fuzzing in testing.
+// fuzzing in testing in LogicNG.
 //
 // To generate a randomized formula with a nested size of 4, you can call
 //

@@ -1,5 +1,5 @@
 // Package formula provides all the main data-structures for working with
-// propositional formulas and generate them via a formula factory.
+// propositional formulas in LogicNG and generate them via a formula factory.
 //
 // Usually the formula factory is the starting point of working with LogicNG.
 //

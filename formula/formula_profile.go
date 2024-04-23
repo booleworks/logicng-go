@@ -1,27 +1,25 @@
-package function
-
-import f "github.com/booleworks/logicng-go/formula"
+package formula
 
 // LiteralProfile returns the number of occurrences of each literal in the
 // given formula.
-func LiteralProfile(fac f.Factory, formula f.Formula) map[f.Literal]int {
-	cache := make(map[f.Literal]int)
+func LiteralProfile(fac Factory, formula Formula) map[Literal]int {
+	cache := make(map[Literal]int)
 	litProfileRec(fac, formula, cache)
 	return cache
 }
 
 // VariableProfile  returns the number of occurrences of each variable in the
 // given formula.
-func VariableProfile(fac f.Factory, formula f.Formula) map[f.Variable]int {
-	cache := make(map[f.Variable]int)
+func VariableProfile(fac Factory, formula Formula) map[Variable]int {
+	cache := make(map[Variable]int)
 	varProfileRec(fac, formula, cache)
 	return cache
 }
 
-func litProfileRec(fac f.Factory, formula f.Formula, cache map[f.Literal]int) {
-	if formula.Sort() == f.SortLiteral {
-		cache[f.Literal(formula)]++
-	} else if formula.Sort() == f.SortPBC || formula.Sort() == f.SortCC {
+func litProfileRec(fac Factory, formula Formula, cache map[Literal]int) {
+	if formula.Sort() == SortLiteral {
+		cache[Literal(formula)]++
+	} else if formula.Sort() == SortPBC || formula.Sort() == SortCC {
 		_, _, lits, _, _ := fac.PBCOps(formula)
 		for _, l := range lits {
 			litProfileRec(fac, l.AsFormula(), cache)
@@ -33,11 +31,11 @@ func litProfileRec(fac f.Factory, formula f.Formula, cache map[f.Literal]int) {
 	}
 }
 
-func varProfileRec(fac f.Factory, formula f.Formula, cache map[f.Variable]int) {
-	if formula.Sort() == f.SortLiteral {
-		variable := f.Literal(formula).Variable()
+func varProfileRec(fac Factory, formula Formula, cache map[Variable]int) {
+	if formula.Sort() == SortLiteral {
+		variable := Literal(formula).Variable()
 		cache[variable]++
-	} else if formula.Sort() == f.SortPBC || formula.Sort() == f.SortCC {
+	} else if formula.Sort() == SortPBC || formula.Sort() == SortCC {
 		_, _, lits, _, _ := fac.PBCOps(formula)
 		for _, l := range lits {
 			variable := l.Variable()

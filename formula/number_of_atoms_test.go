@@ -1,16 +1,15 @@
-package function
+package formula
 
 import (
 	"testing"
 
-	f "github.com/booleworks/logicng-go/formula"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNumberOfAtoms(t *testing.T) {
 	assert := assert.New(t)
-	fac := f.NewFactory()
-	d := f.NewTestData(fac)
+	fac := NewFactory()
+	d := NewTestData(fac)
 
 	assert.Equal(1, NumberOfAtoms(fac, d.False))
 	assert.Equal(1, NumberOfAtoms(fac, d.True))

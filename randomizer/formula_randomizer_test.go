@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	f "github.com/booleworks/logicng-go/formula"
-	"github.com/booleworks/logicng-go/function"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -177,7 +176,7 @@ func TestRandomizerAnd(t *testing.T) {
 		for i := 0; i < 10; i++ {
 			formula := random.And(depth)
 			assert.Equal(f.SortAnd, formula.Sort())
-			assert.True(function.FormulaDepth(fac, formula) <= depth)
+			assert.True(f.FormulaDepth(fac, formula) <= depth)
 		}
 	}
 }
@@ -194,7 +193,7 @@ func TestRandomizerOr(t *testing.T) {
 		for i := 0; i < 10; i++ {
 			formula := random.Or(depth)
 			assert.Equal(f.SortOr, formula.Sort())
-			assert.True(function.FormulaDepth(fac, formula) <= depth)
+			assert.True(f.FormulaDepth(fac, formula) <= depth)
 		}
 	}
 }
@@ -212,7 +211,7 @@ func TestRandomizerNot(t *testing.T) {
 		for i := 0; i < 10; i++ {
 			formula := random.Not(depth)
 			assert.Equal(f.SortNot, formula.Sort())
-			assert.True(function.FormulaDepth(fac, formula) <= depth)
+			assert.True(f.FormulaDepth(fac, formula) <= depth)
 		}
 	}
 }
@@ -229,7 +228,7 @@ func TestRandomizerImpl(t *testing.T) {
 		for i := 0; i < 10; i++ {
 			formula := random.Impl(depth)
 			assert.Equal(f.SortImpl, formula.Sort())
-			assert.True(function.FormulaDepth(fac, formula) <= depth)
+			assert.True(f.FormulaDepth(fac, formula) <= depth)
 		}
 	}
 }
@@ -246,7 +245,7 @@ func TestRandomizerEquiv(t *testing.T) {
 		for i := 0; i < 10; i++ {
 			formula := random.Equiv(depth)
 			assert.Equal(f.SortEquiv, formula.Sort())
-			assert.True(function.FormulaDepth(fac, formula) <= depth)
+			assert.True(f.FormulaDepth(fac, formula) <= depth)
 		}
 	}
 }

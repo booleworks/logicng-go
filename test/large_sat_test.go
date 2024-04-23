@@ -10,7 +10,6 @@ import (
 
 	"github.com/booleworks/logicng-go/assignment"
 	f "github.com/booleworks/logicng-go/formula"
-	"github.com/booleworks/logicng-go/function"
 	"github.com/booleworks/logicng-go/io"
 	"github.com/booleworks/logicng-go/model"
 	"github.com/booleworks/logicng-go/sat"
@@ -22,7 +21,7 @@ func TestSolverMidFormula(t *testing.T) {
 	start := time.Now()
 	formula, _ := io.ReadFormula(fac, "data/formulas/mid.txt")
 	elapsed := time.Since(start) / 1_000_000
-	atoms := function.NumberOfAtoms(fac, formula)
+	atoms := f.NumberOfAtoms(fac, formula)
 	t.Logf("Read formula (%d atoms): %d ms", atoms, elapsed)
 
 	start = time.Now()
@@ -45,7 +44,7 @@ func TestSolverLargeFormula(t *testing.T) {
 	start := time.Now()
 	formula, _ := io.ReadFormula(fac, "data/formulas/large.txt")
 	elapsed := time.Since(start) / 1_000_000
-	atoms := function.NumberOfAtoms(fac, formula)
+	atoms := f.NumberOfAtoms(fac, formula)
 	t.Logf("Read formula (%d atoms): %d ms", atoms, elapsed)
 
 	start = time.Now()

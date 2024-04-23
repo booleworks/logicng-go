@@ -9,7 +9,6 @@ import (
 	"time"
 
 	f "github.com/booleworks/logicng-go/formula"
-	"github.com/booleworks/logicng-go/function"
 	"github.com/booleworks/logicng-go/parser"
 	"github.com/booleworks/logicng-go/randomizer"
 	"github.com/booleworks/logicng-go/sat"
@@ -105,7 +104,7 @@ func testRandomReordering(t *testing.T, minVars, maxVars int, verbose bool, stat
 			fac := f.NewFactory()
 			formula := randomFormula(fac, vars, depth)
 			if verbose {
-				fmt.Printf("vars = %2d, depth = %2d, nodes = %5d\n", vars, depth, function.NumberOfNodes(fac, formula))
+				fmt.Printf("vars = %2d, depth = %2d, nodes = %5d\n", vars, depth, f.NumberOfNodes(fac, formula))
 			}
 			for _, method := range reorderMethods {
 				performReorder(t, fac, formula, method, true, verbose, stats)
@@ -160,7 +159,7 @@ func testReorderOnBuild(t *testing.T, minVars, maxVars int, verbose bool, stats 
 			fac := f.NewFactory()
 			formula := randomFormula(fac, vars, depth)
 			if verbose {
-				fmt.Printf("vars = %2d, depth = %2d, nodes = %5d\n", vars, depth, function.NumberOfNodes(fac, formula))
+				fmt.Printf("vars = %2d, depth = %2d, nodes = %5d\n", vars, depth, f.NumberOfNodes(fac, formula))
 			}
 			order := order(fac, formula)
 			kernel := NewKernelWithOrdering(fac, order, 1000, 10000)
@@ -327,7 +326,7 @@ type swapStats struct {
 }
 
 func (s *swapStats) newFormula(fac f.Factory, formula f.Formula) {
-	s.maxFormulaSize = max(s.maxFormulaSize, function.NumberOfNodes(fac, formula))
+	s.maxFormulaSize = max(s.maxFormulaSize, f.NumberOfNodes(fac, formula))
 }
 
 func (s *swapStats) newBdd(bdd *BDD) {

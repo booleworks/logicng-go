@@ -1,6 +1,6 @@
 // Package dnnf provides datastructures and algorithms for compiling and
 // manipulation deterministic, decomposable negation normal forms, or short
-// [DNNF].
+// [DNNF] in LogicNG.
 //
 // The d-DNNF of a formula has proven to be more succinct than it's BDD.
 // Further, it helps to alleviate the ubiquitous memory explosion problem of

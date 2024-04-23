@@ -1,5 +1,5 @@
 // Package normalform provides algorithms for converting Boolean formulas into
-// normal forms.
+// normal forms in LogicNG.
 //
 // The two most important normal forms are the conjunctive normal form (CNF)
 // and the disjunctive normal form (DNF). In particular, the CNF is of special

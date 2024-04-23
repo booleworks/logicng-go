@@ -1,5 +1,5 @@
-// Package simplification gaterns various simplification algorithms for Boolean
-// formulas.
+// Package simplification gathers various simplification algorithms for Boolean
+// formulas in LogicNG.
 //
 // The idea of the simplifiers is to simplify a given formula.
 // But what is "simple" in terms of a formula? Since "simple" is no

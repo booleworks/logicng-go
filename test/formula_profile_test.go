@@ -1,4 +1,4 @@
-package function
+package test
 
 import (
 	"testing"
@@ -12,10 +12,10 @@ func TestProfileConstants(t *testing.T) {
 	assert := assert.New(t)
 	fac := f.NewFactory()
 
-	assert.Equal(map[f.Variable]int{}, VariableProfile(fac, fac.Verum()))
-	assert.Equal(map[f.Variable]int{}, VariableProfile(fac, fac.Falsum()))
-	assert.Equal(map[f.Literal]int{}, LiteralProfile(fac, fac.Verum()))
-	assert.Equal(map[f.Literal]int{}, LiteralProfile(fac, fac.Falsum()))
+	assert.Equal(map[f.Variable]int{}, f.VariableProfile(fac, fac.Verum()))
+	assert.Equal(map[f.Variable]int{}, f.VariableProfile(fac, fac.Falsum()))
+	assert.Equal(map[f.Literal]int{}, f.LiteralProfile(fac, fac.Verum()))
+	assert.Equal(map[f.Literal]int{}, f.LiteralProfile(fac, fac.Falsum()))
 }
 
 func TestProfileLiterals(t *testing.T) {
@@ -25,12 +25,12 @@ func TestProfileLiterals(t *testing.T) {
 
 	expectedVars := map[f.Variable]int{fac.Var("a"): 1}
 
-	assert.Equal(expectedVars, VariableProfile(fac, p.ParseUnsafe("a")))
-	assert.Equal(expectedVars, VariableProfile(fac, p.ParseUnsafe("~a")))
+	assert.Equal(expectedVars, f.VariableProfile(fac, p.ParseUnsafe("a")))
+	assert.Equal(expectedVars, f.VariableProfile(fac, p.ParseUnsafe("~a")))
 	expectedLits := map[f.Literal]int{fac.Lit("a", true): 1}
-	assert.Equal(expectedLits, LiteralProfile(fac, p.ParseUnsafe("a")))
+	assert.Equal(expectedLits, f.LiteralProfile(fac, p.ParseUnsafe("a")))
 	expectedLits = map[f.Literal]int{fac.Lit("a", false): 1}
-	assert.Equal(expectedLits, LiteralProfile(fac, p.ParseUnsafe("~a")))
+	assert.Equal(expectedLits, f.LiteralProfile(fac, p.ParseUnsafe("~a")))
 }
 
 func TestProfileNot(t *testing.T) {
@@ -51,8 +51,8 @@ func TestProfileNot(t *testing.T) {
 	expectedLits[fac.Lit("c", false)] = 1
 
 	formula := p.ParseUnsafe("~(a & (b | c) & ((~b | ~c) => c))")
-	assert.Equal(expectedVars, VariableProfile(fac, formula))
-	assert.Equal(expectedLits, LiteralProfile(fac, formula))
+	assert.Equal(expectedVars, f.VariableProfile(fac, formula))
+	assert.Equal(expectedLits, f.LiteralProfile(fac, formula))
 }
 
 func TestProfileBinaryOperator(t *testing.T) {
@@ -75,10 +75,10 @@ func TestProfileBinaryOperator(t *testing.T) {
 	impl := p.ParseUnsafe("(a & (b | c) & (~b | ~c)) => c")
 	equiv := p.ParseUnsafe("(a & (b | c) & (~b | ~c)) <=> c")
 
-	assert.Equal(expectedVars, VariableProfile(fac, impl))
-	assert.Equal(expectedVars, VariableProfile(fac, equiv))
-	assert.Equal(expectedLits, LiteralProfile(fac, impl))
-	assert.Equal(expectedLits, LiteralProfile(fac, equiv))
+	assert.Equal(expectedVars, f.VariableProfile(fac, impl))
+	assert.Equal(expectedVars, f.VariableProfile(fac, equiv))
+	assert.Equal(expectedLits, f.LiteralProfile(fac, impl))
+	assert.Equal(expectedLits, f.LiteralProfile(fac, equiv))
 }
 
 func TestProfileNAryOperator(t *testing.T) {
@@ -99,8 +99,8 @@ func TestProfileNAryOperator(t *testing.T) {
 	expectedLits[fac.Lit("c", false)] = 1
 
 	formula := p.ParseUnsafe("a & (b | c) & (~b | ~c) & c")
-	assert.Equal(expectedVars, VariableProfile(fac, formula))
-	assert.Equal(expectedLits, LiteralProfile(fac, formula))
+	assert.Equal(expectedVars, f.VariableProfile(fac, formula))
+	assert.Equal(expectedLits, f.LiteralProfile(fac, formula))
 }
 
 func TestProfilePbc(t *testing.T) {
@@ -136,14 +136,14 @@ func TestProfilePbc(t *testing.T) {
 	cc2 := p.ParseUnsafe("a + b + c > 2")
 	amo := p.ParseUnsafe("a + ~b + c <= 1")
 
-	assert.Equal(expectedVars1, VariableProfile(fac, pb1))
-	assert.Equal(expectedLits1, LiteralProfile(fac, pb1))
-	assert.Equal(expectedVars2, VariableProfile(fac, pb2))
-	assert.Equal(expectedVars2L, LiteralProfile(fac, pb2))
-	assert.Equal(expectedVars1, VariableProfile(fac, cc1))
-	assert.Equal(expectedVars1L, LiteralProfile(fac, cc1))
-	assert.Equal(expectedVars2, VariableProfile(fac, cc2))
-	assert.Equal(expectedVars2L, LiteralProfile(fac, cc2))
-	assert.Equal(expectedVars2, VariableProfile(fac, amo))
-	assert.Equal(expectedLits2, LiteralProfile(fac, amo))
+	assert.Equal(expectedVars1, f.VariableProfile(fac, pb1))
+	assert.Equal(expectedLits1, f.LiteralProfile(fac, pb1))
+	assert.Equal(expectedVars2, f.VariableProfile(fac, pb2))
+	assert.Equal(expectedVars2L, f.LiteralProfile(fac, pb2))
+	assert.Equal(expectedVars1, f.VariableProfile(fac, cc1))
+	assert.Equal(expectedVars1L, f.LiteralProfile(fac, cc1))
+	assert.Equal(expectedVars2, f.VariableProfile(fac, cc2))
+	assert.Equal(expectedVars2L, f.LiteralProfile(fac, cc2))
+	assert.Equal(expectedVars2, f.VariableProfile(fac, amo))
+	assert.Equal(expectedLits2, f.LiteralProfile(fac, amo))
 }

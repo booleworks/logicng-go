@@ -2,7 +2,6 @@ package dnnf
 
 import (
 	f "github.com/booleworks/logicng-go/formula"
-	"github.com/booleworks/logicng-go/function"
 	"github.com/booleworks/logicng-go/sat"
 	"github.com/emirpasic/gods/sets/treeset"
 	"github.com/emirpasic/gods/utils"
@@ -65,7 +64,7 @@ func newDtreeLeaf(fac f.Factory, id int32, clause f.Formula) *dtreeLeaf {
 		id:              id,
 		clause:          clause,
 		statClauseIds:   []int32{id},
-		clauseSize:      int32(function.NumberOfAtoms(fac, clause)),
+		clauseSize:      int32(f.NumberOfAtoms(fac, clause)),
 		statSeparator:   []int32{},
 		separatorBitSet: newBitset(),
 	}

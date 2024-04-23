@@ -7,7 +7,6 @@ import (
 	"github.com/booleworks/logicng-go/configuration"
 	"github.com/booleworks/logicng-go/errorx"
 	f "github.com/booleworks/logicng-go/formula"
-	"github.com/booleworks/logicng-go/function"
 	"github.com/booleworks/logicng-go/model"
 	"github.com/booleworks/logicng-go/normalform"
 )
@@ -201,7 +200,7 @@ func (m *Solver) addCNF(formula f.Formula, weight int) {
 }
 
 func (m *Solver) addClause(formula f.Formula, weight int) {
-	clauseVec := make([]int32, function.NumberOfAtoms(m.fac, formula))
+	clauseVec := make([]int32, f.NumberOfAtoms(m.fac, formula))
 	for i, lit := range f.Literals(m.fac, formula).Content() {
 		variable := lit.Variable()
 		index, ok := m.var2index[variable]

@@ -1,5 +1,5 @@
 // Package bdd provides data structures and algorithms on Binary Decision
-// Diagrams (BDD).
+// Diagrams (BDD) in LogicNG.
 //
 // A BDD is a directed acyclic graph of a given formula. It has a single root;
 // Each inner node is labeled with a propositional variable and has one

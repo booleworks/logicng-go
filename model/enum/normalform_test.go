@@ -8,7 +8,6 @@ import (
 
 	"github.com/booleworks/logicng-go/errorx"
 	f "github.com/booleworks/logicng-go/formula"
-	"github.com/booleworks/logicng-go/function"
 	"github.com/booleworks/logicng-go/normalform"
 	"github.com/booleworks/logicng-go/parser"
 	"github.com/booleworks/logicng-go/randomizer"
@@ -141,9 +140,9 @@ func hasConstantTermSizeCNF(fac f.Factory, cnf f.Formula) bool {
 		return true
 	case f.SortAnd:
 		ops, _ := fac.NaryOperands(cnf)
-		count := function.NumberOfAtoms(fac, ops[0])
+		count := f.NumberOfAtoms(fac, ops[0])
 		for i := 1; i < len(ops); i++ {
-			if function.NumberOfAtoms(fac, ops[i]) != count {
+			if f.NumberOfAtoms(fac, ops[i]) != count {
 				return false
 			}
 		}
@@ -159,9 +158,9 @@ func hasConstantTermSizeDNF(fac f.Factory, cnf f.Formula) bool {
 		return true
 	case f.SortOr:
 		ops, _ := fac.NaryOperands(cnf)
-		count := function.NumberOfAtoms(fac, ops[0])
+		count := f.NumberOfAtoms(fac, ops[0])
 		for i := 1; i < len(ops); i++ {
-			if function.NumberOfAtoms(fac, ops[i]) != count {
+			if f.NumberOfAtoms(fac, ops[i]) != count {
 				return false
 			}
 		}

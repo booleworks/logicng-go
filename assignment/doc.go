@@ -1,5 +1,5 @@
-// Package assignment provides a data structure for Boolean assignments,
-// mapping Boolean variables to truth values.
+// Package assignment provides a data structure for Boolean assignments in
+// LogicNG, mapping Boolean variables to truth values.
 //
 // In contrast to the model found in the [model] package, an assignment stores
 // the variables internally in such a way that it can be efficiently used for

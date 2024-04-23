@@ -5,7 +5,6 @@ import (
 	"sort"
 
 	f "github.com/booleworks/logicng-go/formula"
-	"github.com/booleworks/logicng-go/function"
 	"github.com/booleworks/logicng-go/graph"
 	"github.com/booleworks/logicng-go/normalform"
 	"github.com/emirpasic/gods/maps/linkedhashmap"
@@ -109,7 +108,7 @@ func MinToMaxOrder(fac f.Factory, formula f.Formula) []f.Variable {
 }
 
 func occurenceOrder(fac f.Factory, formula f.Formula, min2max bool) []f.Variable {
-	profile := function.VariableProfile(fac, formula)
+	profile := f.VariableProfile(fac, formula)
 	dfs := DFSOrder(fac, formula)
 	variables := make([]f.Variable, len(dfs))
 	copy(variables, dfs)

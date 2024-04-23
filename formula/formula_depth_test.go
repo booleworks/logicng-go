@@ -1,17 +1,16 @@
-package function
+package formula
 
 import (
 	"fmt"
 	"testing"
 
-	f "github.com/booleworks/logicng-go/formula"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestFormulaDepthAtoms(t *testing.T) {
 	assert := assert.New(t)
-	fac := f.NewFactory()
-	d := f.NewTestData(fac)
+	fac := NewFactory()
+	d := NewTestData(fac)
 
 	assert.Equal(0, FormulaDepth(fac, fac.Falsum()))
 	assert.Equal(0, FormulaDepth(fac, fac.Verum()))
@@ -28,8 +27,8 @@ func TestFormulaDepthAtoms(t *testing.T) {
 
 func TestFormulaDepthDeep(t *testing.T) {
 	assert := assert.New(t)
-	fac := f.NewFactory()
-	d := f.NewTestData(fac)
+	fac := NewFactory()
+	d := NewTestData(fac)
 
 	assert.Equal(1, FormulaDepth(fac, d.AND1))
 	assert.Equal(1, FormulaDepth(fac, d.AND2))
@@ -51,7 +50,7 @@ func TestFormulaDepthDeep(t *testing.T) {
 
 func TestFormulaTestDeeper(t *testing.T) {
 	assert := assert.New(t)
-	fac := f.NewFactory()
+	fac := NewFactory()
 
 	formula := fac.Variable("Y")
 	for i := 0; i < 10; i++ {

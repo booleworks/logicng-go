@@ -1,5 +1,5 @@
 // Package graph contains datastructures and algorithm for simple graph and
-// hyper-graph implementations.
+// hyper-graph implementations in LogicNG.
 //
 // Hyper-graphs are only used for the BDD Force variable ordering heuristic.
 // Graphs however are used in a more versatile manner for constraint graphs of

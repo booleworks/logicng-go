@@ -1,4 +1,5 @@
-// Package sat provides a SAT solver with a rich interface.
+// Package sat provides LogicNG's SAT solver with a rich interface.
+//
 // The SAT problem is the problem of deciding whether a formula in Boolean
 // logic is satisfiable or not. In other words, does there exist a variable
 // assignment under which the formula evaluates to true?

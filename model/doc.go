@@ -1,5 +1,5 @@
-// Package model provides a data structure for Boolean models.  A model is just
-// a list of literals.
+// Package model provides a data structure for Boolean models in LogicNG.  A
+// model is just a list of literals.
 //
 // In contrast to the assignment found in the [assignment] package, a model
 // stores the literals internally just as a list without checking for

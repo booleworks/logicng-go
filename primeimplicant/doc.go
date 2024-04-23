@@ -1,5 +1,5 @@
 // Package primeimplicant provides algorithms for computing minimum prime
-// implicants and minimum prime implicant coverages.
+// implicants and minimum prime implicant coverages in LogicNG.
 //
 //   - An implicant of a formula is any min-term – a conjunction of literals –
 //     such that the implicant logically implies the formula.

@@ -1,4 +1,4 @@
-// Package iter gathers functionality for model iteration.
+// Package iter gathers functionality for model iteration in LogicNG.
 //
 // All (potentially projected) models on a SAT solver are iterated.  Iteration
 // can be configured with different strategies.  The default strategy is to

@@ -5,7 +5,6 @@ import (
 	"github.com/booleworks/logicng-go/configuration"
 	"github.com/booleworks/logicng-go/errorx"
 	f "github.com/booleworks/logicng-go/formula"
-	"github.com/booleworks/logicng-go/function"
 	"github.com/booleworks/logicng-go/handler"
 )
 
@@ -283,7 +282,7 @@ func PGCNF(fac f.Factory, formula f.Formula, boundaryForFactorization int, state
 		return nnf
 	}
 	var pg f.Formula
-	if function.NumberOfAtoms(fac, nnf) < boundaryForFactorization {
+	if f.NumberOfAtoms(fac, nnf) < boundaryForFactorization {
 		pg = FactorizedCNF(fac, nnf)
 	} else {
 		pg = computeTransformation(fac, nnf, state)
@@ -391,10 +390,10 @@ func TseitinCNF(fac f.Factory, formula f.Formula, boundaryForFactorization int, 
 		topLevel, _ := assignment.New(fac, state.LiteralMap[nnf])
 		return assignment.Restrict(fac, tseitin, topLevel)
 	}
-	if function.NumberOfAtoms(fac, nnf) < boundaryForFactorization {
+	if f.NumberOfAtoms(fac, nnf) < boundaryForFactorization {
 		tseitin = FactorizedCNF(fac, nnf)
 	} else {
-		for _, op := range function.SubNodes(fac, nnf) {
+		for _, op := range f.SubNodes(fac, nnf) {
 			computeTseitin(fac, op, state)
 		}
 		topLevel, _ := assignment.New(fac, state.LiteralMap[nnf])

@@ -1,5 +1,5 @@
 // Package maxsat provides an implementation of a MAX-SAT solver with different
-// solving algorithms.
+// solving algorithms in LogicNG.
 //
 // Given an unsatisfiable formula in CNF, the MAX-SAT problem is the problem of
 // finding an assignment which satisfies the maximum number of clauses and

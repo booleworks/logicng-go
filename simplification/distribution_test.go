@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	f "github.com/booleworks/logicng-go/formula"
-	"github.com/booleworks/logicng-go/function"
 	"github.com/booleworks/logicng-go/parser"
 	"github.com/booleworks/logicng-go/sat"
 	"github.com/stretchr/testify/assert"
@@ -39,7 +38,7 @@ func TestDistributeSimple(t *testing.T) {
 	dist := Distribute(fac, formula)
 
 	assert.True(sat.IsEquivalent(fac, formula, dist))
-	assert.Equal(19, function.NumberOfAtoms(fac, dist))
+	assert.Equal(19, f.NumberOfAtoms(fac, dist))
 }
 
 func TestDistributeComplex(t *testing.T) {

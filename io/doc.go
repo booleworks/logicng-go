@@ -1,4 +1,5 @@
-// Package io gathers readers and writers for formulas in different formats.
+// Package io gathers readers and writers for formulas in different formats in
+// LogicNG.
 //
 // To write a formula to a file, you can use the
 //

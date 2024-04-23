@@ -1,5 +1,5 @@
 // Package encoding provides data structures and algorithms for cardinality and
-// pseudo-Boolean encodings.
+// pseudo-Boolean encodings in LogicNG.
 //
 // Encoders transform a constraint into a CNF representation.  For conventional
 // (non-incremental) cardinality constraints we have the following encodings

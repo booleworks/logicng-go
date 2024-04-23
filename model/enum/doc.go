@@ -1,4 +1,5 @@
-// Package enum provides algorithms to perform model enumeration on formulas.
+// Package enum provides algorithms to perform model enumeration on formulas in
+// LogicNG.
 //
 // An enumeration can be performed on a formula:
 //
