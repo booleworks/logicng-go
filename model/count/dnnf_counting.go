@@ -22,6 +22,27 @@ import (
 // counted - if there are arbitrary cardinality constraints or pseudo-Boolean
 // constraints in the formula, an error is returned.
 func Count(fac f.Factory, variables []f.Variable, formulas ...f.Formula) (*big.Int, error) {
+	cnt, err, _ := CountWithHandler(fac, variables, nil, formulas...)
+	return cnt, err
+}
+
+// CountWithHandler computes the model count for the given formulas (interpreted as
+// conjunction) and a set of relevant variables. This set can only be a
+// superset of the original formulas' variables. No projected model counting is
+// supported.  This is just used for don't care variable detection.
+//
+// Since the counter internally has to generate a CNF formula which does not
+// alter the model count, only AMO and EXO cardinality constraints can be
+// counted - if there are arbitrary cardinality constraints or pseudo-Boolean
+// constraints in the formula, an error is returned.
+//
+// If the DNNF handler aborts the dnnf compilation the ok flag is false.
+func CountWithHandler(
+	fac f.Factory,
+	variables []f.Variable,
+	handler dnnf.Handler,
+	formulas ...f.Formula,
+) (*big.Int, error, bool) {
 	vars := f.NewVarSet(variables...)
 	if !vars.ContainsAll(f.Variables(fac, formulas...)) {
 		panic(errorx.BadInput("variables must be a superset of the formulas' variables"))
@@ -35,20 +56,23 @@ func Count(fac f.Factory, variables []f.Variable, formulas ...f.Formula) (*big.I
 			}
 		}
 		if nonTrueCount == 0 {
-			return big.NewInt(1), nil
+			return big.NewInt(1), nil, true
 		} else {
-			return big.NewInt(0), nil
+			return big.NewInt(0), nil, true
 		}
 	}
 	cnfs, err := encodeAsCNF(fac, formulas)
 	if err != nil {
-		return nil, err
+		return nil, err, true
 	}
 	simplification := simplify(fac, cnfs)
-	count := count(fac, simplification.simplifiedFormulas)
+	count, ok := count(fac, simplification.simplifiedFormulas, handler)
+	if !ok {
+		return nil, nil, false
+	}
 	dontCareVariables := simplification.getDontCareVariables(vars)
 	exp := big.NewInt(2).Exp(big.NewInt(2), big.NewInt(int64(dontCareVariables.Size())), nil)
-	return count.Mul(count, exp), nil
+	return count.Mul(count, exp), nil, true
 }
 
 func encodeAsCNF(fac f.Factory, formulas []f.Formula) ([]f.Formula, error) {
@@ -85,17 +109,20 @@ func simplify(fac f.Factory, formulas []f.Formula) *simplificationResult {
 	return &simplificationResult{fac, simplified, backboneVariables.Content()}
 }
 
-func count(fac f.Factory, formulas []f.Formula) *big.Int {
+func count(fac f.Factory, formulas []f.Formula, handler dnnf.Handler) (*big.Int, bool) {
 	constraintGraph := graph.GenerateConstraintGraph(fac, formulas...)
 	ccs := graph.ComputeConnectedComponents(constraintGraph)
 	components := graph.SplitFormulasByComponent(fac, formulas, ccs)
 	count := big.NewInt(1)
 	for _, component := range components {
-		dnnf := dnnf.Compile(fac, fac.And(component...))
+		dnnf, ok := dnnf.CompileWithHandler(fac, fac.And(component...), handler)
+		if !ok {
+			return nil, false
+		}
 		dnnfCount := dnnf.ModelCount()
 		count = count.Mul(count, dnnfCount)
 	}
-	return count
+	return count, true
 }
 
 type simplificationResult struct {
