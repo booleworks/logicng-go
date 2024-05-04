@@ -9,14 +9,6 @@ import (
 	"github.com/emirpasic/gods/maps/treemap"
 )
 
-// A Handler for a DNNF can abort the compilation of a DNNF.  The method
-// ShannonExpansion is called after each performed Shannon expansion within the
-// DNNF compiler.
-type Handler interface {
-	handler.Handler
-	ShannonExpansion() bool
-}
-
 // Compile returns a compiled DNNF for the given formula.
 func Compile(fac f.Factory, formula f.Formula) *DNNF {
 	dnnf, _ := CompileWithHandler(fac, formula, nil)
