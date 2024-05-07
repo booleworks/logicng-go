@@ -42,6 +42,7 @@ func (s *Solver) computeUnsatCore() *e.UnsatCore {
 	for prop := range props {
 		propositions = append(propositions, prop)
 	}
+	slices.SortFunc(propositions, f.PropComparator)
 	return e.NewUnsatCore(propositions, false)
 }
 
@@ -88,6 +89,7 @@ func handleTrivialCase(solver *Solver) *e.UnsatCore {
 				if propositions[0] != pjp {
 					propositions = append(propositions, pjp)
 				}
+				slices.SortFunc(propositions, f.PropComparator)
 				return e.NewUnsatCore(propositions, false)
 			}
 		}

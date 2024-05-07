@@ -63,3 +63,15 @@ func NewStandardProposition(formula Formula, description ...string) *StandardPro
 func NewExtendedProposition[T fmt.Stringer](formula Formula, backpack T) *ExtendedProposition[T] {
 	return &ExtendedProposition[T]{formula, backpack}
 }
+
+// PropComparator compares two propositions p1 and p2.
+func PropComparator(a, b Proposition) int {
+	switch {
+	case a.String() > b.String():
+		return 1
+	case a.String() < b.String():
+		return -1
+	default:
+		return int(a.Formula()) - int(b.Formula())
+	}
+}
