@@ -240,7 +240,18 @@ func variables(fac Factory, formula Formula) *VarSet {
 }
 
 // Literals returns all literals of the given formula as a literal set.
-func Literals(fac Factory, formula Formula) *LitSet {
+func Literals(fac Factory, formula ...Formula) *LitSet {
+	if len(formula) == 1 {
+		return literals(fac, formula[0])
+	}
+	result := NewMutableLitSet()
+	for _, f := range formula {
+		result.AddAll(literals(fac, f))
+	}
+	return result.AsImmutable()
+}
+
+func literals(fac Factory, formula Formula) *LitSet {
 	cached, ok := LookupFunctionCache(fac, FuncLiterals, formula)
 	if ok {
 		return cached.(*LitSet)
