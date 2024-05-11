@@ -25,6 +25,7 @@ func TestBDDTrue(t *testing.T) {
 	assert.Equal(fac.Verum(), bdd.DNF())
 	assert.Equal(*big.NewInt(1), *bdd.ModelCount())
 	assert.Equal(*big.NewInt(0), *bdd.NumberOfCNFClauses())
+	assert.Equal("<$true>", bdd.NodeRepresentation().String())
 }
 
 func TestBDDFalse(t *testing.T) {
@@ -37,6 +38,7 @@ func TestBDDFalse(t *testing.T) {
 	assert.Equal(fac.Falsum(), bdd.DNF())
 	assert.Equal(*big.NewInt(0), *bdd.ModelCount())
 	assert.Equal(*big.NewInt(1), *bdd.NumberOfCNFClauses())
+	assert.Equal("<$false>", bdd.NodeRepresentation().String())
 }
 
 func TestBDDVariable(t *testing.T) {
@@ -52,6 +54,7 @@ func TestBDDVariable(t *testing.T) {
 	assert.Equal(*big.NewInt(1), *bdd.ModelCount())
 	assert.Equal(*big.NewInt(1), *bdd.NumberOfCNFClauses())
 	modelsEqual(t, []*model.Model{model.New(va.AsLiteral())}, bdd.ModelEnumeration(va))
+	assert.Equal("<A | low=<$false> high=<$true>>", bdd.NodeRepresentation().String())
 }
 
 func TestBDDNegativeVariable(t *testing.T) {
@@ -68,6 +71,7 @@ func TestBDDNegativeVariable(t *testing.T) {
 	assert.Equal(*big.NewInt(1), *bdd.ModelCount())
 	assert.Equal(*big.NewInt(1), *bdd.NumberOfCNFClauses())
 	modelsEqual(t, []*model.Model{model.New(vna)}, bdd.ModelEnumeration(va))
+	assert.Equal("<A | low=<$true> high=<$false>>", bdd.NodeRepresentation().String())
 }
 
 func TestBDDImplication(t *testing.T) {
@@ -92,6 +96,7 @@ func TestBDDImplication(t *testing.T) {
 		model.New(va.AsLiteral(), vnb),
 	}
 	modelsEqual(t, expected, bdd.ModelEnumeration(va, vb))
+	assert.Equal("<A | low=<$true> high=<B | low=<$true> high=<$false>>>", bdd.NodeRepresentation().String())
 }
 
 func TestBDDEquivalence(t *testing.T) {
@@ -115,6 +120,7 @@ func TestBDDEquivalence(t *testing.T) {
 		model.New(va.AsLiteral(), vnb),
 	}
 	modelsEqual(t, expected, bdd.ModelEnumeration(va, vb))
+	assert.Equal("<A | low=<B | low=<$false> high=<$true>> high=<B | low=<$true> high=<$false>>>", bdd.NodeRepresentation().String())
 }
 
 func TestBDDOr(t *testing.T) {
@@ -146,6 +152,7 @@ func TestBDDOr(t *testing.T) {
 		model.New(va.AsLiteral(), vb.AsLiteral(), vc.AsLiteral()),
 	}
 	modelsEqual(t, expected, bdd.ModelEnumeration(va, vb, vc))
+	assert.Equal("<A | low=<B | low=<C | low=<$true> high=<$false>> high=<$true>> high=<$true>>", bdd.NodeRepresentation().String())
 }
 
 func TestBDDAnd(t *testing.T) {
@@ -167,6 +174,7 @@ func TestBDDAnd(t *testing.T) {
 
 	expected := []*model.Model{model.New(va.AsLiteral(), vb.AsLiteral(), vnc)}
 	modelsEqual(t, expected, bdd.ModelEnumeration(va, vb, vc))
+	assert.Equal("<A | low=<$false> high=<B | low=<$false> high=<C | low=<$true> high=<$false>>>>", bdd.NodeRepresentation().String())
 }
 
 func TestBDDFormula(t *testing.T) {
