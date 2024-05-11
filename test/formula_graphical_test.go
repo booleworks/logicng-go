@@ -16,15 +16,15 @@ import (
 func TestAstWriterConstants(t *testing.T) {
 	fac := f.NewFactory()
 
-	testFilesAst(t, "false", f.GenerateGraphicalFormulaAst(fac, fac.Falsum(), f.DefaultFormulaGraphicalGenerator()))
-	testFilesAst(t, "true", f.GenerateGraphicalFormulaAst(fac, fac.Verum(), f.DefaultFormulaGraphicalGenerator()))
+	testFilesAst(t, "false", f.GenerateGraphicalFormulaAST(fac, fac.Falsum(), f.DefaultFormulaGraphicalGenerator()))
+	testFilesAst(t, "true", f.GenerateGraphicalFormulaAST(fac, fac.Verum(), f.DefaultFormulaGraphicalGenerator()))
 }
 
 func TestAstWriterLiterals(t *testing.T) {
 	fac := f.NewFactory()
 
-	testFilesAst(t, "x", f.GenerateGraphicalFormulaAst(fac, fac.Variable("x"), f.DefaultFormulaGraphicalGenerator()))
-	testFilesAst(t, "not_x", f.GenerateGraphicalFormulaAst(fac, fac.Literal("x", false), f.DefaultFormulaGraphicalGenerator()))
+	testFilesAst(t, "x", f.GenerateGraphicalFormulaAST(fac, fac.Variable("x"), f.DefaultFormulaGraphicalGenerator()))
+	testFilesAst(t, "not_x", f.GenerateGraphicalFormulaAST(fac, fac.Literal("x", false), f.DefaultFormulaGraphicalGenerator()))
 }
 
 func TestAstWriterFormulas(t *testing.T) {
@@ -37,11 +37,11 @@ func TestAstWriterFormulas(t *testing.T) {
 	f4 := p.ParseUnsafe("~(a & b) | b & ~c")
 	f5 := p.ParseUnsafe("a | ~b | (2*a + 3*~b + 4*c <= 23)")
 
-	testFilesAst(t, "f1", f.GenerateGraphicalFormulaAst(fac, f1, f.DefaultFormulaGraphicalGenerator()))
-	testFilesAst(t, "f2", f.GenerateGraphicalFormulaAst(fac, f2, f.DefaultFormulaGraphicalGenerator()))
-	testFilesAst(t, "f3", f.GenerateGraphicalFormulaAst(fac, f3, f.DefaultFormulaGraphicalGenerator()))
-	testFilesAst(t, "f4", f.GenerateGraphicalFormulaAst(fac, f4, f.DefaultFormulaGraphicalGenerator()))
-	testFilesAst(t, "f5", f.GenerateGraphicalFormulaAst(fac, f5, f.DefaultFormulaGraphicalGenerator()))
+	testFilesAst(t, "f1", f.GenerateGraphicalFormulaAST(fac, f1, f.DefaultFormulaGraphicalGenerator()))
+	testFilesAst(t, "f2", f.GenerateGraphicalFormulaAST(fac, f2, f.DefaultFormulaGraphicalGenerator()))
+	testFilesAst(t, "f3", f.GenerateGraphicalFormulaAST(fac, f3, f.DefaultFormulaGraphicalGenerator()))
+	testFilesAst(t, "f4", f.GenerateGraphicalFormulaAST(fac, f4, f.DefaultFormulaGraphicalGenerator()))
+	testFilesAst(t, "f5", f.GenerateGraphicalFormulaAST(fac, f5, f.DefaultFormulaGraphicalGenerator()))
 }
 
 func TestAstWriterDuplicateFormulaParts(t *testing.T) {
@@ -50,8 +50,8 @@ func TestAstWriterDuplicateFormulaParts(t *testing.T) {
 	f6 := p.ParseUnsafe("(a & b) | (c & ~(a & b))")
 	f7 := p.ParseUnsafe("(c & d) | (a & b) | ((c & d) <=> (a & b))")
 
-	testFilesAst(t, "f6", f.GenerateGraphicalFormulaAst(fac, f6, f.DefaultFormulaGraphicalGenerator()))
-	testFilesAst(t, "f7", f.GenerateGraphicalFormulaAst(fac, f7, f.DefaultFormulaGraphicalGenerator()))
+	testFilesAst(t, "f6", f.GenerateGraphicalFormulaAST(fac, f6, f.DefaultFormulaGraphicalGenerator()))
+	testFilesAst(t, "f7", f.GenerateGraphicalFormulaAST(fac, f7, f.DefaultFormulaGraphicalGenerator()))
 }
 
 func TestAstWriterFixedStyle(t *testing.T) {
@@ -65,7 +65,7 @@ func TestAstWriterFixedStyle(t *testing.T) {
 		AlignTerminals:   true,
 	}
 
-	testFilesAst(t, "f8", f.GenerateGraphicalFormulaAst(fac, f8, generator))
+	testFilesAst(t, "f8", f.GenerateGraphicalFormulaAST(fac, f8, generator))
 }
 
 func TestAstWriterDynamicStyle(t *testing.T) {
@@ -99,7 +99,7 @@ func TestAstWriterDynamicStyle(t *testing.T) {
 		ComputeNodeStyle: computeNodeStyle,
 	}
 
-	testFilesAst(t, "f9", f.GenerateGraphicalFormulaAst(fac, f9, generator))
+	testFilesAst(t, "f9", f.GenerateGraphicalFormulaAST(fac, f9, generator))
 }
 
 func TestAstWriterEdgeMapper(t *testing.T) {
@@ -123,7 +123,7 @@ func TestAstWriterEdgeMapper(t *testing.T) {
 		ComputeEdgeStyle: computeEdgeStyle,
 	}
 
-	testFilesAst(t, "f10", f.GenerateGraphicalFormulaAst(fac, f10, generator))
+	testFilesAst(t, "f10", f.GenerateGraphicalFormulaAST(fac, f10, generator))
 }
 
 func TestAstWriterLabelMapper(t *testing.T) {
@@ -141,21 +141,21 @@ func TestAstWriterLabelMapper(t *testing.T) {
 		ComputeLabel:     computeLabel,
 	}
 
-	testFilesAst(t, "f8-ownLabels", f.GenerateGraphicalFormulaAst(fac, f8, generator))
+	testFilesAst(t, "f8-ownLabels", f.GenerateGraphicalFormulaAST(fac, f8, generator))
 }
 
 func TestDagWriterConstants(t *testing.T) {
 	fac := f.NewFactory()
 
-	testFilesDag(t, "false", f.GenerateGraphicalFormulaDag(fac, fac.Falsum(), f.DefaultFormulaGraphicalGenerator()))
-	testFilesDag(t, "true", f.GenerateGraphicalFormulaDag(fac, fac.Verum(), f.DefaultFormulaGraphicalGenerator()))
+	testFilesDag(t, "false", f.GenerateGraphicalFormulaDAG(fac, fac.Falsum(), f.DefaultFormulaGraphicalGenerator()))
+	testFilesDag(t, "true", f.GenerateGraphicalFormulaDAG(fac, fac.Verum(), f.DefaultFormulaGraphicalGenerator()))
 }
 
 func TestDagWriterLiterals(t *testing.T) {
 	fac := f.NewFactory()
 
-	testFilesDag(t, "x", f.GenerateGraphicalFormulaDag(fac, fac.Variable("x"), f.DefaultFormulaGraphicalGenerator()))
-	testFilesDag(t, "not_x", f.GenerateGraphicalFormulaDag(fac, fac.Literal("x", false), f.DefaultFormulaGraphicalGenerator()))
+	testFilesDag(t, "x", f.GenerateGraphicalFormulaDAG(fac, fac.Variable("x"), f.DefaultFormulaGraphicalGenerator()))
+	testFilesDag(t, "not_x", f.GenerateGraphicalFormulaDAG(fac, fac.Literal("x", false), f.DefaultFormulaGraphicalGenerator()))
 }
 
 func TestDagWriterFormulas(t *testing.T) {
@@ -168,11 +168,11 @@ func TestDagWriterFormulas(t *testing.T) {
 	f4 := p.ParseUnsafe("~(a & b) | b & ~c")
 	f5 := p.ParseUnsafe("a | ~b | (2*a + 3*~b + 4*c <= 23)")
 
-	testFilesDag(t, "f1", f.GenerateGraphicalFormulaDag(fac, f1, f.DefaultFormulaGraphicalGenerator()))
-	testFilesDag(t, "f2", f.GenerateGraphicalFormulaDag(fac, f2, f.DefaultFormulaGraphicalGenerator()))
-	testFilesDag(t, "f3", f.GenerateGraphicalFormulaDag(fac, f3, f.DefaultFormulaGraphicalGenerator()))
-	testFilesDag(t, "f4", f.GenerateGraphicalFormulaDag(fac, f4, f.DefaultFormulaGraphicalGenerator()))
-	testFilesDag(t, "f5", f.GenerateGraphicalFormulaDag(fac, f5, f.DefaultFormulaGraphicalGenerator()))
+	testFilesDag(t, "f1", f.GenerateGraphicalFormulaDAG(fac, f1, f.DefaultFormulaGraphicalGenerator()))
+	testFilesDag(t, "f2", f.GenerateGraphicalFormulaDAG(fac, f2, f.DefaultFormulaGraphicalGenerator()))
+	testFilesDag(t, "f3", f.GenerateGraphicalFormulaDAG(fac, f3, f.DefaultFormulaGraphicalGenerator()))
+	testFilesDag(t, "f4", f.GenerateGraphicalFormulaDAG(fac, f4, f.DefaultFormulaGraphicalGenerator()))
+	testFilesDag(t, "f5", f.GenerateGraphicalFormulaDAG(fac, f5, f.DefaultFormulaGraphicalGenerator()))
 }
 
 func TestDagWriterDuplicateFormulaParts(t *testing.T) {
@@ -181,8 +181,8 @@ func TestDagWriterDuplicateFormulaParts(t *testing.T) {
 	f6 := p.ParseUnsafe("(a & b) | (c & ~(a & b))")
 	f7 := p.ParseUnsafe("(c & d) | (a & b) | ((c & d) <=> (a & b))")
 
-	testFilesDag(t, "f6", f.GenerateGraphicalFormulaDag(fac, f6, f.DefaultFormulaGraphicalGenerator()))
-	testFilesDag(t, "f7", f.GenerateGraphicalFormulaDag(fac, f7, f.DefaultFormulaGraphicalGenerator()))
+	testFilesDag(t, "f6", f.GenerateGraphicalFormulaDAG(fac, f6, f.DefaultFormulaGraphicalGenerator()))
+	testFilesDag(t, "f7", f.GenerateGraphicalFormulaDAG(fac, f7, f.DefaultFormulaGraphicalGenerator()))
 }
 
 func TestDagWriterFixedStyle(t *testing.T) {
@@ -196,7 +196,7 @@ func TestDagWriterFixedStyle(t *testing.T) {
 		AlignTerminals:   true,
 	}
 
-	testFilesDag(t, "f8", f.GenerateGraphicalFormulaDag(fac, f8, generator))
+	testFilesDag(t, "f8", f.GenerateGraphicalFormulaDAG(fac, f8, generator))
 }
 
 func TestDagWriterDynamicStyle(t *testing.T) {
@@ -234,7 +234,7 @@ func TestDagWriterDynamicStyle(t *testing.T) {
 		ComputeLabel:     computeLabel,
 	}
 
-	testFilesDag(t, "f9", f.GenerateGraphicalFormulaDag(fac, f9, generator))
+	testFilesDag(t, "f9", f.GenerateGraphicalFormulaDAG(fac, f9, generator))
 }
 
 func TestDagWriterEdgeMapper(t *testing.T) {
@@ -256,7 +256,7 @@ func TestDagWriterEdgeMapper(t *testing.T) {
 		ComputeEdgeStyle: computeEdgeStyle,
 	}
 
-	testFilesDag(t, "f10", f.GenerateGraphicalFormulaDag(fac, f10, generator))
+	testFilesDag(t, "f10", f.GenerateGraphicalFormulaDAG(fac, f10, generator))
 }
 
 func testFilesDag(t *testing.T, fileName string, representation *graphical.Representation) {

@@ -18,11 +18,11 @@ func DefaultFormulaGraphicalGenerator() *graphical.Generator[Formula] {
 	}
 }
 
-// GenerateGraphicalFormulaAst generates a graphical representation of the
+// GenerateGraphicalFormulaAST generates a graphical representation of the
 // formula with the configuration of the generator as an abstract syntax tree
 // (AST).  The resulting representation can then be exported as mermaid or
 // graphviz graph.
-func GenerateGraphicalFormulaAst(
+func GenerateGraphicalFormulaAST(
 	fac Factory,
 	formula Formula,
 	generator *graphical.Generator[Formula],
@@ -47,7 +47,7 @@ func (g *astGenerator) walkFormula(formula Formula) *graphical.Node {
 	case SortFalse, SortTrue, SortLiteral:
 		return g.walkAtomicFormula(formula)
 	case SortCC, SortPBC:
-		return g.walkPbConstraint(formula)
+		return g.walkPBConstraint(formula)
 	case SortNot:
 		return g.walkNotFormula(formula)
 	case SortImpl, SortEquiv:
@@ -69,7 +69,7 @@ func (g *astGenerator) walkAtomicFormula(formula Formula) *graphical.Node {
 	return g.addNode(formula, label, true)
 }
 
-func (g *astGenerator) walkPbConstraint(pbc Formula) *graphical.Node {
+func (g *astGenerator) walkPBConstraint(pbc Formula) *graphical.Node {
 	pbNode := g.addNode(pbc, pbc.Sprint(g.fac), false)
 	_, _, literals, _, _ := g.fac.PBCOps(pbc)
 	for _, operand := range literals {
@@ -149,10 +149,10 @@ func litString(fac Factory, literal Literal) string {
 	}
 }
 
-// GenerateGraphicalFormulaDag generates a graphical representation of the
+// GenerateGraphicalFormulaDAG generates a graphical representation of the
 // formula with the configuration of the generator as a graph (DAG).  The
 // resulting representation can then be exported as mermaid or graphviz graph.
-func GenerateGraphicalFormulaDag(
+func GenerateGraphicalFormulaDAG(
 	fac Factory,
 	formula Formula,
 	generator *graphical.Generator[Formula],
@@ -194,7 +194,7 @@ func (g *dagGenerator) walkFormula(formula Formula) *graphical.Node {
 		// since this is a literal, it has to be already present
 		return g.nodes[formula]
 	case SortCC, SortPBC:
-		return g.walkPbConstraint(formula)
+		return g.walkPBConstraint(formula)
 	case SortNot:
 		return g.walkNotFormula(formula)
 	case SortImpl, SortEquiv:
@@ -206,7 +206,7 @@ func (g *dagGenerator) walkFormula(formula Formula) *graphical.Node {
 	}
 }
 
-func (g *dagGenerator) walkPbConstraint(pbc Formula) *graphical.Node {
+func (g *dagGenerator) walkPBConstraint(pbc Formula) *graphical.Node {
 	node, present := g.addNode(pbc, pbc.Sprint(g.fac), false)
 	if !present {
 		_, _, ops, _, _ := g.fac.PBCOps(pbc)
