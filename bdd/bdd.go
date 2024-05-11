@@ -430,33 +430,33 @@ func (b *BDD) VariableOrder() []f.Variable {
 }
 
 // NodeRepresentation returns a graph-like representation of the BDD as nodes.
-func (b *BDD) NodeRepresentation() BDDNode {
+func (b *BDD) NodeRepresentation() Node {
 	kernel := b.Kernel
 	index := b.Index
 	kernelNodeMap := make(map[int32][]int32)
 	for _, n := range kernel.allNodes(index) {
 		kernelNodeMap[n[0]] = n
 	}
-	nodeMap := make(map[int32]BDDNode)
+	nodeMap := make(map[int32]Node)
 	return buildBDDNode(index, kernel, kernelNodeMap, &nodeMap)
 }
 
-func buildBDDNode(index int32, kernel *Kernel, kernelNodeMap map[int32][]int32, nodeMap *map[int32]BDDNode) BDDNode {
+func buildBDDNode(index int32, kernel *Kernel, kernelNodeMap map[int32][]int32, nodeMap *map[int32]Node) Node {
 	node, ok := (*nodeMap)[index]
 	if ok {
 		return node
 	}
 	switch index {
 	case bddFalse:
-		node = &BDDConstant{Value: false}
+		node = &ConstantNode{Value: false}
 	case bddTrue:
-		node = &BDDConstant{Value: true}
+		node = &ConstantNode{Value: true}
 	default:
 		kernelNode := kernelNodeMap[index]
 		variable, _ := kernel.getVariableForIndex(kernelNode[1])
 		lowNode := buildBDDNode(kernelNode[2], kernel, kernelNodeMap, nodeMap)
 		highNode := buildBDDNode(kernelNode[3], kernel, kernelNodeMap, nodeMap)
-		node = &BDDInnerNode{variable.Sprint(kernel.fac), lowNode, highNode}
+		node = &InnerNode{variable.Sprint(kernel.fac), lowNode, highNode}
 	}
 	(*nodeMap)[index] = node
 	return node
