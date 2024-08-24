@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/io"
 	"github.com/booleworks/logicng-go/parser"
 	"github.com/booleworks/logicng-go/randomizer"
@@ -19,30 +20,30 @@ func TestPrimeImplicantReductionSimple(t *testing.T) {
 	parser := parser.New(fac)
 
 	pr := newPrimeReduction(fac, d.True)
-	result, _ := pr.reduceImplicant([]f.Literal{d.LA, d.LB}, nil)
+	result, _ := pr.reduceImplicant([]f.Literal{d.LA, d.LB}, handler.NopHandler)
 	assert.Equal(0, len(result))
 
 	pr = newPrimeReduction(fac, parser.ParseUnsafe("a&b|c&d"))
-	result, _ = pr.reduceImplicant([]f.Literal{d.LA, d.LB, d.LC, d.LD.Negate(fac)}, nil)
+	result, _ = pr.reduceImplicant([]f.Literal{d.LA, d.LB, d.LC, d.LD.Negate(fac)}, handler.NopHandler)
 	assert.Equal(2, len(result))
 	assert.True(slices.Contains(result, d.LA))
 	assert.True(slices.Contains(result, d.LB))
 
-	result, _ = pr.reduceImplicant([]f.Literal{d.LNA, d.LB, d.LC, d.LD}, nil)
+	result, _ = pr.reduceImplicant([]f.Literal{d.LNA, d.LB, d.LC, d.LD}, handler.NopHandler)
 	assert.Equal(2, len(result))
 	assert.True(slices.Contains(result, d.LC))
 	assert.True(slices.Contains(result, d.LD))
 
 	pr = newPrimeReduction(fac, parser.ParseUnsafe("a|b|~a&~b"))
-	result, _ = pr.reduceImplicant([]f.Literal{d.LNA, d.LB}, nil)
+	result, _ = pr.reduceImplicant([]f.Literal{d.LNA, d.LB}, handler.NopHandler)
 	assert.Equal(0, len(result))
 
 	pr = newPrimeReduction(fac, parser.ParseUnsafe("(a => b) | b | c"))
-	result, _ = pr.reduceImplicant([]f.Literal{d.LA, d.LB, d.LC.Negate(fac)}, nil)
+	result, _ = pr.reduceImplicant([]f.Literal{d.LA, d.LB, d.LC.Negate(fac)}, handler.NopHandler)
 	assert.Equal(1, len(result))
 	assert.True(slices.Contains(result, d.LB))
 
-	result, _ = pr.reduceImplicant([]f.Literal{d.LA, d.LNB, d.LC}, nil)
+	result, _ = pr.reduceImplicant([]f.Literal{d.LA, d.LNB, d.LC}, handler.NopHandler)
 	assert.Equal(1, len(result))
 	assert.True(slices.Contains(result, d.LC))
 }
@@ -85,10 +86,10 @@ func TestPrimeImplicantCornerCases(t *testing.T) {
 }
 
 func testImplicantFormula(t *testing.T, fac f.Factory, formula f.Formula) {
-	testImplicantFormulaDetail(t, fac, formula, nil, false)
+	testImplicantFormulaDetail(t, fac, formula, handler.NopHandler, false)
 }
 
-func testImplicantFormulaDetail(t *testing.T, fac f.Factory, formula f.Formula, handler sat.Handler, expAborted bool) {
+func testImplicantFormulaDetail(t *testing.T, fac f.Factory, formula f.Formula, h handler.Handler, expAborted bool) {
 	assert := assert.New(t)
 	solver := sat.NewSolver(fac)
 	solver.Add(formula)
@@ -99,13 +100,12 @@ func testImplicantFormulaDetail(t *testing.T, fac f.Factory, formula f.Formula, 
 
 	model := result.Model()
 	pr := newPrimeReduction(fac, formula)
-	primeImplicant, ok := pr.reduceImplicant(model.Literals, handler)
+	primeImplicant, state := pr.reduceImplicant(model.Literals, h)
 	if expAborted {
-		assert.False(ok)
-		assert.True(handler.Aborted())
+		assert.False(state.Success)
 		assert.Nil(primeImplicant)
 	} else {
-		assert.True(ok)
+		assert.True(state.Success)
 		for _, lit := range primeImplicant {
 			assert.True(slices.Contains(model.Literals, lit))
 		}

@@ -4,60 +4,62 @@ import (
 	"math"
 
 	"github.com/booleworks/logicng-go/bdd"
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/model"
 	"github.com/booleworks/logicng-go/model/iter"
 	"github.com/booleworks/logicng-go/sat"
 )
 
-// ToBDDOnFormula enumerates all models of a formula over the given variables
+// ToBddOnFormula enumerates all models of a formula over the given variables
 // and tathers the result in a BDD.
-func ToBDDOnFormula(
+func ToBddOnFormula(
 	fac f.Factory,
 	formula f.Formula,
 	variables []f.Variable,
 ) *bdd.BDD {
-	models, _ := ToBDDOnFormulaWithConfig(fac, formula, variables, iter.DefaultConfig())
+	models, _ := ToBddOnFormulaWithConfig(fac, formula, variables, iter.DefaultConfig())
 	return models
 }
 
-// ToBDDOnFormulaWithConfig enumerates all models of a formula over the given
+// ToBddOnFormulaWithConfig enumerates all models of a formula over the given
 // variables and gathers the result in a BDD.  The config can be used to
 // influence the model iteration process by setting a handler and/or an
 // iteration strategy.
-func ToBDDOnFormulaWithConfig(
+func ToBddOnFormulaWithConfig(
 	fac f.Factory,
 	formula f.Formula,
 	variables []f.Variable,
 	config *iter.Config,
-) (*bdd.BDD, bool) {
+) (*bdd.BDD, handler.State) {
 	solver := sat.NewSolver(fac)
 	solver.Add(formula)
-	return ToBDDOnSolverWithConfig(solver, variables, config)
+	return ToBddOnSolverWithConfig(solver, variables, config)
 }
 
-// ToBDDOnSolver enumerates all models on the given SAT solver over the given
+// ToBddOnSolver enumerates all models on the given SAT solver over the given
 // variables and gathers the result in a BDD.
-func ToBDDOnSolver(solver *sat.Solver, variables []f.Variable) *bdd.BDD {
-	models, _ := ToBDDOnSolverWithConfig(solver, variables, iter.DefaultConfig())
+func ToBddOnSolver(solver *sat.Solver, variables []f.Variable) *bdd.BDD {
+	models, _ := ToBddOnSolverWithConfig(solver, variables, iter.DefaultConfig())
 	return models
 }
 
-// ToBDDOnSolverWithConfig enumerates all models on the given SAT solver over
+// ToBddOnSolverWithConfig enumerates all models on the given SAT solver over
 // the given variables and gathers the result in a BDD.  The config can be used
 // to influence the model iteration process by setting a handler and/or an
 // iteration strategy.
-func ToBDDOnSolverWithConfig(
+func ToBddOnSolverWithConfig(
 	solver *sat.Solver,
 	variables []f.Variable,
 	config *iter.Config,
-) (*bdd.BDD, bool) {
+) (*bdd.BDD, handler.State) {
 	if config == nil {
 		config = iter.DefaultConfig()
 	}
 	me := iter.New[*bdd.BDD](f.NewVarSet(variables...), nil, config)
-	result, ok := me.Iterate(solver, generateModelCollector(variables))
-	return result, ok
+	falseBdd := bdd.Compile(solver.Factory(), solver.Factory().Falsum())
+	return me.Iterate(solver, generateModelCollector(variables), falseBdd)
 }
 
 type modelEnumBddCollector struct {
@@ -91,36 +93,42 @@ func generateModelCollector(
 }
 
 func (c *modelEnumBddCollector) AddModel(
-	modelFromSolver []bool, solver *sat.Solver, relevantAllIndices []int32, handler iter.Handler,
-) bool {
-	if handler == nil || handler.FoundModels(c.dontCareFactor) {
-		model := solver.CoreSolver().CreateModel(solver.Factory(), modelFromSolver, relevantAllIndices)
-		c.uncommittedModels = append(c.uncommittedModels, model)
-		return true
-	} else {
-		return false
+	modelFromSolver []bool, solver *sat.Solver, relevantAllIndices []int32, hdl handler.Handler,
+) handler.State {
+	e := iter.EventIteratorFoundModels{NumberOfModels: c.dontCareFactor}
+	mdl := solver.CoreSolver().CreateModel(solver.Factory(), modelFromSolver, relevantAllIndices)
+	c.uncommittedModels = append(c.uncommittedModels, mdl)
+	if !hdl.ShouldResume(e) {
+		return handler.Cancellation(e)
 	}
+	return succ
 }
 
-func (c *modelEnumBddCollector) Commit(handler iter.Handler) bool {
+func (c *modelEnumBddCollector) Commit(hdl handler.Handler) handler.State {
 	for _, uncommittedModel := range c.uncommittedModels {
 		modelFormula := uncommittedModel.Formula(c.kernel.Factory())
 		modelBdd := bdd.CompileWithKernel(c.kernel.Factory(), modelFormula, c.kernel)
 		c.committedModels = c.committedModels.Or(modelBdd)
 	}
 	c.uncommittedModels = make([]*model.Model, 0)
-	return handler == nil || handler.Commit()
+	if !hdl.ShouldResume(event.ModelEnumerationCommit) {
+		return handler.Cancellation(event.ModelEnumerationCommit)
+	}
+	return succ
 }
 
-func (c *modelEnumBddCollector) Rollback(handler iter.Handler) bool {
+func (c *modelEnumBddCollector) Rollback(hdl handler.Handler) handler.State {
 	c.uncommittedModels = make([]*model.Model, 0)
-	return handler == nil || handler.Rollback()
+	if !hdl.ShouldResume(event.ModelEnumerationRollback) {
+		return handler.Cancellation(event.ModelEnumerationRollback)
+	}
+	return succ
 }
 
-func (c *modelEnumBddCollector) RollbackAndReturnModels(_ *sat.Solver, handler iter.Handler) []*model.Model {
+func (c *modelEnumBddCollector) RollbackAndReturnModels(_ *sat.Solver, hdl handler.Handler) []*model.Model {
 	modelsToReturn := make([]*model.Model, len(c.uncommittedModels))
 	copy(modelsToReturn, c.uncommittedModels)
-	c.Rollback(handler)
+	c.Rollback(hdl)
 	return modelsToReturn
 }
 

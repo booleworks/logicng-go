@@ -4,6 +4,8 @@ import (
 	"math"
 	"testing"
 
+	"github.com/booleworks/logicng-go/event"
+	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/model/iter"
 	"github.com/booleworks/logicng-go/randomizer"
 	"github.com/booleworks/logicng-go/sat"
@@ -15,9 +17,9 @@ import (
 
 var cfgs = []*iter.Config{
 	iter.DefaultConfig(),
-	{Handler: nil, Strategy: iter.NewNoSplitMEStrategy()},
-	{Handler: nil, Strategy: iter.NewBasicStrategy(iter.DefaultLeastCommonVarProvider(), 2)},
-	{Handler: nil, Strategy: iter.NewBasicStrategy(iter.DefaultMostCommonVarProvider(), 2)},
+	{Handler: handler.NopHandler, Strategy: iter.NewNoSplitMEStrategy()},
+	{Handler: handler.NopHandler, Strategy: iter.NewBasicStrategy(iter.DefaultLeastCommonVarProvider(), 2)},
+	{Handler: handler.NopHandler, Strategy: iter.NewBasicStrategy(iter.DefaultMostCommonVarProvider(), 2)},
 }
 
 func TestMEContradiction(t *testing.T) {
@@ -261,9 +263,9 @@ func TestMEWithLimit(t *testing.T) {
 			Handler:  iter.HandlerWithLimit(3),
 			Strategy: cfg.Strategy,
 		}
-		models, ok := OnFormulaWithConfig(fac, formula, fac.Vars("A", "B", "C"), newCfg)
-		assert.False(ok)
-		assert.True(newCfg.Handler.Aborted())
+		models, state := OnFormulaWithConfig(fac, formula, fac.Vars("A", "B", "C"), newCfg)
+		assert.False(state.Success)
+		assert.NotEqual(event.Nothing, state.CancelCause)
 		assert.Equal(3, len(models))
 		for _, m := range models {
 			vars := f.Variables(fac, m.Formula(fac))

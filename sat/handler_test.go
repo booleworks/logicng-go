@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/handler"
 	"github.com/stretchr/testify/assert"
@@ -16,26 +17,26 @@ func TestTimeoutHandlerWithDuration(t *testing.T) {
 	solver := NewSolver(fac)
 	solver.Add(ph)
 	duration, _ := time.ParseDuration("500ms")
-	satHandler := HandlerWithTimeout(*handler.NewTimeoutWithDuration(duration))
+	satHandler := handler.NewTimeoutWithDuration(duration)
 
 	sResult := solver.Call(Params().Handler(satHandler))
 
 	assert.False(sResult.OK())
-	assert.True(sResult.Aborted())
-	assert.True(satHandler.Aborted())
+	assert.True(sResult.Cancelled())
+	assert.NotEqual(event.Nothing, sResult.state.CancelCause)
 	assert.False(sResult.Sat())
 
 	ph = GeneratePigeonHole(fac, 2)
 	solver = NewSolver(fac)
 	solver.Add(ph)
 	duration, _ = time.ParseDuration("2s")
-	satHandler = HandlerWithTimeout(*handler.NewTimeoutWithDuration(duration))
+	satHandler = handler.NewTimeoutWithDuration(duration)
 
 	sResult = solver.Call(Params().Handler(satHandler))
 
 	assert.True(sResult.OK())
-	assert.False(sResult.Aborted())
-	assert.False(satHandler.Aborted())
+	assert.False(sResult.Cancelled())
+	assert.Equal(event.Nothing, sResult.state.CancelCause)
 	assert.False(sResult.Sat())
 }
 
@@ -47,12 +48,13 @@ func TestTimeoutHandlerWithEnd(t *testing.T) {
 	solver.Add(ph)
 	duration, _ := time.ParseDuration("500ms")
 	end := time.Now().Add(duration)
-	handler := HandlerWithTimeout(*handler.NewTimeoutWithEnd(end))
+	handler := *handler.NewTimeoutWithEnd(end)
 
 	sResult := solver.Call(Params().Handler(handler))
 
 	assert.False(sResult.OK())
-	assert.True(handler.Aborted())
+	assert.True(sResult.Cancelled())
+	assert.NotEqual(event.Nothing, sResult.state.CancelCause)
 	assert.False(sResult.Sat())
 }
 
@@ -65,25 +67,24 @@ func TestOptimizationTimeoutHandler(t *testing.T) {
 	solver.Add(nq)
 	duration, _ := time.ParseDuration("500ms")
 	end := time.Now().Add(duration)
-	optHandler := OptimizationHandlerWithTimeout(*handler.NewTimeoutWithEnd(end))
+	optHandler := handler.NewTimeoutWithEnd(end)
 
-	result, ok := solver.MaximizeWithHandler(vars, optHandler)
+	result, state := solver.MaximizeWithHandler(vars, optHandler)
 
-	assert.False(ok)
-	assert.True(optHandler.Aborted())
+	assert.False(state.Success)
+	assert.NotEqual(event.Nothing, state.CancelCause)
 	assert.Nil(result)
-	assert.NotNil(optHandler.IntermediateResult())
 
 	nq = GenerateNQueens(fac, 4)
 	vars = f.VariablesAsLiterals(f.Variables(fac, nq).Content())
 	solver = NewSolver(fac)
 	solver.Add(nq)
 	duration, _ = time.ParseDuration("2h")
-	optHandler = OptimizationHandlerWithTimeout(*handler.NewTimeoutWithDuration(duration))
+	optHandler = handler.NewTimeoutWithDuration(duration)
 
-	result, ok = solver.MaximizeWithHandler(vars, optHandler)
+	result, state = solver.MaximizeWithHandler(vars, optHandler)
 
-	assert.True(ok)
-	assert.False(optHandler.Aborted())
+	assert.True(state.Success)
+	assert.Equal(event.Nothing, state.CancelCause)
 	assert.NotNil(result)
 }

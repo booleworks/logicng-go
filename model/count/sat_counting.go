@@ -3,7 +3,9 @@ package count
 import (
 	"math/big"
 
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/model"
 	"github.com/booleworks/logicng-go/model/iter"
 	"github.com/booleworks/logicng-go/sat"
@@ -23,7 +25,7 @@ func OnFormulaWithConfig(
 	formula f.Formula,
 	variables []f.Variable,
 	config *iter.Config,
-) (*big.Int, bool) {
+) (*big.Int, handler.State) {
 	solver := sat.NewSolver(fac)
 	solver.Add(formula)
 	return OnSolverWithConfig(solver, variables, config)
@@ -38,13 +40,12 @@ func OnSolver(solver *sat.Solver, variables []f.Variable) *big.Int {
 // OnSolverWithConfig counts all models on the given SAT solver over the given
 // variables.  The config can be used to influence the model iteration process
 // by setting a handler and/or an iteration strategy.
-func OnSolverWithConfig(solver *sat.Solver, variables []f.Variable, config *iter.Config) (*big.Int, bool) {
+func OnSolverWithConfig(solver *sat.Solver, variables []f.Variable, config *iter.Config) (*big.Int, handler.State) {
 	if config == nil {
 		config = iter.DefaultConfig()
 	}
 	me := iter.New[*big.Int](f.NewVarSet(variables...), nil, config)
-	result, ok := me.Iterate(solver, newModelCountCollector)
-	return result, ok
+	return me.Iterate(solver, newModelCountCollector, big.NewInt(0))
 }
 
 type modelCountCollector struct {
@@ -54,9 +55,7 @@ type modelCountCollector struct {
 	dontCareFactor     *big.Int
 }
 
-func newModelCountCollector(
-	_ f.Factory, _, dontCaresNotOnSolver, _ *f.VarSet,
-) iter.Collector[*big.Int] {
+func newModelCountCollector(_ f.Factory, _, dontCaresNotOnSolver, _ *f.VarSet) iter.Collector[*big.Int] {
 	dontCareFactor := big.NewInt(2).Exp(big.NewInt(2), big.NewInt(int64(dontCaresNotOnSolver.Size())), nil)
 	return &modelCountCollector{
 		committedCount:     big.NewInt(0),
@@ -67,35 +66,41 @@ func newModelCountCollector(
 }
 
 func (c *modelCountCollector) AddModel(
-	modelFromSolver []bool, _ *sat.Solver, relevantAllIndices []int32, handler iter.Handler,
-) bool {
-	if handler == nil || handler.FoundModels(int(c.dontCareFactor.Int64())) {
-		c.uncommittedModels = append(c.uncommittedModels, modelFromSolver)
-		c.uncommittedIndices = append(c.uncommittedIndices, relevantAllIndices)
-		return true
-	} else {
-		return false
+	modelFromSolver []bool, _ *sat.Solver, relevantAllIndices []int32, hdl handler.Handler,
+) handler.State {
+	e := iter.EventIteratorFoundModels{NumberOfModels: int(c.dontCareFactor.Int64())}
+	c.uncommittedModels = append(c.uncommittedModels, modelFromSolver)
+	c.uncommittedIndices = append(c.uncommittedIndices, relevantAllIndices)
+	if !hdl.ShouldResume(e) {
+		return handler.Cancellation(e)
 	}
+	return succ
 }
 
-func (c *modelCountCollector) Commit(handler iter.Handler) bool {
+func (c *modelCountCollector) Commit(hdl handler.Handler) handler.State {
 	mul := big.NewInt(1).Mul(big.NewInt(int64(len(c.uncommittedModels))), c.dontCareFactor)
 	c.committedCount.Add(c.committedCount, mul)
 	c.clearUncommitted()
-	return handler == nil || handler.Commit()
-}
-
-func (c *modelCountCollector) Rollback(handler iter.Handler) bool {
-	c.clearUncommitted()
-	return handler == nil || handler.Rollback()
-}
-
-func (c *modelCountCollector) RollbackAndReturnModels(solver *sat.Solver, handler iter.Handler) []*model.Model {
-	modelsToReturn := make([]*model.Model, len(c.uncommittedModels))
-	for i, model := range c.uncommittedModels {
-		modelsToReturn[i] = solver.CoreSolver().CreateModel(solver.Factory(), model, c.uncommittedIndices[i])
+	if !hdl.ShouldResume(event.ModelEnumerationCommit) {
+		return handler.Cancellation(event.ModelEnumerationCommit)
 	}
-	c.Rollback(handler)
+	return succ
+}
+
+func (c *modelCountCollector) Rollback(hdl handler.Handler) handler.State {
+	c.clearUncommitted()
+	if !hdl.ShouldResume(event.ModelEnumerationRollback) {
+		return handler.Cancellation(event.ModelEnumerationRollback)
+	}
+	return succ
+}
+
+func (c *modelCountCollector) RollbackAndReturnModels(solver *sat.Solver, hdl handler.Handler) []*model.Model {
+	modelsToReturn := make([]*model.Model, len(c.uncommittedModels))
+	for i, mdl := range c.uncommittedModels {
+		modelsToReturn[i] = solver.CoreSolver().CreateModel(solver.Factory(), mdl, c.uncommittedIndices[i])
+	}
+	c.Rollback(hdl)
 	return modelsToReturn
 }
 

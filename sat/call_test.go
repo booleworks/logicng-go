@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/booleworks/logicng-go/assignment"
+	"github.com/booleworks/logicng-go/event"
 	"github.com/booleworks/logicng-go/model"
 	"github.com/booleworks/logicng-go/parser"
 
@@ -56,7 +57,7 @@ func TestSolverCallSequence(t *testing.T) {
 		result := solver.Call()
 		assert.True(result.OK())
 		assert.True(result.Sat())
-		assert.False(result.Aborted())
+		assert.False(result.Cancelled())
 		assert.Nil(result.Model())
 		assert.Nil(result.UnsatCore())
 		assert.Nil(result.UpZeroLits())
@@ -64,7 +65,7 @@ func TestSolverCallSequence(t *testing.T) {
 		result = solver.Call(WithModel(vars))
 		assert.True(result.OK())
 		assert.True(result.Sat())
-		assert.False(result.Aborted())
+		assert.False(result.Cancelled())
 		assert.NotNil(result.Model())
 		assert.Nil(result.UnsatCore())
 		assert.Nil(result.UpZeroLits())
@@ -194,16 +195,16 @@ func TestSolverCallHandler(t *testing.T) {
 
 		result := solver.Call(WithHandler(newMaxConflictHandler(0)))
 		assert.False(result.OK())
-		assert.True(result.Aborted())
+		assert.True(result.Cancelled())
 
 		result = solver.Call(WithHandler(newMaxConflictHandler(0)))
 		assert.False(result.OK())
-		assert.True(result.Aborted())
+		assert.True(result.Cancelled())
 
 		result = solver.Call(WithHandler(newMaxConflictHandler(100)))
 		assert.True(result.OK())
 		assert.True(result.Sat())
-		assert.False(result.Aborted())
+		assert.False(result.Cancelled())
 	}
 }
 
@@ -282,20 +283,17 @@ func TestSolverCallAdditionalFormulas(t *testing.T) {
 type maxConflictHander struct {
 	maxConflicts int
 	numConflicts int
-	aborted      bool
+	cancelled    bool
 }
 
 func newMaxConflictHandler(maxConflicts int) *maxConflictHander {
 	return &maxConflictHander{maxConflicts, 0, false}
 }
 
-func (h *maxConflictHander) FinishedSolving() {}
-func (h *maxConflictHander) Started()         {}
-func (h *maxConflictHander) Aborted() bool    { return h.aborted }
-func (h *maxConflictHander) DetectedConflict() bool {
-	h.aborted = h.numConflicts > h.maxConflicts
+func (h *maxConflictHander) ShouldResume(e event.Event) bool {
+	h.cancelled = h.numConflicts > h.maxConflicts
 	h.numConflicts++
-	return !h.aborted
+	return !h.cancelled
 }
 
 func verifyUnsatCore(t *testing.T, fac f.Factory, unsatCore *explanation.UnsatCore) {

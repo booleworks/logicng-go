@@ -3,6 +3,7 @@ package normalform
 import (
 	"testing"
 
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/parser"
 	"github.com/stretchr/testify/assert"
@@ -157,10 +158,10 @@ func TestCNFNot(t *testing.T) {
 	assert.Equal(p.ParseUnsafe("~a2 & ~b2 & x2 & y2"), FactorizedCNF(fac, p.ParseUnsafe("~(a2 | b2 | ~x2 | ~y2)")))
 	assert.Equal(p.ParseUnsafe("~a2 & ~b2 & x2 & y2"), FactorizedCNF(fac, p.ParseUnsafe("~(a2 | b2 | ~x2 | ~y2)")))
 
-	handler := NewCNFHandler(-1, -1)
-	cnf, ok := FactorizedCNFWithHandler(fac, p.ParseUnsafe("~(~(a2 | b2) <=> ~(x2 | y2))"), handler)
+	handler := NewFactorizationHandler(-1, -1)
+	cnf, state := FactorizedCNFWithHandler(fac, p.ParseUnsafe("~(~(a2 | b2) <=> ~(x2 | y2))"), handler)
 	assert.Equal(p.ParseUnsafe("(a2 | b2 | x2 | y2) & (~x2 | ~a2) & (~y2 | ~a2) & (~x2 | ~b2) & (~y2 | ~b2)"), cnf)
-	assert.True(ok)
+	assert.True(state.Success)
 	assert.Equal(7, handler.currentDistributions)
 	assert.Equal(4, handler.currentClauses)
 }
@@ -171,16 +172,15 @@ func TestCNFWithHandler(t *testing.T) {
 	p := parser.New(fac)
 
 	formula := p.ParseUnsafe("(~(~(a | b) => ~(x | y))) & ((a | x) => ~(b | y))")
-	handler := NewCNFHandler(-1, 2)
+	handler := NewFactorizationHandler(-1, 2)
 
-	cnf, ok := FactorizedCNFWithHandler(fac, formula, handler)
+	cnf, state := FactorizedCNFWithHandler(fac, formula, handler)
 	assert.Equal(f.Formula(0), cnf)
-	assert.False(ok)
-	assert.True(handler.Aborted())
+	assert.False(state.Success)
+	assert.NotEqual(event.Nothing, state.CancelCause)
 
 	formula = p.ParseUnsafe("~(a | b)")
-	cnf, ok = FactorizedCNFWithHandler(fac, formula, handler)
+	cnf, state = FactorizedCNFWithHandler(fac, formula, handler)
 	assert.Equal(p.ParseUnsafe("~a & ~b"), cnf)
-	assert.True(ok)
-	assert.False(handler.Aborted())
+	assert.True(state.Success)
 }

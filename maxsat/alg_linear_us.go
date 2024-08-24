@@ -5,6 +5,7 @@ import (
 
 	"github.com/booleworks/logicng-go/errorx"
 	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/sat"
 )
 
@@ -32,11 +33,11 @@ func newLinearUS(config ...*Config) *linearUS {
 	}
 }
 
-func (m *linearUS) search(handler Handler) (result, bool) {
+func (m *linearUS) search(hdl handler.Handler) (result, handler.State) {
 	if m.problemType == weighted {
 		panic(errorx.BadInput("linearUS does not support weighted MaxSAT instances"))
 	}
-	return m.innerSearch(handler, func() (result, bool) {
+	return m.innerSearch(hdl, func() (result, handler.State) {
 		switch m.incrementalStrategy {
 		case IncNone:
 			return m.none()
@@ -48,41 +49,40 @@ func (m *linearUS) search(handler Handler) (result, bool) {
 	})
 }
 
-func (m *linearUS) none() (result, bool) {
+func (m *linearUS) none() (result, handler.State) {
 	m.nbInitialVariables = m.nVars()
 	m.initRelaxation()
 	m.solver = m.rebuildSolver()
 	m.encoder.setIncremental(IncNone)
 	for {
-		satHandler := m.satHandler()
-		res, ok := searchSatSolver(m.solver, satHandler)
-		if !ok {
-			return resUndef, false
+		res, state := searchSatSolver(m.solver, m.hdl)
+		if !state.Success {
+			return resUndef, state
 		} else if res == f.TristateTrue {
 			m.nbSatisfiable++
 			newCost := m.computeCostModel(m.solver.Model(), math.MaxInt)
 			m.saveModel(m.solver.Model())
 			m.ubCost = newCost
 			if m.nbSatisfiable == 1 {
-				if !m.foundUpperBound(m.ubCost, nil) {
-					return resUndef, false
+				if state := m.foundUpperBound(m.ubCost); !state.Success {
+					return resUndef, state
 				}
 				m.encoder.encodeCardinality(m.solver, m.objFunction, 0)
 			} else {
-				return resOptimum, true
+				return resOptimum, succ
 			}
 		} else {
 			m.lbCost++
 			if m.nbSatisfiable == 0 {
-				return resUnsat, true
+				return resUnsat, succ
 			} else if m.lbCost == m.ubCost {
 				if m.nbSatisfiable > 0 {
-					return resOptimum, true
+					return resOptimum, succ
 				} else {
-					return resUnsat, true
+					return resUnsat, succ
 				}
-			} else if !m.foundLowerBound(m.lbCost, nil) {
-				return resUndef, false
+			} else if state := m.foundLowerBound(m.lbCost); !state.Success {
+				return resUndef, state
 			}
 			m.solver = m.rebuildSolver()
 			m.encoder.encodeCardinality(m.solver, m.objFunction, m.lbCost)
@@ -90,47 +90,46 @@ func (m *linearUS) none() (result, bool) {
 	}
 }
 
-func (m *linearUS) iterative() (result, bool) {
+func (m *linearUS) iterative() (result, handler.State) {
 	m.nbInitialVariables = m.nVars()
 	m.initRelaxation()
 	m.solver = m.rebuildSolver()
 	var assumptions []int32
 	m.encoder.setIncremental(IncIterative)
 	for {
-		satHandler := m.satHandler()
-		res, ok := searchSatSolverWithAssumptions(m.solver, satHandler, assumptions)
-		if !ok {
-			return resUndef, false
+		res, state := searchSatSolverWithAssumptions(m.solver, m.hdl, assumptions)
+		if !state.Success {
+			return resUndef, state
 		} else if res == f.TristateTrue {
 			m.nbSatisfiable++
 			newCost := m.computeCostModel(m.solver.Model(), math.MaxInt)
 			m.saveModel(m.solver.Model())
 			m.ubCost = newCost
 			if m.nbSatisfiable == 1 {
-				if !m.foundUpperBound(m.ubCost, nil) {
-					return resUndef, false
+				if state := m.foundUpperBound(m.ubCost); !state.Success {
+					return resUndef, state
 				}
 				for i := 0; i < len(m.objFunction); i++ {
 					assumptions = append(assumptions, sat.Not(m.objFunction[i]))
 				}
 			} else {
-				return resOptimum, true
+				return resOptimum, succ
 			}
 		} else {
 			m.nbCores++
 			m.lbCost++
 			if m.nbSatisfiable == 0 {
-				return resUnsat, true
+				return resUnsat, succ
 			}
 			if m.lbCost == m.ubCost {
 				if m.nbSatisfiable > 0 {
-					return resOptimum, true
+					return resOptimum, succ
 				} else {
-					return resUnsat, true
+					return resUnsat, succ
 				}
 			}
-			if !m.foundLowerBound(m.lbCost, nil) {
-				return resUndef, false
+			if state := m.foundLowerBound(m.lbCost); !state.Success {
+				return resUndef, state
 			}
 			if !m.encoder.hasCardEncoding() {
 				m.encoder.buildCardinality(m.solver, m.objFunction, m.lbCost)

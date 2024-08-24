@@ -1,11 +1,15 @@
 package enum
 
 import (
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/model"
 	"github.com/booleworks/logicng-go/model/iter"
 	"github.com/booleworks/logicng-go/sat"
 )
+
+var succ = handler.Success()
 
 // OnFormula enumerates all models of a formula over the given variables.  The
 // additionalVariables will be included in each model, but are not iterated
@@ -30,7 +34,7 @@ func OnFormulaWithConfig(
 	variables []f.Variable,
 	config *iter.Config,
 	additionalVariables ...f.Variable,
-) ([]*model.Model, bool) {
+) ([]*model.Model, handler.State) {
 	solver := sat.NewSolver(fac)
 	solver.Add(formula)
 	return OnSolverWithConfig(solver, variables, config, additionalVariables...)
@@ -53,7 +57,7 @@ func OnSolverWithConfig(
 	variables []f.Variable,
 	config *iter.Config,
 	additionalVariables ...f.Variable,
-) ([]*model.Model, bool) {
+) ([]*model.Model, handler.State) {
 	var add *f.VarSet
 	if additionalVariables != nil {
 		add = f.NewVarSet(additionalVariables...)
@@ -62,8 +66,7 @@ func OnSolverWithConfig(
 		config = iter.DefaultConfig()
 	}
 	me := iter.New[[]*model.Model](f.NewVarSet(variables...), add, config)
-	result, ok := me.Iterate(solver, newModelEnumCollector)
-	return result, ok
+	return me.Iterate(solver, newModelEnumCollector, make([]*model.Model, 0))
 }
 
 type modelEnumCollector struct {
@@ -90,36 +93,42 @@ func newModelEnumCollector(
 }
 
 func (c *modelEnumCollector) AddModel(
-	modelFromSolver []bool, solver *sat.Solver, relevantAllIndices []int32, handler iter.Handler,
-) bool {
-	if handler == nil || handler.FoundModels(len(c.baseModels)) {
-		model := solver.CoreSolver().CreateModel(solver.Factory(), modelFromSolver, relevantAllIndices)
-		modelLiterals := c.additionalVariablesNotOnSolver.Content()
-		modelLiterals = append(modelLiterals, model.Literals...)
-		c.uncommittedModels = append(c.uncommittedModels, modelLiterals)
-		return true
-	} else {
-		return false
+	modelFromSolver []bool, solver *sat.Solver, relevantAllIndices []int32, hdl handler.Handler,
+) handler.State {
+	e := iter.EventIteratorFoundModels{NumberOfModels: len(c.baseModels)}
+	mdl := solver.CoreSolver().CreateModel(solver.Factory(), modelFromSolver, relevantAllIndices)
+	modelLiterals := c.additionalVariablesNotOnSolver.Content()
+	modelLiterals = append(modelLiterals, mdl.Literals...)
+	c.uncommittedModels = append(c.uncommittedModels, modelLiterals)
+	if !hdl.ShouldResume(e) {
+		return handler.Cancellation(e)
 	}
+	return succ
 }
 
-func (c *modelEnumCollector) Commit(handler iter.Handler) bool {
+func (c *modelEnumCollector) Commit(hdl handler.Handler) handler.State {
 	c.committedModels = append(c.committedModels, c.expandUncommittedModels()...)
 	c.uncommittedModels = make([][]f.Literal, 0, 4)
-	return handler == nil || handler.Commit()
+	if !hdl.ShouldResume(event.ModelEnumerationCommit) {
+		return handler.Cancellation(event.ModelEnumerationCommit)
+	}
+	return succ
 }
 
-func (c *modelEnumCollector) Rollback(handler iter.Handler) bool {
+func (c *modelEnumCollector) Rollback(hdl handler.Handler) handler.State {
 	c.uncommittedModels = make([][]f.Literal, 0, 4)
-	return handler == nil || handler.Rollback()
+	if !hdl.ShouldResume(event.ModelEnumerationRollback) {
+		return handler.Cancellation(event.ModelEnumerationRollback)
+	}
+	return succ
 }
 
-func (c *modelEnumCollector) RollbackAndReturnModels(_ *sat.Solver, handler iter.Handler) []*model.Model {
+func (c *modelEnumCollector) RollbackAndReturnModels(_ *sat.Solver, hdl handler.Handler) []*model.Model {
 	modelsToReturn := make([]*model.Model, len(c.uncommittedModels))
 	for i, lits := range c.uncommittedModels {
 		modelsToReturn[i] = model.New(lits...)
 	}
-	c.Rollback(handler)
+	c.Rollback(hdl)
 	return modelsToReturn
 }
 

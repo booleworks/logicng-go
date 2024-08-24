@@ -3,6 +3,7 @@ package primeimplicant
 import (
 	"slices"
 
+	"github.com/booleworks/logicng-go/event"
 	"github.com/booleworks/logicng-go/handler"
 
 	f "github.com/booleworks/logicng-go/formula"
@@ -13,6 +14,8 @@ import (
 
 // CoverSort encodes the sort of the cover: Implicants or Implicates.
 type CoverSort byte
+
+var succ = handler.Success()
 
 const (
 	CoverImplicants CoverSort = iota
@@ -37,7 +40,7 @@ const (
 // the implicates will be complete, the other one will still be a cover of the
 // given formula.
 func CoverMin(fac f.Factory, formula f.Formula, coverSort CoverSort) *PrimeResult {
-	min, _ := compute(fac, formula, coverSort, false, nil)
+	min, _ := compute(fac, formula, coverSort, false, handler.NopHandler)
 	return min
 }
 
@@ -46,30 +49,30 @@ func CoverMin(fac f.Factory, formula f.Formula, coverSort CoverSort) *PrimeResul
 // the implicates will be complete, the other one will still be a cover of the
 // given formula.
 func CoverMax(fac f.Factory, formula f.Formula, coverSort CoverSort) *PrimeResult {
-	max, _ := compute(fac, formula, coverSort, true, nil)
+	max, _ := compute(fac, formula, coverSort, true, handler.NopHandler)
 	return max
 }
 
 // CoverMinWithHandler computes prime implicants and prime implicates
 // for a given formula using minimal models. The cover type specifies if the
 // implicants or the implicates will be complete, the other one will still be a
-// cover of the given formula.  The given handler can be used to abort the
+// cover of the given formula.  The given handler can be used to cancel the
 // SAT-Solver based optimization during the computation.
 func CoverMinWithHandler(
-	fac f.Factory, formula f.Formula, coverSort CoverSort, optimizationHandler sat.OptimizationHandler,
-) (*PrimeResult, bool) {
-	return compute(fac, formula, coverSort, false, optimizationHandler)
+	fac f.Factory, formula f.Formula, coverSort CoverSort, hdl handler.Handler,
+) (*PrimeResult, handler.State) {
+	return compute(fac, formula, coverSort, false, hdl)
 }
 
 // CoverMaxWithHandler computes prime implicants and prime implicates
 // for a given formula using maximal models. The cover type specifies if the
 // implicants or the implicates will be complete, the other one will still be a
-// cover of the given formula.  The given handler can be used to abort the
+// cover of the given formula.  The given handler can be used to cancel the
 // SAT-Solver based optimization during the computation.
 func CoverMaxWithHandler(
-	fac f.Factory, formula f.Formula, coverSort CoverSort, optimizationHandler sat.OptimizationHandler,
-) (*PrimeResult, bool) {
-	return compute(fac, formula, coverSort, true, optimizationHandler)
+	fac f.Factory, formula f.Formula, coverSort CoverSort, hdl handler.Handler,
+) (*PrimeResult, handler.State) {
+	return compute(fac, formula, coverSort, true, hdl)
 }
 
 func compute(
@@ -77,9 +80,11 @@ func compute(
 	formula f.Formula,
 	coverSort CoverSort,
 	maximize bool,
-	optimizationHandler sat.OptimizationHandler,
-) (*PrimeResult, bool) {
-	handler.Start(optimizationHandler)
+	hdl handler.Handler,
+) (*PrimeResult, handler.State) {
+	if !hdl.ShouldResume(event.PrimeComputationStarted) {
+		return nil, handler.Cancellation(event.PrimeComputationStarted)
+	}
 	completeImplicants := coverSort == CoverImplicants
 	var formulaForComputation f.Formula
 	if completeImplicants {
@@ -87,14 +92,14 @@ func compute(
 	} else {
 		formulaForComputation = formula.Negate(fac)
 	}
-	implicants, implicates, ok := computeGeneric(fac, formulaForComputation, maximize, optimizationHandler)
-	if !ok {
-		return nil, false
+	implicants, implicates, state := computeGeneric(fac, formulaForComputation, maximize, hdl)
+	if !state.Success {
+		return nil, state
 	}
 	if completeImplicants {
-		return &PrimeResult{implicants, implicates, coverSort}, true
+		return &PrimeResult{implicants, implicates, coverSort}, succ
 	} else {
-		return &PrimeResult{negateAll(fac, implicates), negateAll(fac, implicants), coverSort}, true
+		return &PrimeResult{negateAll(fac, implicates), negateAll(fac, implicants), coverSort}, succ
 	}
 }
 
@@ -102,8 +107,8 @@ func computeGeneric(
 	fac f.Factory,
 	formula f.Formula,
 	maximize bool,
-	optimizationHandler sat.OptimizationHandler,
-) ([][]f.Literal, [][]f.Literal, bool) {
+	hdl handler.Handler,
+) ([][]f.Literal, [][]f.Literal, handler.State) {
 	sub := createSubstitution(fac, formula)
 	literals := make([]f.Literal, 0, len(sub.newVar2oldLit))
 	for key := range sub.newVar2oldLit {
@@ -118,41 +123,37 @@ func computeGeneric(
 	var primeImplicants, primeImplicates [][]f.Literal
 	for {
 		var hModel *model.Model
-		var ok bool
+		var state handler.State
 		if maximize {
-			hModel, ok = hSolver.MaximizeWithHandler(literals, optimizationHandler)
+			hModel, state = hSolver.MaximizeWithHandler(literals, hdl)
 		} else {
-			hModel, ok = hSolver.MinimizeWithHandler(literals, optimizationHandler)
+			hModel, state = hSolver.MinimizeWithHandler(literals, hdl)
 		}
-		if !ok {
-			return nil, nil, false
+		if !state.Success {
+			return nil, nil, state
 		}
 		if hModel == nil {
-			return primeImplicants, primeImplicates, true
+			return primeImplicants, primeImplicates, succ
 		}
 		fModel := transformModel(hModel, &sub.newVar2oldLit)
-		var satHandler sat.Handler
-		if optimizationHandler != nil {
-			satHandler = optimizationHandler.SatHandler()
-		}
 		params := sat.Params().
-			Handler(satHandler).
+			Handler(hdl).
 			WithModel(f.Variables(fac, formula).Content()).
 			Literal(fModel.Literals...)
 		fResult := fSolver.Call(params)
-		if fResult.Aborted() {
-			return nil, nil, false
+		if fResult.Cancelled() {
+			return nil, nil, fResult.State()
 		}
 		if !fResult.Sat() {
 			var primeImplicant []f.Literal
-			var ok bool
+			var state handler.State
 			if maximize {
-				primeImplicant, ok = primeReduction.reduceImplicant(fModel.Literals, satHandler)
+				primeImplicant, state = primeReduction.reduceImplicant(fModel.Literals, hdl)
 			} else {
-				primeImplicant, ok = fModel.Literals, true
+				primeImplicant, state = fModel.Literals, succ
 			}
-			if !ok {
-				return nil, nil, false
+			if !state.Success {
+				return nil, nil, state
 			}
 			primeImplicants = append(primeImplicants, primeImplicant)
 			blockingClause := make([]f.Formula, len(primeImplicant))
@@ -171,9 +172,9 @@ func computeGeneric(
 			for i, lit := range ls {
 				implicate[i] = lit.Negate(fac)
 			}
-			primeImplicate, ok := primeReduction.reduceImplicate(fac, implicate, satHandler)
-			if !ok {
-				return nil, nil, false
+			primeImplicate, state := primeReduction.reduceImplicate(fac, implicate, hdl)
+			if !state.Success {
+				return nil, nil, state
 			}
 			primeImplicates = append(primeImplicates, primeImplicate)
 			hSolver.Add(transformation.SubstituteLiterals(fac, fac.Or(f.LiteralsAsFormulas(primeImplicate)...), &sub.substitution))
@@ -232,28 +233,30 @@ func newPrimeReduction(fac f.Factory, formula f.Formula) *primeReduction {
 	return &primeReduction{implicantSolver, implicateSolver}
 }
 
-func (p *primeReduction) reduceImplicant(
-	implicant []f.Literal, satHandler sat.Handler,
-) ([]f.Literal, bool) {
-	handler.Start(satHandler)
+func (p *primeReduction) reduceImplicant(implicant []f.Literal, hdl handler.Handler) ([]f.Literal, handler.State) {
+	if !hdl.ShouldResume(event.ImplicateReductionStarted) {
+		return nil, handler.Cancellation(event.ImplicateReductionStarted)
+	}
 	primeImplicant := f.NewMutableLitSet(implicant...)
 	for _, lit := range implicant {
 		primeImplicant.Remove(lit)
-		sResult := p.implicantSolver.Call(sat.Params().Handler(satHandler).Literal(primeImplicant.Content()...))
-		if sResult.Aborted() {
-			return nil, false
+		sResult := p.implicantSolver.Call(sat.Params().Handler(hdl).Literal(primeImplicant.Content()...))
+		if sResult.Cancelled() {
+			return nil, sResult.State()
 		}
 		if sResult.Sat() {
 			primeImplicant.Add(lit)
 		}
 	}
-	return primeImplicant.Content(), true
+	return primeImplicant.Content(), succ
 }
 
 func (p *primeReduction) reduceImplicate(
-	fac f.Factory, implicate []f.Literal, satHandler sat.Handler,
-) ([]f.Literal, bool) {
-	handler.Start(satHandler)
+	fac f.Factory, implicate []f.Literal, hdl handler.Handler,
+) ([]f.Literal, handler.State) {
+	if !hdl.ShouldResume(event.ImplicateReductionStarted) {
+		return nil, handler.Cancellation(event.ImplicateReductionStarted)
+	}
 	primeImplicate := f.NewMutableLitSet(implicate...)
 	for _, lit := range implicate {
 		primeImplicate.Remove(lit)
@@ -261,15 +264,15 @@ func (p *primeReduction) reduceImplicate(
 		for i, lit := range primeImplicate.Content() {
 			assumptions[i] = lit.Negate(fac)
 		}
-		sResult := p.implicateSolver.Call(sat.Params().Handler(satHandler).Literal(assumptions...))
-		if sResult.Aborted() {
-			return nil, false
+		sResult := p.implicateSolver.Call(sat.Params().Handler(hdl).Literal(assumptions...))
+		if sResult.Cancelled() {
+			return nil, sResult.State()
 		}
 		if sResult.Sat() {
 			primeImplicate.Add(lit)
 		}
 	}
-	return primeImplicate.Content(), true
+	return primeImplicate.Content(), succ
 }
 
 type substitutionResult struct {

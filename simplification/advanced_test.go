@@ -42,7 +42,7 @@ func TestAdvancedSimplifierTimeoutHandlerSmall(t *testing.T) {
 	fac := f.NewFactory()
 	p := parser.New(fac)
 	duration, _ := time.ParseDuration("1s")
-	handler := sat.OptimizationHandlerWithTimeout(*handler.NewTimeoutWithDuration(duration))
+	handler := handler.NewTimeoutWithDuration(duration)
 	formula := p.ParseUnsafe("a & b | ~c & a")
 	testHandler(t, fac, handler, formula, false)
 }
@@ -50,7 +50,7 @@ func TestAdvancedSimplifierTimeoutHandlerSmall(t *testing.T) {
 func TestAdvancedSimplifierTimeoutHandlerLarge(t *testing.T) {
 	fac := f.NewFactory()
 	duration, _ := time.ParseDuration("500ms")
-	handler := sat.OptimizationHandlerWithTimeout(*handler.NewTimeoutWithDuration(duration))
+	handler := handler.NewTimeoutWithDuration(duration)
 	formula, _ := io.ReadFormula(fac, "../test/data/formulas/large.txt")
 	testHandler(t, fac, handler, formula, true)
 }
@@ -98,16 +98,14 @@ func computeAndVerifyAS(t *testing.T, fac f.Factory, formula f.Formula) {
 	assert.True(t, sat.IsEquivalent(fac, formula, simplified))
 }
 
-func testHandler(t *testing.T, fac f.Factory, handler sat.OptimizationHandler, formula f.Formula, exp bool) {
+func testHandler(t *testing.T, fac f.Factory, h handler.Handler, formula f.Formula, exp bool) {
 	assert := assert.New(t)
-	result, ok := AdvancedWithHandler(fac, formula, handler)
+	result, state := AdvancedWithHandler(fac, formula, h)
 	if exp {
-		assert.True(handler.Aborted())
-		assert.False(ok)
+		assert.False(state.Success)
 		assert.Equal(fac.Falsum(), result)
 	} else {
-		assert.False(handler.Aborted())
-		assert.True(ok)
+		assert.True(state.Success)
 		assert.NotEqual(fac.Falsum(), result)
 	}
 }

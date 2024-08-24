@@ -2,42 +2,41 @@ package enum
 
 import (
 	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/model/iter"
 	"github.com/booleworks/logicng-go/sat"
 )
 
 // CanonicalCNF returns a canonical CNF of the given formula.
 func CanonicalCNF(fac f.Factory, formula f.Formula) f.Formula {
-	cnf, _ := canonicalEnumeration(fac, formula, true, nil)
+	cnf, _ := canonicalEnumeration(fac, formula, true, handler.NopHandler)
 	return cnf
 }
 
-// CanonicalCNF returns a canonical CNF of the given formula.  The given
-// iterHandler can be used to abort the computation.  If the enumeration was
-// aborted, the ok flag is false.
-func CanonicalCNFWithHandler(fac f.Factory, formula f.Formula, iterHandler iter.Handler) (cnf f.Formula, ok bool) {
-	return canonicalEnumeration(fac, formula, true, iterHandler)
+// CanonicalCNFWithHandler returns a canonical CNF of the given formula.
+// The given  iterHandler can be used to cancel the computation.
+func CanonicalCNFWithHandler(fac f.Factory, formula f.Formula, hdl handler.Handler) (f.Formula, handler.State) {
+	return canonicalEnumeration(fac, formula, true, hdl)
 }
 
 // CanonicalDNF returns a canonical DNF of the given formula.
 func CanonicalDNF(fac f.Factory, formula f.Formula) f.Formula {
-	dnf, _ := canonicalEnumeration(fac, formula, false, nil)
+	dnf, _ := canonicalEnumeration(fac, formula, false, handler.NopHandler)
 	return dnf
 }
 
-// CanonicalDNF returns a canonical DNF of the given formula.  The given
-// iterHandler can be used to abort the computation.  If the enumeration was
-// aborted, the ok flag is false.
-func CanonicalDNFWithHandler(fac f.Factory, formula f.Formula, iterHandler iter.Handler) (cnf f.Formula, ok bool) {
-	return canonicalEnumeration(fac, formula, false, iterHandler)
+// CanonicalDNFWithHandler returns a canonical DNF of the given formula.
+// The given  iterHandler can be used to cancel the computation.
+func CanonicalDNFWithHandler(fac f.Factory, formula f.Formula, hdl handler.Handler) (f.Formula, handler.State) {
+	return canonicalEnumeration(fac, formula, false, hdl)
 }
 
 func canonicalEnumeration(
 	fac f.Factory,
 	formula f.Formula,
 	cnf bool,
-	iterHandler iter.Handler,
-) (f.Formula, bool) {
+	hdl handler.Handler,
+) (f.Formula, handler.State) {
 	solver := sat.NewSolver(fac)
 	if cnf {
 		solver.Add(formula.Negate(fac))
@@ -45,13 +44,13 @@ func canonicalEnumeration(
 		solver.Add(formula)
 	}
 	config := iter.DefaultConfig()
-	config.Handler = iterHandler
-	enumeration, ok := OnSolverWithConfig(solver, f.Variables(fac, formula).Content(), config)
-	if !ok {
-		return 0, false
+	config.Handler = hdl
+	enumeration, state := OnSolverWithConfig(solver, f.Variables(fac, formula).Content(), config)
+	if !state.Success {
+		return 0, state
 	}
 	if len(enumeration) == 0 {
-		return fac.Constant(cnf), true
+		return fac.Constant(cnf), succ
 	}
 	ops := make([]f.Formula, len(enumeration))
 	for i, m := range enumeration {
@@ -66,8 +65,8 @@ func canonicalEnumeration(
 		}
 	}
 	if cnf {
-		return fac.And(ops...), true
+		return fac.And(ops...), succ
 	} else {
-		return fac.Or(ops...), true
+		return fac.Or(ops...), succ
 	}
 }

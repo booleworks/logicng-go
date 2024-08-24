@@ -4,7 +4,9 @@ import (
 	"math"
 
 	"github.com/booleworks/logicng-go/errorx"
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 )
 
 const (
@@ -40,6 +42,8 @@ var (
 	bddEquiv = operand{6, [4]int{1, 0, 0, 1}}
 	bddNot   = operand{10, [4]int{1, 1, 0, 0}}
 )
+
+var succ = handler.Success()
 
 // A Kernel holds all internal data structures used during the compilation,
 // especially the node cache. Algorithms on BDDs always require the kernel
@@ -437,12 +441,12 @@ func (k *Kernel) applyRec(l, r int32, op operand) (int32, bool) {
 	return res, false
 }
 
-func (k *Kernel) addRef(root int32, handler Handler) (int32, bool) {
-	if handler != nil && !handler.NewRefAdded() {
-		return -1, false
+func (k *Kernel) addRef(root int32, hdl handler.Handler) (int32, handler.State) {
+	if !hdl.ShouldResume(event.BddNewRefAdded) {
+		return -1, handler.Cancellation(event.BddNewRefAdded)
 	}
 	if root < 2 {
-		return root, true
+		return root, succ
 	}
 	if root >= k.nodesize {
 		panic(errorx.IllegalState("not a valid BDD root node: %d", root))
@@ -451,7 +455,7 @@ func (k *Kernel) addRef(root int32, handler Handler) (int32, bool) {
 		panic(errorx.IllegalState("not a valid BDD root node: %d", root))
 	}
 	k.incRef(root)
-	return root, true
+	return root, succ
 }
 
 func (k *Kernel) delRef(root int32) {
@@ -789,7 +793,7 @@ func (k *Kernel) Statistics() Statistics {
 	}
 }
 
-// Factory() returns the formula factory of the kernel.
+// Factory returns the formula factory of the kernel.
 func (k *Kernel) Factory() f.Factory {
 	return k.fac
 }

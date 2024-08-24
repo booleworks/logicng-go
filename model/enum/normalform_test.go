@@ -62,9 +62,8 @@ func TestCanonicalCNFHandler(t *testing.T) {
 	fac := f.NewFactory()
 	formula := randomizer.New(fac).Formula(5)
 	handler := iter.HandlerWithLimit(1)
-	cnf, ok := CanonicalCNFWithHandler(fac, formula, handler)
-	assert.False(t, ok)
-	assert.True(t, handler.Aborted())
+	cnf, state := CanonicalCNFWithHandler(fac, formula, handler)
+	assert.False(t, state.Success)
 	assert.Equal(t, fac.Falsum(), cnf)
 }
 
@@ -174,8 +173,7 @@ func TestCanonicalDNFHandler(t *testing.T) {
 	fac := f.NewFactory()
 	formula := randomizer.New(fac).Formula(5)
 	handler := iter.HandlerWithLimit(1)
-	dnf, ok := CanonicalDNFWithHandler(fac, formula, handler)
-	assert.False(t, ok)
-	assert.True(t, handler.Aborted())
+	dnf, state := CanonicalDNFWithHandler(fac, formula, handler)
+	assert.False(t, state.Success)
 	assert.Equal(t, fac.Falsum(), dnf)
 }

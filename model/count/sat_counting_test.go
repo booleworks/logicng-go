@@ -4,6 +4,8 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/booleworks/logicng-go/event"
+	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/normalform"
 	"github.com/booleworks/logicng-go/randomizer"
 
@@ -15,10 +17,7 @@ import (
 )
 
 var cfgs = []*iter.Config{
-	//iter.DefaultConfig(),
-	//{handler: nil, Strategy: iter.NewNoSplitMEStrategy()},
-	//{handler: nil, Strategy: iter.NewBasicStrategy(iter.DefaultLeastCommonVarProvider(), 2)},
-	{Handler: nil, Strategy: iter.NewBasicStrategy(iter.DefaultMostCommonVarProvider(), 2)},
+	{Handler: handler.NopHandler, Strategy: iter.NewBasicStrategy(iter.DefaultMostCommonVarProvider(), 2)},
 }
 
 func TestMCContradiction(t *testing.T) {
@@ -130,9 +129,9 @@ func TestMCWithLimit(t *testing.T) {
 			Handler:  iter.HandlerWithLimit(3),
 			Strategy: cfg.Strategy,
 		}
-		count, ok := OnFormulaWithConfig(fac, formula, fac.Vars("A", "B", "C"), newCfg)
-		assert.False(ok)
-		assert.True(newCfg.Handler.Aborted())
+		count, state := OnFormulaWithConfig(fac, formula, fac.Vars("A", "B", "C"), newCfg)
+		assert.False(state.Success)
+		assert.NotEqual(event.Nothing, state.CancelCause)
 		assert.Equal(big.NewInt(3), count)
 	}
 }

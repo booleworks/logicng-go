@@ -2,6 +2,7 @@ package mus
 
 import (
 	"github.com/booleworks/logicng-go/errorx"
+	"github.com/booleworks/logicng-go/event"
 	e "github.com/booleworks/logicng-go/explanation"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/handler"
@@ -15,19 +16,20 @@ import (
 //
 // Returns an error if the formula is satisfiable.
 func ComputeInsertionBased(fac f.Factory, propositions *[]f.Proposition) (*e.UnsatCore, error) {
-	mus, _, err := ComputeInsertionBasedWithHandler(fac, propositions, nil)
+	mus, _, err := ComputeInsertionBasedWithHandler(fac, propositions, handler.NopHandler)
 	return mus, err
 }
 
 // ComputeInsertionBasedWithHandler computes a MUS using the insertion-based
-// algorithm.  The given SAT handler can be used to abort the MUS computation.
-// If the computation was aborted by the handler, the ok flag is false.
+// algorithm.  The given handler can be used to cancel the MUS computation.
 //
 // Returns an error if the formula is satisfiable.
 func ComputeInsertionBasedWithHandler(
-	fac f.Factory, propositions *[]f.Proposition, satHandler s.Handler,
-) (unsatCore *e.UnsatCore, ok bool, err error) {
-	handler.Start(satHandler)
+	fac f.Factory, propositions *[]f.Proposition, hdl handler.Handler,
+) (*e.UnsatCore, handler.State, error) {
+	if !hdl.ShouldResume(event.MusComputationStarted) {
+		return nil, handler.Cancellation(event.MusComputationStarted), nil
+	}
 	currentFormula := make([]f.Proposition, len(*propositions))
 	copy(currentFormula, *propositions)
 	mus := make([]f.Proposition, 0, len(*propositions))
@@ -38,18 +40,22 @@ func ComputeInsertionBasedWithHandler(
 		solver := s.NewSolver(fac)
 		solver.AddProposition(mus...)
 		count := len(currentFormula)
-		for shouldProceed(solver, satHandler) {
+		for {
+			sat := solver.Call(s.Params().Handler(hdl))
+			if sat.Cancelled() {
+				return nil, sat.State(), nil
+			}
+			if !sat.Sat() {
+				break
+			}
 			if count == 0 {
-				return nil, true, errorx.BadInput("formula set is satisfiable")
+				return nil, handler.Success(), errorx.BadInput("formula set is satisfiable")
 			}
 			count--
 			removeProposition := currentFormula[count]
 			currentSubset = append(currentSubset, removeProposition)
 			transitionProposition = removeProposition
 			solver.AddProposition(removeProposition)
-		}
-		if handler.Aborted(satHandler) {
-			return nil, false, nil
 		}
 		currentFormula = make([]f.Proposition, len(currentSubset))
 		copy(currentFormula, currentSubset)
@@ -62,7 +68,7 @@ func ComputeInsertionBasedWithHandler(
 			mus = append(mus, transitionProposition)
 		}
 	}
-	return e.NewUnsatCore(mus, true), true, nil
+	return e.NewUnsatCore(mus, true), handler.Success(), nil
 }
 
 // ComputeDeletionBased computes a MUS using the deletion-based algorithm.
@@ -73,19 +79,20 @@ func ComputeInsertionBasedWithHandler(
 //
 // Returns an error if the formula is satisfiable.
 func ComputeDeletionBased(fac f.Factory, propositions *[]f.Proposition) (*e.UnsatCore, error) {
-	mus, _, err := ComputeDeletionBasedWithHandler(fac, propositions, nil)
+	mus, _, err := ComputeDeletionBasedWithHandler(fac, propositions, handler.NopHandler)
 	return mus, err
 }
 
 // ComputeDeletionBasedWithHandler computes a MUS using the deletion-based
-// algorithm. The given SAT handler can be used to abort the MUS computation.
-// If the computation was aborted by the handler, the ok flag is false.
+// algorithm. The given handler can be used to cancel the MUS computation.
 //
 // Returns an error if the formula is satisfiable.
 func ComputeDeletionBasedWithHandler(
-	fac f.Factory, propositions *[]f.Proposition, satHandler s.Handler,
-) (unsatCore *e.UnsatCore, ok bool, err error) {
-	handler.Start(satHandler)
+	fac f.Factory, propositions *[]f.Proposition, hdl handler.Handler,
+) (*e.UnsatCore, handler.State, error) {
+	if !hdl.ShouldResume(event.MusComputationStarted) {
+		return nil, handler.Cancellation(event.MusComputationStarted), nil
+	}
 	mus := make([]f.Proposition, 0, len(*propositions))
 	solverStates := make([]*s.SolverState, len(*propositions))
 	solver := s.NewSolver(fac)
@@ -93,33 +100,28 @@ func ComputeDeletionBasedWithHandler(
 		solverStates[i] = solver.SaveState()
 		solver.AddProposition(p)
 	}
-	sResult := solver.Call(s.Params().Handler(satHandler))
-	if sResult.Aborted() {
-		return nil, false, nil
+	sResult := solver.Call(s.Params().Handler(hdl))
+	if sResult.Cancelled() {
+		return nil, sResult.State(), nil
 	}
 	if sResult.Sat() {
-		return nil, true, errorx.BadInput("formula set is satisfiable")
+		return nil, handler.Success(), errorx.BadInput("formula set is satisfiable")
 	}
 	for i := len(solverStates) - 1; i >= 0; i-- {
 		err := solver.LoadState(solverStates[i])
 		if err != nil {
-			return nil, false, err
+			return nil, handler.Success(), err
 		}
 		for _, prop := range mus {
 			solver.AddProposition(prop)
 		}
-		sResult := solver.Call(s.Params().Handler(satHandler))
-		if sResult.Aborted() {
-			return nil, false, nil
+		sResult := solver.Call(s.Params().Handler(hdl))
+		if sResult.Cancelled() {
+			return nil, sResult.State(), nil
 		}
 		if sResult.Sat() {
 			mus = append(mus, (*propositions)[i])
 		}
 	}
-	return e.NewUnsatCore(mus, true), true, nil
-}
-
-func shouldProceed(solver *s.Solver, handler s.Handler) bool {
-	sResult := solver.Call(s.Params().Handler(handler))
-	return sResult.OK() && sResult.Sat()
+	return e.NewUnsatCore(mus, true), handler.Success(), nil
 }

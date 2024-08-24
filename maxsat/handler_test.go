@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/sat"
@@ -28,11 +29,11 @@ func TestMaxsatTimeoutHandler(t *testing.T) {
 			solver.AddSoftFormula(clause, weight)
 		}
 		duration, _ := time.ParseDuration("100ms")
-		maxsatHandler := HandlerWithTimeout(*handler.NewTimeoutWithDuration(duration))
-		result, ok := solver.SolveWithHandler(maxsatHandler)
+		maxsatHandler := handler.NewTimeoutWithDuration(duration)
+		result, state := solver.SolveWithHandler(maxsatHandler)
 
-		assert.False(ok)
-		assert.True(maxsatHandler.Aborted())
+		assert.False(state.Success)
+		assert.NotEqual(event.Nothing, state.CancelCause)
 		assert.Equal(Result{}, result)
 
 		solver.Reset()
@@ -41,12 +42,12 @@ func TestMaxsatTimeoutHandler(t *testing.T) {
 			solver.AddSoftFormula(clause, weight)
 		}
 		duration, _ = time.ParseDuration("100s")
-		maxsatHandler = HandlerWithTimeout(*handler.NewTimeoutWithDuration(duration))
+		maxsatHandler = handler.NewTimeoutWithDuration(duration)
 
-		result, ok = solver.SolveWithHandler(maxsatHandler)
+		result, state = solver.SolveWithHandler(maxsatHandler)
 
-		assert.True(ok)
-		assert.False(maxsatHandler.Aborted())
+		assert.True(state.Success)
+		assert.Equal(event.Nothing, state.CancelCause)
 		assert.True(result.Satisfiable)
 		if solver.SupportsWeighted() {
 			assert.Equal(2, result.Optimum)

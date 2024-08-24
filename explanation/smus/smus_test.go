@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/io"
 	"github.com/booleworks/logicng-go/parser"
-	"github.com/booleworks/logicng-go/sat"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -227,7 +227,7 @@ func TestSMUSManyConflicts(t *testing.T) {
 
 func TestSMUSTimeoutHandlerSmall(t *testing.T) {
 	duration, _ := time.ParseDuration("5s")
-	handler := sat.OptimizationHandlerWithTimeout(*handler.NewTimeoutWithDuration(duration))
+	handler := handler.NewTimeoutWithDuration(duration)
 	fac := f.NewFactory()
 	formulas := []f.Formula{fac.Variable("a"), fac.Literal("a", false)}
 	testHandler(t, fac, handler, formulas, false)
@@ -235,22 +235,22 @@ func TestSMUSTimeoutHandlerSmall(t *testing.T) {
 
 func TestSMUSTimeoutHandlerLarge(t *testing.T) {
 	duration, _ := time.ParseDuration("1s")
-	handler := sat.OptimizationHandlerWithTimeout(*handler.NewTimeoutWithDuration(duration))
+	handler := handler.NewTimeoutWithDuration(duration)
 	fac := f.NewFactory()
 	formulas, _ := io.ReadFormulas(fac, "../../test/data/formulas/large.txt")
 	testHandler(t, fac, handler, formulas, true)
 }
 
-func testHandler(t *testing.T, fac f.Factory, handler sat.OptimizationHandler, formulas []f.Formula, exp bool) {
+func testHandler(t *testing.T, fac f.Factory, hdl handler.Handler, formulas []f.Formula, exp bool) {
 	assert := assert.New(t)
-	result, ok := ComputeForFormulasWithHandler(fac, formulas, handler)
+	result, ok := ComputeForFormulasWithHandler(fac, formulas, hdl)
 	if exp {
-		assert.True(handler.Aborted())
-		assert.False(ok)
+		assert.False(ok.Success)
+		assert.NotEqual(event.Nothing, ok.CancelCause)
 		assert.Nil(result)
 	} else {
-		assert.False(handler.Aborted())
-		assert.True(ok)
+		assert.True(ok.Success)
+		assert.Equal(event.Nothing, ok.CancelCause)
 		assert.NotNil(result)
 	}
 }

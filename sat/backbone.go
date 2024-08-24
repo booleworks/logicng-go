@@ -1,6 +1,7 @@
 package sat
 
 import (
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/handler"
 )
@@ -55,16 +56,19 @@ func (b *Backbone) CompleteBackbone(fac f.Factory) []f.Literal {
 func (s *Solver) ComputeBackbone(
 	fac f.Factory, variables []f.Variable, backboneSort ...BackboneSort,
 ) *Backbone {
-	backbone, _ := s.ComputeBackboneWithHandler(fac, variables, nil, backboneSort...)
+	backbone, _ := s.ComputeBackboneWithHandler(fac, variables, handler.NopHandler, backboneSort...)
 	return backbone
 }
 
 // ComputeBackboneWithHandler computes the positive and negative backbone on
-// the solver.  The given SAT handler can be used to abort the solver used for
+// the solver.  The given handler can be used to cancel the solver used for
 // the backbone computation.
 func (s *Solver) ComputeBackboneWithHandler(
-	fac f.Factory, variables []f.Variable, satHandler Handler, backboneSort ...BackboneSort,
-) (*Backbone, bool) {
+	fac f.Factory, variables []f.Variable, hdl handler.Handler, backboneSort ...BackboneSort,
+) (*Backbone, handler.State) {
+	if !hdl.ShouldResume(event.BackboneComputationStarted) {
+		return nil, handler.Cancellation(event.BackboneComputationStarted)
+	}
 	m := s.core
 	var bbSort BackboneSort
 	if len(backboneSort) == 0 {
@@ -73,32 +77,27 @@ func (s *Solver) ComputeBackboneWithHandler(
 		bbSort = backboneSort[0]
 	}
 	state := m.saveState()
-	sat, ok := m.Solve(satHandler)
-	if !ok {
-		return nil, false
-	}
-	if sat == f.TristateTrue {
+	sat, hdlState := m.Solve(hdl)
+	var backbone *Backbone
+	if !hdlState.Success {
+		// do nothing
+	} else if sat == f.TristateTrue {
 		m.computingBackbone = true
 		relevantVarIndices := m.getRelevantVarIndices(fac, variables)
 		m.initBackboneDS(relevantVarIndices)
-		m.computeBackboneInternal(relevantVarIndices, bbSort, satHandler)
-		if handler.Aborted(satHandler) {
-			return nil, false
+		hdlState = m.computeBackboneInternal(relevantVarIndices, bbSort, hdl)
+		if hdlState.Success {
+			backbone = m.buildBackbone(fac, variables, bbSort)
 		}
-		backbone := m.buildBackbone(fac, variables, bbSort)
 		m.computingBackbone = false
-		err := m.loadState(state)
-		if err != nil {
-			panic(err)
-		}
-		return backbone, true
 	} else {
-		err := m.loadState(state)
-		if err != nil {
-			panic(err)
-		}
-		return &Backbone{Sat: false}, true
+		backbone = &Backbone{Sat: false}
 	}
+	err := m.loadState(state)
+	if err != nil {
+		panic(err)
+	}
+	return backbone, hdlState
 }
 
 func (m *CoreSolver) getRelevantVarIndices(fac f.Factory, variables []f.Variable) []int32 {
@@ -122,14 +121,16 @@ func (m *CoreSolver) initBackboneDS(variables []int32) {
 	}
 }
 
-func (m *CoreSolver) computeBackboneInternal(variables []int32, bbSort BackboneSort, handler Handler) {
+func (m *CoreSolver) computeBackboneInternal(
+	variables []int32, bbSort BackboneSort, hdl handler.Handler,
+) handler.State {
 	m.createInitialCandidates(variables, bbSort)
 	for len(m.backboneCandidates) > 0 {
 		lit := m.backboneCandidates[len(m.backboneCandidates)-1]
 		m.backboneCandidates = m.backboneCandidates[:len(m.backboneCandidates)-1]
-		sat, ok := m.solveWithLit(lit, handler)
-		if !ok {
-			return
+		sat, state := m.solveWithLit(lit, hdl)
+		if !state.Success {
+			return state
 		}
 		if sat {
 			m.refineUpperBound()
@@ -137,6 +138,7 @@ func (m *CoreSolver) computeBackboneInternal(variables []int32, bbSort BackboneS
 			m.addBackboneLiteral(lit)
 		}
 	}
+	return succ
 }
 
 func (m *CoreSolver) createInitialCandidates(variables []int32, bbSort BackboneSort) {
@@ -172,11 +174,11 @@ func (m *CoreSolver) refineUpperBound() {
 	}
 }
 
-func (m *CoreSolver) solveWithLit(lit int32, handler Handler) (bool, bool) {
+func (m *CoreSolver) solveWithLit(lit int32, hdl handler.Handler) (bool, handler.State) {
 	m.backboneAssumptions = append(m.backboneAssumptions, Not(lit))
-	sat, ok := m.SolveWithAssumptions(handler, m.backboneAssumptions)
+	sat, state := m.SolveWithAssumptions(hdl, m.backboneAssumptions)
 	m.backboneAssumptions = m.backboneAssumptions[:len(m.backboneAssumptions)-1]
-	return sat == f.TristateTrue, ok
+	return sat == f.TristateTrue, state
 }
 
 func (m *CoreSolver) buildBackbone(fac f.Factory, variables []f.Variable, bbSort BackboneSort) *Backbone {

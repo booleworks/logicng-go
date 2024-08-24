@@ -1,35 +1,30 @@
 package handler
 
-import "time"
+import (
+	"time"
 
-// A Timeout handler is used to abort computations after a given time.
+	"github.com/booleworks/logicng-go/event"
+)
+
+// A Timeout handler is used to cancel computations after a given time.
 type Timeout struct {
-	Computation
 	designatedEnd time.Time
 }
 
-// NewTimeoutWithEnd generates a new timeout handler which aborts a computation
+// NewTimeoutWithEnd generates a new timeout handler which cancels a computation
 // at the given time.
 func NewTimeoutWithEnd(time time.Time) *Timeout {
-	return &Timeout{Computation{}, time}
+	return &Timeout{time}
 }
 
-// NewTimeoutWithDuration generates a new timeout handler which aborts a computation
+// NewTimeoutWithDuration generates a new timeout handler which cancels a computation
 // after the given duration.
 func NewTimeoutWithDuration(duration time.Duration) *Timeout {
 	designatedEnd := time.Now().Add(duration)
-	return &Timeout{Computation{}, designatedEnd}
+	return &Timeout{designatedEnd}
 }
 
-// TimeLimitExceeded reports whether the internal time limit of the handler was
-// exceeded.
-func (t *Timeout) TimeLimitExceeded() bool {
-	t.aborted = time.Now().After(t.designatedEnd)
-	return t.aborted
-}
-
-// Aborted reports whether the computation was aborted by the handler.
-func (t *Timeout) Aborted() bool {
-	t.TimeLimitExceeded()
-	return t.aborted
+// ShouldResume returns true if the time limit is not yet reached.
+func (t Timeout) ShouldResume(event.Event) bool {
+	return !time.Now().After(t.designatedEnd)
 }

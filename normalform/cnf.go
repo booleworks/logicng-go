@@ -4,6 +4,7 @@ import (
 	"github.com/booleworks/logicng-go/assignment"
 	"github.com/booleworks/logicng-go/configuration"
 	"github.com/booleworks/logicng-go/errorx"
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/handler"
 )
@@ -11,6 +12,8 @@ import (
 // CNFAlgorithm encodes the different algorithms for converting a formula to
 // CNF.
 type CNFAlgorithm byte
+
+var succ = handler.Success()
 
 const (
 	CNFFactorization CNFAlgorithm = iota
@@ -108,7 +111,7 @@ func determineConfig(fac f.Factory, initConfig []*CNFConfig) *CNFConfig {
 }
 
 func advancedEncoding(fac f.Factory, formula f.Formula, config *CNFConfig) f.Formula {
-	factorizationHandler := &CNFHandler{
+	factorizationHandler := &FactorizationHandler{
 		distributionBoundary: config.DistributionBoundary,
 		clauseBoundary:       config.CreatedClauseBoundary,
 	}
@@ -124,10 +127,10 @@ func advancedEncoding(fac f.Factory, formula f.Formula, config *CNFConfig) f.For
 }
 
 func singleAdvancedEncoding(
-	fac f.Factory, formula f.Formula, config *CNFConfig, cnfHandler *CNFHandler,
+	fac f.Factory, formula f.Formula, config *CNFConfig, hdl *FactorizationHandler,
 ) f.Formula {
-	result, ok := FactorizedCNFWithHandler(fac, formula, cnfHandler)
-	if !ok {
+	result, state := FactorizedCNFWithHandler(fac, formula, hdl)
+	if !state.Success {
 		if config.FallbackAlgorithmForAdvancedEncoding == CNFPlaistedGreenbaum {
 			return PGCNFWithBoundary(fac, formula, config.AtomBoundary)
 		} else {
@@ -140,61 +143,58 @@ func singleAdvancedEncoding(
 // FactorizedCNF returns the given formula in conjunctive normal form.  The
 // algorithm used is factorization.  The resulting CNF can grow exponentially,
 // therefore unless you are sure that the input is sensible, prefer the CNF
-// factorization with a handler in order to be able to abort it.
+// factorization with a handler in order to be able to cancel it.
 func FactorizedCNF(fac f.Factory, formula f.Formula) f.Formula {
-	cnf, _ := factorizedCNFRec(fac, formula, nil)
+	cnf, _ := factorizedCNFRec(fac, formula, handler.NopHandler)
 	return cnf
 }
 
 // FactorizedCNFWithHandler returns the given formula in conjunctive normal
-// form.  The given handler can be used to abort the factorization.  Returns
-// the CNF and an ok flag which is false when the handler aborted the
-// computation.
-func FactorizedCNFWithHandler(
-	fac f.Factory, formula f.Formula, factorizatonHandler FactorizationHandler,
-) (cnf f.Formula, ok bool) {
-	handler.Start(factorizatonHandler)
-	return factorizedCNFRec(fac, formula, factorizatonHandler)
+// form.  The given handler can be used to cancel the factorization.  Returns
+// the CNF and the handler state.
+func FactorizedCNFWithHandler(fac f.Factory, formula f.Formula, hdl handler.Handler) (f.Formula, handler.State) {
+	hdl.ShouldResume(event.FactorizationStarted)
+	return factorizedCNFRec(fac, formula, hdl)
 }
 
-func factorizedCNFRec(fac f.Factory, formula f.Formula, handler FactorizationHandler) (f.Formula, bool) {
+func factorizedCNFRec(fac f.Factory, formula f.Formula, hdl handler.Handler) (f.Formula, handler.State) {
 	if formula.Sort() <= f.SortLiteral {
-		return formula, true
+		return formula, succ
 	}
 	cached, ok := f.LookupTransformationCache(fac, f.TransCNFFactorization, formula)
 	if ok {
-		return cached, true
+		return cached, succ
 	}
-	ok = true
+	state := handler.Success()
 	switch fsort := formula.Sort(); fsort {
 	case f.SortNot, f.SortImpl, f.SortEquiv:
-		cached, ok = factorizedCNFRec(fac, NNF(fac, formula), handler)
+		cached, state = factorizedCNFRec(fac, NNF(fac, formula), hdl)
 	case f.SortOr:
 		nary, _ := fac.NaryOperands(formula)
 		nops := make([]f.Formula, 0, len(nary))
 		for _, op := range nary {
-			if !ok {
-				return 0, false
+			if !state.Success {
+				return 0, state
 			}
 			var nop f.Formula
-			nop, ok = factorizedCNFRec(fac, op, handler)
+			nop, state = factorizedCNFRec(fac, op, hdl)
 			nops = append(nops, nop)
 		}
 		cached = nops[0]
 		for i := 1; i < len(nops); i++ {
-			if !ok {
-				return 0, false
+			if !state.Success {
+				return 0, state
 			}
-			cached, ok = distributeCNF(fac, cached, nops[i], handler)
+			cached, state = distributeCNF(fac, cached, nops[i], hdl)
 		}
 	case f.SortAnd:
 		nary, _ := fac.NaryOperands(formula)
 		nops := make([]f.Formula, 0, len(nary))
 		for _, op := range nary {
 			var apply f.Formula
-			apply, ok = factorizedCNFRec(fac, op, handler)
-			if !ok {
-				return 0, false
+			apply, state = factorizedCNFRec(fac, op, hdl)
+			if !state.Success {
+				return 0, state
 			}
 			nops = append(nops, apply)
 		}
@@ -204,20 +204,16 @@ func factorizedCNFRec(fac f.Factory, formula f.Formula, handler FactorizationHan
 	default:
 		panic(errorx.UnknownEnumValue(fsort))
 	}
-	if ok {
+	if state.Success {
 		f.SetTransformationCache(fac, f.TransCNFFactorization, formula, cached)
-		return cached, true
+		return cached, succ
 	}
-	return 0, false
+	return 0, state
 }
 
-func distributeCNF(fac f.Factory, f1, f2 f.Formula, handler FactorizationHandler) (f.Formula, bool) {
-	proceed := true
-	if handler != nil {
-		proceed = handler.PerformedDistribution()
-	}
-	if !proceed {
-		return 0, false
+func distributeCNF(fac f.Factory, f1, f2 f.Formula, hdl handler.Handler) (f.Formula, handler.State) {
+	if !hdl.ShouldResume(event.DistributionPerformed) {
+		return 0, handler.Cancellation(event.DistributionPerformed)
 	}
 	if f1.Sort() == f.SortAnd || f2.Sort() == f.SortAnd {
 		nops := make([]f.Formula, 0)
@@ -231,19 +227,19 @@ func distributeCNF(fac f.Factory, f1, f2 f.Formula, handler FactorizationHandler
 			operands, _ = fac.NaryOperands(f2)
 		}
 		for _, op := range operands {
-			distribute, ok := distributeCNF(fac, op, form, handler)
-			if !ok {
-				return 0, false
+			distribute, state := distributeCNF(fac, op, form, hdl)
+			if !state.Success {
+				return 0, state
 			}
 			nops = append(nops, distribute)
 		}
-		return fac.And(nops...), true
+		return fac.And(nops...), succ
 	}
 	clause := fac.Or(f1, f2)
-	if handler != nil {
-		proceed = handler.CreatedClause(clause)
+	if !hdl.ShouldResume(event.FactorizationCreatedClause) {
+		return clause, handler.Cancellation(event.FactorizationCreatedClause)
 	}
-	return clause, proceed
+	return clause, succ
 }
 
 // PGCNFDefault transforms a formula to CNF with the algorithm by Plaisted &

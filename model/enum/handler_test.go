@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/model/iter"
@@ -22,20 +23,20 @@ func TestModelIterationTimeoutHandler(t *testing.T) {
 	end := time.Now().Add(duration)
 
 	meConfig := iter.DefaultConfig()
-	meConfig.Handler = iter.HandlerWithTimeout(*handler.NewTimeoutWithEnd(end))
-	_, ok := OnSolverWithConfig(solver, vars, meConfig)
-	assert.False(ok)
-	assert.True(meConfig.Handler.Aborted())
+	meConfig.Handler = handler.NewTimeoutWithEnd(end)
+	_, state := OnSolverWithConfig(solver, vars, meConfig)
+	assert.False(state.Success)
+	assert.NotEqual(event.Nothing, state.CancelCause)
 
 	nq = sat.GenerateNQueens(fac, 5)
 	vars = f.Variables(fac, nq).Content()
 	solver = sat.NewSolver(fac)
 	solver.Add(nq)
 	duration, _ = time.ParseDuration("1h")
-	meConfig.Handler = iter.HandlerWithTimeout(*handler.NewTimeoutWithDuration(duration))
+	meConfig.Handler = handler.NewTimeoutWithDuration(duration)
 
-	result, ok := OnSolverWithConfig(solver, vars, meConfig)
-	assert.True(ok)
-	assert.False(meConfig.Handler.Aborted())
+	result, state := OnSolverWithConfig(solver, vars, meConfig)
+	assert.True(state.Success)
+	assert.Equal(event.Nothing, state.CancelCause)
 	assert.Equal(10, len(result))
 }

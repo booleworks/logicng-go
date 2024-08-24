@@ -6,18 +6,18 @@ import (
 	"github.com/booleworks/logicng-go/errorx"
 )
 
-func (k *Kernel) ithVar(i int32) (int32, bool) {
+func (k *Kernel) ithVar(i int32) int32 {
 	if i < 0 || i >= k.varnum {
-		return -1, false
+		panic(errorx.IllegalState("illegal variable index: %d", i))
 	}
-	return k.vars[i*2], true
+	return k.vars[i*2]
 }
 
-func (k *Kernel) nithVar(i int32) (int32, bool) {
+func (k *Kernel) nithVar(i int32) int32 {
 	if i < 0 || i >= k.varnum {
-		return -1, false
+		panic(errorx.IllegalState("illegal variable index: %d", i))
 	}
-	return k.vars[i*2+1], true
+	return k.vars[i*2+1]
 }
 
 func (k *Kernel) bddVar(root int32) int32 {

@@ -1,6 +1,7 @@
 package dnnf
 
 import (
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/normalform"
@@ -9,27 +10,28 @@ import (
 	"github.com/emirpasic/gods/maps/treemap"
 )
 
+var succ = handler.Success()
+
 // Compile returns a compiled DNNF for the given formula.
 func Compile(fac f.Factory, formula f.Formula) *DNNF {
-	dnnf, _ := CompileWithHandler(fac, formula, nil)
+	dnnf, _ := CompileWithHandler(fac, formula, handler.NopHandler)
 	return dnnf
 }
 
 // CompileWithHandler returns a compiled DNNF for the given formula.  The
-// handler can be used to abort the DNNF compilation.  If the DNNF compilation
-// was aborted, the ok flag is false.
-func CompileWithHandler(fac f.Factory, formula f.Formula, dnnfHandler Handler) (dnnf *DNNF, ok bool) {
+// handler can be used to cancel the DNNF compilation.
+func CompileWithHandler(fac f.Factory, formula f.Formula, hdl handler.Handler) (*DNNF, handler.State) {
 	originalVariables := f.NewMutableVarSet()
 	originalVariables.AddAll(f.Variables(fac, formula))
 	cnf := normalform.CNF(fac, formula)
 	originalVariables.AddAll(f.Variables(fac, cnf))
 	simplifiedFormula := simplifyFormula(fac, cnf)
 	compiler := newCompiler(fac, simplifiedFormula)
-	dnnfFormula, ok := compiler.compile(dnnfHandler)
-	if !ok {
-		return nil, ok
+	dnnfFormula, state := compiler.compile(hdl)
+	if !state.Success {
+		return nil, state
 	} else {
-		return &DNNF{fac, dnnfFormula, originalVariables.AsImmutable()}, ok
+		return &DNNF{fac, dnnfFormula, originalVariables.AsImmutable()}, succ
 	}
 }
 
@@ -41,7 +43,7 @@ type compiler struct {
 	solver            sat.DnnfSatSolver
 	numberOfVariables int32
 	cache             *treemap.Map
-	handler           Handler
+	hdl               handler.Handler
 	localCacheKeys    [][]*bitset
 	localOccurrences  [][][]int32
 }
@@ -89,17 +91,17 @@ func bitsetComp(a, b interface{}) int {
 	return 0
 }
 
-func (c *compiler) compile(dnnfHandler Handler) (f.Formula, bool) {
+func (c *compiler) compile(hdl handler.Handler) (f.Formula, handler.State) {
 	if !sat.IsSatisfiable(c.fac, c.cnf) {
-		return c.fac.Falsum(), true
+		return c.fac.Falsum(), succ
 	}
 	dTree := c.generateDtree(c.fac)
-	return c.compileWithTree(dTree, dnnfHandler)
+	return c.compileWithTree(dTree, hdl)
 }
 
 func initializeClauses(fac f.Factory, cnf f.Formula) (f.Formula, f.Formula) {
-	units := []f.Formula{}
-	nonUnits := []f.Formula{}
+	var units []f.Formula
+	var nonUnits []f.Formula
 	switch cnf.Sort() {
 	case f.SortAnd:
 		for _, clause := range fac.Operands(cnf) {
@@ -126,23 +128,25 @@ func (c *compiler) generateDtree(fac f.Factory) dtree {
 	return tree
 }
 
-func (c *compiler) compileWithTree(dtree dtree, compilationHandler Handler) (f.Formula, bool) {
+func (c *compiler) compileWithTree(dtree dtree, hdl handler.Handler) (f.Formula, handler.State) {
 	if c.nonUnitClauses.IsAtomic() {
-		return c.cnf, true
+		return c.cnf, succ
 	}
 	if !c.solver.Start() {
-		return c.fac.Falsum(), true
+		return c.fac.Falsum(), succ
 	}
 	c.initializeCaches(dtree)
-	c.handler = compilationHandler
-	handler.Start(compilationHandler)
+	c.hdl = hdl
+	if !hdl.ShouldResume(event.DnnfComputationStarted) {
+		return 0, handler.Cancellation(event.DnnfComputationStarted)
+	}
 
-	result, ok := c.cnf2ddnnf(dtree)
-	c.handler = nil
-	if !ok {
-		return 0, false
+	result, state := c.cnf2ddnnf(dtree)
+	c.hdl = nil
+	if !state.Success {
+		return 0, state
 	} else {
-		return c.fac.And(c.unitClauses, result), true
+		return c.fac.And(c.unitClauses, result), state
 	}
 }
 
@@ -170,32 +174,32 @@ func (c *compiler) initializeCaches(dtree dtree) {
 	}
 }
 
-func (c *compiler) cnf2ddnnf(tree dtree) (f.Formula, bool) {
+func (c *compiler) cnf2ddnnf(tree dtree) (f.Formula, handler.State) {
 	return c.cnf2ddnnfInner(tree, 0)
 }
 
-func (c *compiler) cnf2ddnnfInner(tree dtree, currentShannons int) (f.Formula, bool) {
+func (c *compiler) cnf2ddnnfInner(tree dtree, currentShannons int) (f.Formula, handler.State) {
 	separator := tree.dynamicSeparator()
 	implied := c.newlyImpliedLiterals(tree.staticVarSet())
 
 	if separator.cardinality() == 0 {
 		switch node := tree.(type) {
 		case *dtreeLeaf:
-			return c.fac.And(implied, c.leaf2ddnnf(node)), true
+			return c.fac.And(implied, c.leaf2ddnnf(node)), succ
 		default:
 			return c.conjoin(implied, node.(*dtreeNode), currentShannons)
 		}
 	} else {
 		variable := c.chooseShannonVariable(tree, separator, currentShannons)
-		if c.handler != nil && !c.handler.ShannonExpansion() {
-			return 0, false
+		if !c.hdl.ShouldResume(event.DnnfShannonExpansion) {
+			return 0, handler.Cancellation(event.DnnfShannonExpansion)
 		}
 
 		positiveDnnf := c.fac.Falsum()
 		if c.solver.Decide(variable, true) {
-			res, ok := c.cnf2ddnnfInner(tree, currentShannons+1)
-			if !ok {
-				return 0, false
+			res, state := c.cnf2ddnnfInner(tree, currentShannons+1)
+			if !state.Success {
+				return 0, state
 			} else {
 				positiveDnnf = res
 			}
@@ -205,15 +209,15 @@ func (c *compiler) cnf2ddnnfInner(tree dtree, currentShannons int) (f.Formula, b
 			if c.solver.AtAssertionLevel() && c.solver.AssertCdLiteral() {
 				return c.cnf2ddnnf(tree)
 			} else {
-				return c.fac.Falsum(), true
+				return c.fac.Falsum(), succ
 			}
 		}
 
 		negativeDnnf := c.fac.Falsum()
 		if c.solver.Decide(variable, false) {
-			res, ok := c.cnf2ddnnfInner(tree, currentShannons+1)
-			if !ok {
-				return 0, false
+			res, state := c.cnf2ddnnfInner(tree, currentShannons+1)
+			if !state.Success {
+				return 0, state
 			} else {
 				negativeDnnf = res
 			}
@@ -223,14 +227,14 @@ func (c *compiler) cnf2ddnnfInner(tree dtree, currentShannons int) (f.Formula, b
 			if c.solver.AtAssertionLevel() && c.solver.AssertCdLiteral() {
 				return c.cnf2ddnnf(tree)
 			} else {
-				return c.fac.Falsum(), true
+				return c.fac.Falsum(), succ
 			}
 		}
 
 		lit := c.solver.LitForIdx(variable)
 		positiveBranch := c.fac.And(lit, positiveDnnf)
 		negativeBranch := c.fac.And(lit.Negate(c.fac), negativeDnnf)
-		return c.fac.And(implied, c.fac.Or(positiveBranch, negativeBranch)), true
+		return c.fac.And(implied, c.fac.Or(positiveBranch, negativeBranch)), succ
 	}
 }
 
@@ -257,44 +261,44 @@ func (c *compiler) chooseShannonVariable(tree dtree, separator *bitset, currentS
 	return max
 }
 
-func (c *compiler) conjoin(implied f.Formula, tree *dtreeNode, currentShannons int) (f.Formula, bool) {
+func (c *compiler) conjoin(implied f.Formula, tree *dtreeNode, currentShannons int) (f.Formula, handler.State) {
 	if implied.Sort() == f.SortFalse {
-		return c.fac.Falsum(), true
+		return c.fac.Falsum(), succ
 	}
-	left, ok := c.cnfAux(tree.left, currentShannons)
-	if !ok {
-		return 0, false
+	left, state := c.cnfAux(tree.left, currentShannons)
+	if !state.Success {
+		return 0, state
 	}
 	if left.Sort() == f.SortFalse {
-		return c.fac.Falsum(), true
+		return c.fac.Falsum(), succ
 	}
-	right, ok := c.cnfAux(tree.right, currentShannons)
-	if !ok {
-		return 0, false
+	right, state := c.cnfAux(tree.right, currentShannons)
+	if !state.Success {
+		return 0, state
 	}
 	if right.Sort() == f.SortFalse {
-		return c.fac.Falsum(), true
+		return c.fac.Falsum(), succ
 	}
-	return c.fac.And(implied, left, right), true
+	return c.fac.And(implied, left, right), succ
 }
 
-func (c *compiler) cnfAux(tree dtree, currentShannons int) (f.Formula, bool) {
+func (c *compiler) cnfAux(tree dtree, currentShannons int) (f.Formula, handler.State) {
 	switch node := tree.(type) {
 	case *dtreeLeaf:
-		return c.leaf2ddnnf(node), true
+		return c.leaf2ddnnf(node), succ
 	default:
 		key := c.computeCacheKey(tree.(*dtreeNode), currentShannons)
 		if val, ok := c.cache.Get(key); ok {
-			return val.(f.Formula), true
+			return val.(f.Formula), succ
 		} else {
-			dnnf, ok := c.cnf2ddnnf(tree)
-			if !ok {
-				return 0, false
+			dnnf, state := c.cnf2ddnnf(tree)
+			if !state.Success {
+				return 0, state
 			}
 			if dnnf.Sort() != f.SortFalse {
 				c.cache.Put(key.clone(), dnnf)
 			}
-			return dnnf, true
+			return dnnf, succ
 		}
 	}
 }
@@ -307,8 +311,8 @@ func (c *compiler) computeCacheKey(tree *dtreeNode, currentShannons int) *bitset
 }
 
 func (c *compiler) leaf2ddnnf(leaf *dtreeLeaf) f.Formula {
-	leafResultOperands := []f.Formula{}
-	leafCurrentLiterals := []f.Literal{}
+	var leafResultOperands []f.Formula
+	var leafCurrentLiterals []f.Literal
 	index := 0
 	for _, lit := range f.Literals(c.fac, leaf.clause).Content() {
 		switch c.solver.ValueOf(sat.MkLit(c.solver.VariableIndex(lit), lit.IsNeg())) {

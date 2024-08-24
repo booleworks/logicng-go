@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/io"
 	"github.com/booleworks/logicng-go/parser"
 	"github.com/booleworks/logicng-go/randomizer"
@@ -19,18 +20,18 @@ func TestPrimeImplicateReductionSimple(t *testing.T) {
 	parser := parser.New(fac)
 
 	pr := newPrimeReduction(fac, parser.ParseUnsafe("a&b"))
-	result, _ := pr.reduceImplicate(fac, []f.Literal{d.LA, d.LB}, nil)
+	result, _ := pr.reduceImplicate(fac, []f.Literal{d.LA, d.LB}, handler.NopHandler)
 	assert.Equal(1, len(result))
 
 	pr = newPrimeReduction(fac, parser.ParseUnsafe("(a => b) | b | c"))
-	result, _ = pr.reduceImplicate(fac, []f.Literal{d.LNA, d.LB, d.LC}, nil)
+	result, _ = pr.reduceImplicate(fac, []f.Literal{d.LNA, d.LB, d.LC}, handler.NopHandler)
 	assert.Equal(3, len(result))
 	assert.True(slices.Contains(result, d.LNA))
 	assert.True(slices.Contains(result, d.LB))
 	assert.True(slices.Contains(result, d.LC))
 
 	pr = newPrimeReduction(fac, parser.ParseUnsafe("(a => b) & b & c"))
-	result, _ = pr.reduceImplicate(fac, []f.Literal{d.LB, d.LC}, nil)
+	result, _ = pr.reduceImplicate(fac, []f.Literal{d.LB, d.LC}, handler.NopHandler)
 	assert.Equal(1, len(result))
 }
 
@@ -72,10 +73,10 @@ func TestPrimeImplicateCornerCases(t *testing.T) {
 }
 
 func testImplicateFormula(t *testing.T, fac f.Factory, formula f.Formula) {
-	testImplicateFormulaDetail(t, fac, formula, nil, false)
+	testImplicateFormulaDetail(t, fac, formula, handler.NopHandler, false)
 }
 
-func testImplicateFormulaDetail(t *testing.T, fac f.Factory, formula f.Formula, handler sat.Handler, expAborted bool) {
+func testImplicateFormulaDetail(t *testing.T, fac f.Factory, formula f.Formula, h handler.Handler, expAborted bool) {
 	assert := assert.New(t)
 	solver := sat.NewSolver(fac)
 	solver.Add(formula.Negate(fac))
@@ -90,13 +91,12 @@ func testImplicateFormulaDetail(t *testing.T, fac f.Factory, formula f.Formula, 
 		falsifyingAssignment[i] = lit.Negate(fac)
 	}
 	pr := newPrimeReduction(fac, formula)
-	primeImplicate, ok := pr.reduceImplicate(fac, falsifyingAssignment, handler)
+	primeImplicate, state := pr.reduceImplicate(fac, falsifyingAssignment, h)
 	if expAborted {
-		assert.False(ok)
-		assert.True(handler.Aborted())
+		assert.False(state.Success)
 		assert.Nil(primeImplicate)
 	} else {
-		assert.True(ok)
+		assert.True(state.Success)
 		for _, lit := range primeImplicate {
 			assert.True(slices.Contains(falsifyingAssignment, lit))
 		}

@@ -3,6 +3,7 @@ package bdd
 import (
 	"testing"
 
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/normalform"
 	"github.com/booleworks/logicng-go/randomizer"
@@ -25,10 +26,10 @@ func TestBddNormalformCnfWithHandler(t *testing.T) {
 	fac := f.NewFactory()
 	rand := randomizer.NewWithSeed(fac, int64(42))
 	formula := rand.Formula(5)
-	handler := HandlerWithNodes(5)
-	cnf, ok := CNFWithHandler(fac, formula, handler)
-	assert.False(t, ok)
-	assert.True(t, handler.Aborted())
+	hdl := HandlerWithNodes(5)
+	cnf, state := CNFWithHandler(fac, formula, hdl)
+	assert.False(t, state.Success)
+	assert.Equal(t, event.BddNewRefAdded, state.CancelCause)
 	assert.Equal(t, fac.Falsum(), cnf)
 }
 
@@ -47,9 +48,9 @@ func TestBddNormalformDnfWithHandler(t *testing.T) {
 	fac := f.NewFactory()
 	rand := randomizer.NewWithSeed(fac, int64(42))
 	formula := rand.Formula(5)
-	handler := HandlerWithNodes(5)
-	dnf, ok := DNFWithHandler(fac, formula, handler)
-	assert.False(t, ok)
-	assert.True(t, handler.Aborted())
+	hdl := HandlerWithNodes(5)
+	dnf, state := DNFWithHandler(fac, formula, hdl)
+	assert.False(t, state.Success)
+	assert.Equal(t, event.BddNewRefAdded, state.CancelCause)
 	assert.Equal(t, fac.Falsum(), dnf)
 }

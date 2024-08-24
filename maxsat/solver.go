@@ -7,6 +7,7 @@ import (
 	"github.com/booleworks/logicng-go/configuration"
 	"github.com/booleworks/logicng-go/errorx"
 	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/model"
 	"github.com/booleworks/logicng-go/normalform"
 )
@@ -229,33 +230,32 @@ func (m *Solver) addClause(formula f.Formula, weight int) {
 // Solve solves the MAX-SAT problem currently on the solver and returns the
 // computation result.
 func (m *Solver) Solve() Result {
-	result, _ := m.SolveWithHandler(nil)
+	result, _ := m.SolveWithHandler(handler.NopHandler)
 	return result
 }
 
 // SolveWithHandler solves the MAX-SAT problem currently on the solver.  The
-// computation can be aborted with the given handler.  The computation result
-// is returned and an ok flag which is false if the computation was aborted by
-// the handler.
-func (m *Solver) SolveWithHandler(maxsatHandler Handler) (result Result, ok bool) {
+// computation can be cancelled with the given handler.  The computation result
+// is returned and handler state.
+func (m *Solver) SolveWithHandler(hdl handler.Handler) (Result, handler.State) {
 	if m.result != nil {
-		return *m.result, true
+		return *m.result, succ
 	}
 	if m.solver.getCurrentWeight() == 1 {
 		m.solver.setProblemType(unweighted)
 	} else {
 		m.solver.setProblemType(weighted)
 	}
-	res, ok := m.solver.search(maxsatHandler)
-	if !ok || res == resUndef {
-		return Result{}, false
+	res, state := m.solver.search(hdl)
+	if !state.Success {
+		return Result{}, state
 	}
 	if res == resUnsat {
 		m.result = &Result{Satisfiable: false, Optimum: -1}
 	} else {
 		m.result = &Result{Satisfiable: true, Optimum: m.solver.result()}
 	}
-	return *m.result, true
+	return *m.result, succ
 }
 
 // Model returns the model for the last MAX-SAT computation.  It returns an

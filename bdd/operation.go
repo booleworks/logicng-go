@@ -5,6 +5,7 @@ import (
 
 	"github.com/booleworks/logicng-go/errorx"
 	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 )
 
 func (k *Kernel) satOne(r int32) int32 {
@@ -278,7 +279,7 @@ func (k *Kernel) support(r int32) int32 {
 	k.reordering.disableReorder()
 	for n := supportMax; n >= supportMin; n-- {
 		if supportSet[n] == supportId {
-			k.addRef(res, nil)
+			k.addRef(res, handler.NopHandler)
 			tmp := k.makeNodeUnsafe(n, 0, res)
 			k.delRef(res)
 			res = tmp

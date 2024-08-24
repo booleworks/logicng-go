@@ -1,23 +1,34 @@
 package iter
 
 import (
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/sat"
 )
 
+var succ = handler.Success()
+
+type EventIteratorFoundModels struct {
+	NumberOfModels int
+}
+
+func (EventIteratorFoundModels) EventType() string {
+	return "Model Iterator Found Models"
+}
+
 // A ModelIterator iterates over models on a solver.
 type ModelIterator[R any] struct {
 	vars           *f.VarSet
 	additionalVars *f.VarSet
-	handler        Handler
+	hdl            handler.Handler
 	strategy       Strategy
 }
 
 // New creates a new model iterator.  It will iterate over all models projected
 // to the given vars.  The additionalVars will be included in each model, but
 // they are not iterated over.  The config can be used to influence the
-// iteration process with a split strategy an optional handler to abort the
+// iteration process with a split strategy an optional handler to cancel the
 // iteration.
 func New[R any](vars, additionalVars *f.VarSet, config *Config) *ModelIterator[R] {
 	strategy := config.Strategy
@@ -34,8 +45,11 @@ func New[R any](vars, additionalVars *f.VarSet, config *Config) *ModelIterator[R
 func (m *ModelIterator[R]) Iterate(
 	solver *sat.Solver,
 	newCollector func(fac f.Factory, knownVars, dontCareVars, additionalVars *f.VarSet) Collector[R],
-) (R, bool) {
-	handler.Start(m.handler)
+	emptyElement R,
+) (R, handler.State) {
+	if !m.hdl.ShouldResume(event.ModelEnumerationStarted) {
+		return emptyElement, handler.Cancellation(event.ModelEnumerationStarted)
+	}
 	knownVariables := solver.CoreSolver().KnownVariables(solver.Factory())
 	additionalVarsNotOnSolver := difference(m.additionalVars, knownVariables)
 	dontCareVariablesNotOnSolver := difference(m.vars, knownVariables)
@@ -44,8 +58,8 @@ func (m *ModelIterator[R]) Iterate(
 	if vars := m.strategy.SplitVarsForRecursionDepth(m.vars, solver, 0); vars.Size() > 0 {
 		initialSplitVars.AddAll(vars)
 	}
-	m.iterRecursive(collector, solver, []f.Literal{}, m.vars, initialSplitVars.AsImmutable(), 0)
-	return collector.Result(), !handler.Aborted(m.handler)
+	state := m.iterRecursive(collector, solver, []f.Literal{}, m.vars, initialSplitVars.AsImmutable(), 0)
+	return collector.Result(), state
 }
 
 func (m *ModelIterator[R]) iterRecursive(
@@ -55,34 +69,46 @@ func (m *ModelIterator[R]) iterRecursive(
 	iterVars *f.VarSet,
 	splitVars *f.VarSet,
 	recursionDepth int,
-) {
+) handler.State {
 	maxModelsForIter := m.strategy.MaxModelsForIter(recursionDepth)
 	state := solver.SaveState()
 	solver.Add(f.LiteralsAsFormulas(splitModel)...)
-	iterFinished := iterate(collector, solver, iterVars, m.additionalVars, maxModelsForIter, m.handler)
+	iterFinished, iterState := iterate(collector, solver, iterVars, m.additionalVars, maxModelsForIter, m.hdl)
+	if !iterState.Success {
+		collector.Commit(m.hdl)
+		return iterState
+	}
 	if !iterFinished {
-		if !collector.Rollback(m.handler) {
+		if s := collector.Rollback(m.hdl); !s.Success {
 			err := solver.LoadState(state)
 			if err != nil {
 				panic(err)
 			}
-			return
+			return s
 		}
 		newSplitVars := f.NewVarSetCopy(splitVars)
 		maxModelsForSplitAssignments := m.strategy.MaxModelsForSplitAssignments(recursionDepth)
-		for !iterate(collector, solver, newSplitVars, nil, maxModelsForSplitAssignments, m.handler) {
-			if !collector.Rollback(m.handler) {
+		for {
+			itForSplit, itState := iterate(collector, solver, newSplitVars, nil, maxModelsForSplitAssignments, m.hdl)
+			if !itState.Success {
 				err := solver.LoadState(state)
 				if err != nil {
 					panic(err)
 				}
-				return
+				collector.Rollback(m.hdl)
+				return itState
+			} else if itForSplit {
+				break
+			} else {
+				if s := collector.Rollback(m.hdl); !s.Success {
+					err := solver.LoadState(state)
+					if err != nil {
+						panic(err)
+					}
+					return s
+				}
+				newSplitVars = m.strategy.ReduceSplitVars(newSplitVars, recursionDepth)
 			}
-			newSplitVars = m.strategy.ReduceSplitVars(newSplitVars, recursionDepth)
-		}
-		if handler.Aborted(m.handler) {
-			collector.Rollback(m.handler)
-			return
 		}
 
 		remainingVars := f.NewMutableVarSetCopy(iterVars)
@@ -91,34 +117,35 @@ func (m *ModelIterator[R]) iterRecursive(
 			remainingVars.Remove(literal.Variable())
 		}
 
-		newSplitAssignments := collector.RollbackAndReturnModels(solver, m.handler)
+		newSplitAssignments := collector.RollbackAndReturnModels(solver, m.hdl)
 		recursiveSplitVars := m.strategy.SplitVarsForRecursionDepth(remainingVars.AsImmutable(), solver, recursionDepth+1)
 		for _, newSplitAssignment := range newSplitAssignments {
 			recursiveSplitAssignment := make([]f.Literal, newSplitAssignment.Size())
 			copy(recursiveSplitAssignment, newSplitAssignment.Literals)
 			recursiveSplitAssignment = append(recursiveSplitAssignment, splitModel...)
 			m.iterRecursive(collector, solver, recursiveSplitAssignment, iterVars, recursiveSplitVars, recursionDepth+1)
-			if !collector.Commit(m.handler) {
+			if s := collector.Commit(m.hdl); !s.Success {
 				err := solver.LoadState(state)
 				if err != nil {
 					panic(err)
 				}
-				return
+				return s
 			}
 		}
 	} else {
-		if !collector.Commit(m.handler) {
+		if s := collector.Commit(m.hdl); !s.Success {
 			err := solver.LoadState(state)
 			if err != nil {
 				panic(err)
 			}
-			return
+			return s
 		}
 	}
 	err := solver.LoadState(state)
 	if err != nil {
 		panic(err)
 	}
+	return succ
 }
 
 func iterate[R any](
@@ -127,15 +154,15 @@ func iterate[R any](
 	variables *f.VarSet,
 	additionalVariables *f.VarSet,
 	maxModels int,
-	handler Handler,
-) bool {
+	hdl handler.Handler,
+) (bool, handler.State) {
 	stateBeforeIter := solver.SaveState()
 	relevantIndices := relevantIndicesFromSolver(variables, solver)
 	relevantAllIndices := relevantAllIndicesFromSolver(variables, additionalVariables, relevantIndices, solver)
 
 	foundModels := 0
-	proceed := true
-	for proceed && iterSATCall(solver, handler) {
+	state := handler.Success()
+	for iterSATCall(solver, hdl) {
 		modelFromSolver := solver.CoreSolver().Model()
 		foundModels++
 		if foundModels >= maxModels {
@@ -143,10 +170,10 @@ func iterate[R any](
 			if err != nil {
 				panic(err)
 			}
-			return false
+			return false, succ
 		}
-		proceed = collector.AddModel(modelFromSolver, solver, relevantAllIndices, handler)
-		if len(modelFromSolver) > 0 {
+		state = collector.AddModel(modelFromSolver, solver, relevantAllIndices, hdl)
+		if state.Success && len(modelFromSolver) > 0 {
 			blockingClause := generateBlockingClause(modelFromSolver, relevantIndices)
 			solver.CoreSolver().AddClause(blockingClause, nil)
 		} else {
@@ -157,15 +184,14 @@ func iterate[R any](
 	if err != nil {
 		panic(err)
 	}
-	return true
+	if !state.Success {
+		return false, state
+	}
+	return true, succ
 }
 
-func iterSATCall(solver *sat.Solver, handler Handler) bool {
-	var satHandler sat.Handler
-	if handler != nil {
-		satHandler = handler.SatHandler()
-	}
-	sResult := solver.Call(sat.Params().Handler(satHandler))
+func iterSATCall(solver *sat.Solver, hdl handler.Handler) bool {
+	sResult := solver.Call(sat.Params().Handler(hdl))
 	return sResult.OK() && sResult.Sat()
 }
 

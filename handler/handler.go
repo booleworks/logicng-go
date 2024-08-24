@@ -1,43 +1,40 @@
 package handler
 
-// A Handler can be used to abort computations.  The Started method is called
-// when the computation is started.  The Aborted method returns whether the
-// computation was aborted by the handler.
+import "github.com/booleworks/logicng-go/event"
+
+// A Handler can be used to cancel computations.  It reacts to different kinds
+// of events.
 type Handler interface {
-	Started()
-	Aborted() bool
+	// ShouldResume processes the given event and returns true if the
+	// computation should be resumed and false if it should be cancelled.
+	ShouldResume(event.Event) bool
 }
 
-// Aborted returns true when the given handler is not nil and the computation
-// was aborted by this handler.
-func Aborted(handler Handler) bool {
-	return handler != nil && handler.Aborted()
+// A NopHandler never cancels the computation (equivalent to no handler).
+var NopHandler = nopHandler{}
+
+type nopHandler struct{}
+
+func (nopHandler) ShouldResume(event.Event) bool {
+	return true
 }
 
-// Start starts the given handler it is not nil.
-func Start(handler Handler) {
-	if handler != nil {
-		handler.Started()
-	}
+// The State contains the information if a handler was cancelled and
+// if so, which was the event which caused the cancellation.  If the handler
+// was not cancelled, the cause is the "Nothing" event.
+type State struct {
+	Success     bool
+	CancelCause event.Event
 }
 
-// Computation is a simple computation handler which can be embedded in more
-// complex handlers.
-type Computation struct {
-	aborted bool
+// Success generates a new successful handler state where the handler was
+// not cancelled.
+func Success() State {
+	return State{true, event.Nothing}
 }
 
-// Started indicates the handler that the computation was started.
-func (c *Computation) Started() {
-	c.aborted = false
-}
-
-// Aborted reports whether the computation was aborted by the handler.
-func (c *Computation) Aborted() bool {
-	return c.aborted
-}
-
-// SetAborted sets whether the computation was aborted.
-func (c *Computation) SetAborted(aborted bool) {
-	c.aborted = aborted
+// Cancellation generates a new handler state where the handler was cancelled
+// with the given event as cause.
+func Cancellation(cancelCause event.Event) State {
+	return State{false, cancelCause}
 }

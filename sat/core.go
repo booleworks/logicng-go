@@ -3,6 +3,7 @@ package sat
 import (
 	"slices"
 
+	"github.com/booleworks/logicng-go/event"
 	"github.com/booleworks/logicng-go/model"
 
 	"github.com/booleworks/logicng-go/errorx"
@@ -19,6 +20,8 @@ const (
 	ratioRemoveClauses = 2
 	lbBlockingRestart  = 10000
 )
+
+var succ = handler.Success()
 
 // CoreSolver represents a core SAT solver.
 //
@@ -50,9 +53,6 @@ type CoreSolver struct {
 
 	name2idx map[string]int32
 	idx2name map[int32]string
-
-	satHandler        Handler
-	canceledByHandler bool
 
 	assumptionProps   []f.Proposition
 	pgOriginalClauses []proofInformation
@@ -169,7 +169,6 @@ func initialize(m *CoreSolver, config *Config) {
 	m.learntsLiterals = 0
 	m.name2idx = make(map[string]int32)
 	m.idx2name = make(map[int32]string)
-	m.canceledByHandler = false
 	if m.config.ProofGeneration {
 		m.assumptionProps = []f.Proposition{}
 		m.pgOriginalClauses = []proofInformation{}
@@ -386,19 +385,19 @@ func (m *CoreSolver) addAtMost(ps []int32, rhs int) {
 }
 
 // Solve solves the formula on the solver with the given handler.  Returns the
-// result as tristate and an ok flag which is false when the computation was
-// aborted by the handler.
-func (m *CoreSolver) Solve(satHandler Handler) (res f.Tristate, ok bool) {
-	m.satHandler = satHandler
-	handler.Start(m.satHandler)
+// result as tristate and the handler state.
+func (m *CoreSolver) Solve(hdl handler.Handler) (f.Tristate, handler.State) {
+	if !hdl.ShouldResume(event.SatCallStarted) {
+		return f.TristateFalse, handler.Cancellation(event.SatCallStarted)
+	}
 	m.model = []bool{}
 	m.conflict = []int32{}
 	if !m.ok {
-		return f.TristateFalse, true
+		return f.TristateFalse, succ
 	}
 	status := f.TristateUndef
-	for status == f.TristateUndef && !m.canceledByHandler {
-		status, _ = m.search()
+	for status == f.TristateUndef {
+		status, _ = m.search(hdl)
 	}
 
 	if m.config.ProofGeneration && len(m.assumptions) == 0 {
@@ -415,37 +414,33 @@ func (m *CoreSolver) Solve(satHandler Handler) (res f.Tristate, ok bool) {
 	} else if status == f.TristateFalse && len(m.conflict) == 0 {
 		m.ok = false
 	}
-	handlerFinishSolving(m.satHandler)
 	m.cancelUntil(0)
-	m.satHandler = nil
-	if m.canceledByHandler {
-		m.canceledByHandler = false
-		return f.TristateFalse, false
-	} else {
-		return status, true
+	if !hdl.ShouldResume(event.SatCallFinished) {
+		return f.TristateFalse, handler.Cancellation(event.SatCallFinished)
 	}
+	return status, succ
 }
 
 // SolveWithAssumptions is used to the the formulas on the solver with the
-// given assumptions.  Returns the result as tristate and an ok flag which is
-// false when the computation was aborted by the handler.
-func (m *CoreSolver) SolveWithAssumptions(handler Handler, assumptions []int32) (res f.Tristate, ok bool) {
+// given assumptions.  Returns the result as tristate and an the handler state.
+func (m *CoreSolver) SolveWithAssumptions(
+	hdl handler.Handler, assumptions []int32,
+) (res f.Tristate, state handler.State) {
 	m.assumptions = assumptions
-	res, ok = m.Solve(handler)
+	res, state = m.Solve(hdl)
 	m.assumptions = []int32{}
 	return
 }
 
-func (m *CoreSolver) search() (f.Tristate, bool) {
+func (m *CoreSolver) search(hdl handler.Handler) (f.Tristate, handler.State) {
 	if !m.ok {
-		return f.TristateFalse, true
+		return f.TristateFalse, succ
 	}
 	for {
 		confl := m.propagate()
 		if confl != nil {
-			if m.satHandler != nil && !m.satHandler.DetectedConflict() {
-				m.canceledByHandler = true
-				return f.TristateUndef, false
+			if !hdl.ShouldResume(event.SatConflictDetected) {
+				return f.TristateUndef, handler.Cancellation(event.SatConflictDetected)
 			}
 			m.conflicts++
 			m.conflictsRestarts++
@@ -453,7 +448,7 @@ func (m *CoreSolver) search() (f.Tristate, bool) {
 				m.varDecay += 0.01
 			}
 			if m.decisionLevel() == 0 {
-				return f.TristateFalse, true
+				return f.TristateFalse, succ
 			}
 			m.trailQueue.push(len(m.trail))
 			if m.conflictsRestarts > lbBlockingRestart && m.lbdQueue.valid() &&
@@ -494,7 +489,7 @@ func (m *CoreSolver) search() (f.Tristate, bool) {
 				(float64(m.lbdQueue.avg())*m.llConfig.FactorK) > (m.sumLBD/float64(m.conflictsRestarts)) {
 				m.lbdQueue.fastClear()
 				m.cancelUntil(0)
-				return f.TristateUndef, true
+				return f.TristateUndef, succ
 			}
 			if m.conflicts >= (m.curRestart*m.nbClausesBeforeReduce) && len(m.learnts) > 0 {
 				m.curRestart = (m.conflicts / m.nbClausesBeforeReduce) + 1
@@ -513,7 +508,7 @@ func (m *CoreSolver) search() (f.Tristate, bool) {
 						m.pgOriginalClauses = append(m.pgOriginalClauses, pi)
 					}
 					m.analyzeFinal(Not(p))
-					return f.TristateFalse, true
+					return f.TristateFalse, succ
 				} else {
 					if m.config.ProofGeneration {
 						drupLit := (Vari(p) + 1) * (-2*signAsInt(p) + 1)
@@ -527,7 +522,7 @@ func (m *CoreSolver) search() (f.Tristate, bool) {
 			if next == LitUndef {
 				next = m.pickBranchLit()
 				if next == LitUndef {
-					return f.TristateTrue, true
+					return f.TristateTrue, succ
 				}
 			}
 			m.trailLim = append(m.trailLim, len(m.trail))
@@ -1330,9 +1325,9 @@ func (m *CoreSolver) upZeroLiterals() []int32 {
 
 // Model returns the current model of the solver.
 func (m *CoreSolver) Model() []bool {
-	model := make([]bool, len(m.model))
-	copy(model, m.model)
-	return model
+	mdl := make([]bool, len(m.model))
+	copy(mdl, m.model)
+	return mdl
 }
 
 // Conflict returns the current conflict of the solver.

@@ -94,7 +94,7 @@ func TestPrimeComputationHandlerSmall(t *testing.T) {
 	p := parser.New(fac)
 	formula := p.ParseUnsafe("a & b | ~c & a")
 	duration, _ := time.ParseDuration("1s")
-	handler := sat.OptimizationHandlerWithTimeout(*handler.NewTimeoutWithDuration(duration))
+	handler := handler.NewTimeoutWithDuration(duration)
 	testHandlerImplicant(t, fac, handler, formula, false)
 	testHandlerImplicate(t, fac, handler, formula, false)
 }
@@ -103,7 +103,7 @@ func TestPrimeComputationHandlerLarge(t *testing.T) {
 	fac := f.NewFactory()
 	formula, _ := io.ReadFormula(fac, "../test/data/formulas/large.txt")
 	duration, _ := time.ParseDuration("500ms")
-	handler := sat.OptimizationHandlerWithTimeout(*handler.NewTimeoutWithDuration(duration))
+	handler := handler.NewTimeoutWithDuration(duration)
 	testHandlerImplicant(t, fac, handler, formula, true)
 	testHandlerImplicate(t, fac, handler, formula, true)
 }
@@ -148,50 +148,42 @@ func verifyImplicates(t *testing.T, fac f.Factory, implicateSets [][]f.Literal, 
 	assert.True(t, sat.IsEquivalent(fac, fac.And(implicates...), formula))
 }
 
-func testHandlerImplicant(t *testing.T, fac f.Factory, handler sat.OptimizationHandler, formula f.Formula, exp bool) {
+func testHandlerImplicant(t *testing.T, fac f.Factory, h handler.Handler, formula f.Formula, exp bool) {
 	assert := assert.New(t)
-	result, ok := CoverMaxWithHandler(fac, formula, CoverImplicants, handler)
+	result, state := CoverMaxWithHandler(fac, formula, CoverImplicants, h)
 	if exp {
-		assert.True(handler.Aborted())
-		assert.False(ok)
+		assert.False(state.Success)
 		assert.Nil(result)
 	} else {
-		assert.False(handler.Aborted())
-		assert.True(ok)
+		assert.True(state.Success)
 		assert.NotNil(result)
 	}
-	result, ok = CoverMinWithHandler(fac, formula, CoverImplicants, handler)
+	result, state = CoverMinWithHandler(fac, formula, CoverImplicants, h)
 	if exp {
-		assert.True(handler.Aborted())
-		assert.False(ok)
+		assert.False(state.Success)
 		assert.Nil(result)
 	} else {
-		assert.False(handler.Aborted())
-		assert.True(ok)
+		assert.True(state.Success)
 		assert.NotNil(result)
 	}
 }
 
-func testHandlerImplicate(t *testing.T, fac f.Factory, handler sat.OptimizationHandler, formula f.Formula, exp bool) {
+func testHandlerImplicate(t *testing.T, fac f.Factory, h handler.Handler, formula f.Formula, exp bool) {
 	assert := assert.New(t)
-	result, ok := CoverMaxWithHandler(fac, formula, CoverImplicates, handler)
+	result, state := CoverMaxWithHandler(fac, formula, CoverImplicates, h)
 	if exp {
-		assert.True(handler.Aborted())
-		assert.False(ok)
+		assert.False(state.Success)
 		assert.Nil(result)
 	} else {
-		assert.False(handler.Aborted())
-		assert.True(ok)
+		assert.True(state.Success)
 		assert.NotNil(result)
 	}
-	result, ok = CoverMinWithHandler(fac, formula, CoverImplicates, handler)
+	result, state = CoverMinWithHandler(fac, formula, CoverImplicates, h)
 	if exp {
-		assert.True(handler.Aborted())
-		assert.False(ok)
+		assert.False(state.Success)
 		assert.Nil(result)
 	} else {
-		assert.False(handler.Aborted())
-		assert.True(ok)
+		assert.True(state.Success)
 		assert.NotNil(result)
 	}
 }

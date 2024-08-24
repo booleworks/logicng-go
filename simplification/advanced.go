@@ -3,6 +3,7 @@ package simplification
 import (
 	"github.com/booleworks/logicng-go/assignment"
 	"github.com/booleworks/logicng-go/configuration"
+	"github.com/booleworks/logicng-go/event"
 	"github.com/booleworks/logicng-go/explanation/smus"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/handler"
@@ -49,7 +50,7 @@ func DefaultConfig() *Config {
 // on the traditional term tables but uses a SAT solver based implementation
 // based on the advanced simplifier.  The resulting formula is in DNF.
 func QMC(fac f.Factory, formula f.Formula) f.Formula {
-	result, _ := QMCWithHandler(fac, formula, nil)
+	result, _ := QMCWithHandler(fac, formula, handler.NopHandler)
 	return result
 }
 
@@ -57,11 +58,9 @@ func QMC(fac f.Factory, formula f.Formula) f.Formula {
 // the algorithm by Quine and McCluskey.  This implementation is however not
 // based on the traditional term tables but uses a SAT solver based
 // implementation based on the advanced simplifier.  The resulting formula is
-// in DNF.  The given optimization handler can be used to abort the
-// optimization function during the prime implicant computation.
-func QMCWithHandler(
-	fac f.Factory, formula f.Formula, optimizationHandler sat.OptimizationHandler,
-) (f.Formula, bool) {
+// in DNF.  The given handler can be used to cancel the optimization function
+// during the prime implicant computation.
+func QMCWithHandler(fac f.Factory, formula f.Formula, hdl handler.Handler) (f.Formula, handler.State) {
 	config := Config{
 		RestrictBackbone:  false,
 		FactorOut:         false,
@@ -69,7 +68,7 @@ func QMCWithHandler(
 		UseRatingFunction: false,
 		RatingFunction:    DefaultRatingFunction,
 	}
-	return AdvancedWithHandler(fac, formula, optimizationHandler, &config)
+	return AdvancedWithHandler(fac, formula, hdl, &config)
 }
 
 // Advanced simplifies the given formula by performing the following steps
@@ -82,7 +81,7 @@ func QMCWithHandler(
 //
 // It can be configured with an optional advanced simplifier configuration.
 func Advanced(fac f.Factory, formula f.Formula, config ...*Config) f.Formula {
-	result, _ := AdvancedWithHandler(fac, formula, nil, config...)
+	result, _ := AdvancedWithHandler(fac, formula, handler.NopHandler, config...)
 	return result
 }
 
@@ -95,39 +94,37 @@ func Advanced(fac f.Factory, formula f.Formula, config ...*Config) f.Formula {
 //  5. Minimizing negations of the factored-out DNF using the SimplifyNegations function
 //
 // It can be configured with an optional advanced simplifier configuration.
-// The given optimization handler can be used to abort the optimization
-// function during the prime implicant computation.
+// The given  handler can be used to cancel the optimization function during the
+// prime implicant computation.
 func AdvancedWithHandler(
 	fac f.Factory,
 	formula f.Formula,
-	optimizationHandler sat.OptimizationHandler,
+	hdl handler.Handler,
 	config ...*Config,
-) (f.Formula, bool) {
+) (f.Formula, handler.State) {
 	cfg := determineConfig(fac, config)
-	handler.Start(optimizationHandler)
+	if !hdl.ShouldResume(event.AdvancedSimplificationStarted) {
+		return 0, handler.Cancellation(event.AdvancedSimplificationStarted)
+	}
 	simplified := formula
 	var backboneLiterals []f.Literal
 	if cfg.RestrictBackbone {
 		solver := sat.NewSolver(fac)
 		solver.Add(formula)
-		var satHandler sat.Handler
-		if optimizationHandler != nil {
-			satHandler = optimizationHandler.SatHandler()
-		}
-		backbone, ok := solver.ComputeBackboneWithHandler(fac, f.Variables(fac, formula).Content(), satHandler)
-		if !ok {
-			return 0, false
+		backbone, state := solver.ComputeBackboneWithHandler(fac, f.Variables(fac, formula).Content(), hdl)
+		if !state.Success {
+			return 0, state
 		}
 		if !backbone.Sat {
-			return fac.Falsum(), true
+			return fac.Falsum(), handler.Success()
 		}
 		backboneLiterals = append(backboneLiterals, backbone.CompleteBackbone(fac)...)
 		ass, _ := assignment.New(fac, backboneLiterals...)
 		simplified = assignment.Restrict(fac, formula, ass)
 	}
-	simplifyMinDnf, ok := computeMinDNF(fac, simplified, optimizationHandler)
-	if !ok {
-		return 0, false
+	simplifyMinDnf, state := computeMinDNF(fac, simplified, hdl)
+	if !state.Success {
+		return 0, state
 	}
 	simplified = simplifyWithRating(fac, simplified, simplifyMinDnf, cfg)
 	if cfg.FactorOut {
@@ -141,7 +138,7 @@ func AdvancedWithHandler(
 		negationSimplified := MinimizeNegations(fac, simplified)
 		simplified = simplifyWithRating(fac, simplified, negationSimplified, cfg)
 	}
-	return simplified, true
+	return simplified, handler.Success()
 }
 
 func determineConfig(fac f.Factory, initConfig []*Config) *Config {
@@ -157,27 +154,25 @@ func determineConfig(fac f.Factory, initConfig []*Config) *Config {
 	}
 }
 
-func computeMinDNF(
-	fac f.Factory, simplified f.Formula, optimizationHandler sat.OptimizationHandler,
-) (f.Formula, bool) {
-	primeResult, ok := primeimplicant.CoverMinWithHandler(
-		fac, simplified, primeimplicant.CoverImplicants, optimizationHandler,
+func computeMinDNF(fac f.Factory, simplified f.Formula, hdl handler.Handler) (f.Formula, handler.State) {
+	primeResult, state := primeimplicant.CoverMinWithHandler(
+		fac, simplified, primeimplicant.CoverImplicants, hdl,
 	)
-	if !ok {
-		return 0, false
+	if !state.Success {
+		return 0, state
 	}
 	primeImplicants := primeResult.Implicants
-	minimizedPIs, ok := smus.ComputeForFormulasWithHandler(
+	minimizedPIs, state := smus.ComputeForFormulasWithHandler(
 		fac,
 		negateAllLiterals(fac, primeImplicants),
-		optimizationHandler,
+		hdl,
 		simplified,
 	)
-	if !ok {
-		return 0, false
+	if !state.Success {
+		return 0, state
 	}
 	simplified = fac.Or(negateAllLiteralsInFormulas(fac, minimizedPIs)...)
-	return simplified, true
+	return simplified, handler.Success()
 }
 
 func negateAllLiterals(fac f.Factory, literalSets [][]f.Literal) []f.Formula {

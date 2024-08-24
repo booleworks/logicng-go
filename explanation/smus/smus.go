@@ -3,6 +3,7 @@ package smus
 import (
 	"fmt"
 
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/sat"
@@ -17,35 +18,34 @@ func ComputeForFormulas(
 	formulas []f.Formula,
 	additionalConstraints ...f.Formula,
 ) []f.Formula {
-	smus, _ := ComputeForFormulasWithHandler(fac, formulas, nil, additionalConstraints...)
+	smus, _ := ComputeForFormulasWithHandler(fac, formulas, handler.NopHandler, additionalConstraints...)
 	return smus
 }
 
 // ComputeForFormulasWithHandler computes the SMUS for the given list of
 // formulas modulo some additional constraints.  The optimization handler can
-// be used to abort the computation.  Returns the SMUS as a list of formulas.
-// If the handler aborted the computation, the ok flag is false.
+// be used to cancel the computation.  Returns the SMUS as a list of formulas.
 func ComputeForFormulasWithHandler(
 	fac f.Factory,
 	formulas []f.Formula,
-	optimizationHandler sat.OptimizationHandler,
+	hdl handler.Handler,
 	additionalConstraints ...f.Formula,
-) (smus []f.Formula, ok bool) {
+) ([]f.Formula, handler.State) {
 	props := make([]f.Proposition, len(formulas))
 	for i, form := range formulas {
 		props[i] = f.NewStandardProposition(form)
 	}
-	props, ok = ComputeWithHandler(fac, props, optimizationHandler, additionalConstraints...)
-	if !ok {
-		return nil, false
+	props, state := ComputeWithHandler(fac, props, hdl, additionalConstraints...)
+	if !state.Success {
+		return nil, state
 	} else if props == nil {
-		return nil, true
+		return nil, handler.Success()
 	} else {
 		forms := make([]f.Formula, len(props))
 		for i, prop := range props {
 			forms[i] = prop.Formula()
 		}
-		return forms, true
+		return forms, handler.Success()
 	}
 }
 
@@ -56,21 +56,22 @@ func Compute(
 	propositions []f.Proposition,
 	additionalConstraints ...f.Formula,
 ) []f.Proposition {
-	smus, _ := ComputeWithHandler(fac, propositions, nil, additionalConstraints...)
+	smus, _ := ComputeWithHandler(fac, propositions, handler.NopHandler, additionalConstraints...)
 	return smus
 }
 
 // ComputeWithHandler computes the SMUS for the given list of propositions
 // modulo some additional constraints.  The optimization handler can be used to
-// abort the computation.  Returns the SMUS as a list of propositions. If the
-// handler aborted the computation, the ok flag is false.
+// cancel the computation.  Returns the SMUS as a list of propositions.
 func ComputeWithHandler(
 	fac f.Factory,
 	propositions []f.Proposition,
-	optimizationHandler sat.OptimizationHandler,
+	hdl handler.Handler,
 	additionalConstraints ...f.Formula,
-) (smus []f.Proposition, ok bool) {
-	handler.Start(optimizationHandler)
+) ([]f.Proposition, handler.State) {
+	if !hdl.ShouldResume(event.SmusComputationStarted) {
+		return nil, handler.Cancellation(event.SmusComputationStarted)
+	}
 	growSolver := sat.NewSolver(fac)
 	for _, formula := range additionalConstraints {
 		growSolver.Add(formula)
@@ -83,60 +84,59 @@ func ComputeWithHandler(
 		propositionMapping[selector] = proposition
 		growSolver.Add(fac.Equivalence(selector.AsFormula(), proposition.Formula()))
 	}
-	var satHandler sat.Handler
-	if optimizationHandler != nil {
-		satHandler = optimizationHandler.SatHandler()
-	}
-	sResult := growSolver.Call(sat.Params().Handler(satHandler).Variable(assumptions...))
-	if sResult.Aborted() {
-		return nil, false
+	sResult := growSolver.Call(sat.Params().Handler(hdl).Variable(assumptions...))
+	if sResult.Cancelled() {
+		return nil, sResult.State()
 	}
 	if sResult.Sat() {
-		return nil, true
+		return nil, handler.Success()
 	}
 	hSolver := sat.NewSolver(fac)
 	for {
-		h, ok := minimumHs(hSolver, assumptions, optimizationHandler)
-		if !ok {
-			return nil, false
+		h, state := minimumHs(hSolver, assumptions, hdl)
+		if !state.Success {
+			return nil, state
 		}
-		c, ok := grow(growSolver, h, assumptions, optimizationHandler)
-		if !ok {
-			return nil, false
+		c, state := grow(growSolver, h, assumptions, hdl)
+		if !state.Success {
+			return nil, state
 		}
 		if c == nil {
 			props := make([]f.Proposition, len(h))
 			for i, sel := range h {
 				props[i] = propositionMapping[sel]
 			}
-			return props, true
+			return props, handler.Success()
 		}
 		hSolver.Add(fac.Or(f.VariablesAsFormulas(c)...))
 	}
 }
 
-func minimumHs(hSolver *sat.Solver, variables []f.Variable, handler sat.OptimizationHandler) ([]f.Variable, bool) {
-	minimumHsModel, ok := hSolver.MinimizeWithHandler(f.VariablesAsLiterals(variables), handler)
-	if !ok {
-		return nil, false
+func minimumHs(hSolver *sat.Solver, variables []f.Variable, hdl handler.Handler) ([]f.Variable, handler.State) {
+	minimumHsModel, state := hSolver.MinimizeWithHandler(f.VariablesAsLiterals(variables), hdl)
+	if !state.Success {
+		return nil, state
 	} else {
-		return minimumHsModel.PosVars(), true
+		return minimumHsModel.PosVars(), handler.Success()
 	}
 }
 
-func grow(growSolver *sat.Solver, h, variables []f.Variable, handler sat.OptimizationHandler) ([]f.Variable, bool) {
+func grow(growSolver *sat.Solver, h, variables []f.Variable, hdl handler.Handler) ([]f.Variable, handler.State) {
 	solverState := growSolver.SaveState()
 	growSolver.Add(f.VariablesAsFormulas(h)...)
-	maxModel, ok := growSolver.MaximizeWithHandler(f.VariablesAsLiterals(variables), handler)
-	if !ok {
-		return nil, false
+	maxModel, state := growSolver.MaximizeWithHandler(f.VariablesAsLiterals(variables), hdl)
+	if !state.Success {
+		return nil, state
 	} else if maxModel == nil {
-		return nil, true
+		return nil, handler.Success()
 	} else {
-		growSolver.LoadState(solverState)
+		err := growSolver.LoadState(solverState)
+		if err != nil {
+			panic(err)
+		}
 		minimumCorrectionSet := f.NewMutableVarSet(variables...)
 		posVars := maxModel.PosVars()
 		minimumCorrectionSet.RemoveAllElements(&posVars)
-		return minimumCorrectionSet.Content(), true
+		return minimumCorrectionSet.Content(), handler.Success()
 	}
 }

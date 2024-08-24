@@ -4,12 +4,13 @@ import (
 	"github.com/booleworks/logicng-go/errorx"
 	"github.com/booleworks/logicng-go/explanation"
 	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/model"
 )
 
 // CallParams describe the parameters for a single SAT solver call.
 type CallParams struct {
-	handler     Handler
+	hdl         handler.Handler
 	addProps    []f.Proposition
 	modelVars   []f.Variable
 	modelIfSat  bool
@@ -65,13 +66,13 @@ func WithAssumptions(literals []f.Literal) *CallParams {
 //   - no model generation for satisfiable formulas
 //   - no additional assumption literals for the SAT call
 //   - no computation of propagated literals at decision level 0
-func WithHandler(handler Handler) *CallParams {
-	return &CallParams{handler: handler}
+func WithHandler(hdl handler.Handler) *CallParams {
+	return &CallParams{hdl: hdl}
 }
 
 // Handler sets a handler for the SAT call
-func (p *CallParams) Handler(handler Handler) *CallParams {
-	p.handler = handler
+func (p *CallParams) Handler(hdl handler.Handler) *CallParams {
+	p.hdl = hdl
 	return p
 }
 
@@ -139,7 +140,7 @@ func (p *CallParams) Proposition(proposition ...f.Proposition) *CallParams {
 
 // CallResult represents the result of a single call to the SAT solver.
 type CallResult struct {
-	ok          bool
+	state       handler.State
 	satisfiable bool
 	model       *model.Model
 	core        *explanation.UnsatCore
@@ -147,15 +148,20 @@ type CallResult struct {
 }
 
 // OK reports whether the call to the SAT solver yielded a result and was not
-// aborted.
+// cancelled.
 func (r CallResult) OK() bool {
-	return r.ok
+	return r.state.Success
 }
 
-// Aborted reports whether the SAT solver call was aborted by the given
+// Cancelled reports whether the SAT solver call was cancelled by the given
 // handler.
-func (r CallResult) Aborted() bool {
-	return !r.ok
+func (r CallResult) Cancelled() bool {
+	return !r.state.Success
+}
+
+// State returns the handler state after the call.
+func (r CallResult) State() handler.State {
+	return r.state
 }
 
 // Sat reports whether the SAT solver call returned SAT or UNSAT.
@@ -190,7 +196,7 @@ func (r CallResult) UpZeroLits() []f.Literal {
 // on the request a model, unsat core, or propagated literals are also
 // computed.
 func (s *Solver) Call(params ...*CallParams) CallResult {
-	var model *model.Model
+	var mdl *model.Model
 	var core *explanation.UnsatCore
 	var upZeroLits []f.Literal
 	var param *CallParams
@@ -202,18 +208,18 @@ func (s *Solver) Call(params ...*CallParams) CallResult {
 	if param.coreIfUnsat && !s.config.ProofGeneration {
 		panic(errorx.IllegalState("core computation on a SAT solver without proof tracing"))
 	}
-	call := initCall(s, param.handler, param.addProps)
-	if call.ok && call.sat && param.modelIfSat {
-		model = s.computeModel(param.modelVars)
+	call := initCall(s, param.hdl, param.addProps)
+	if call.state.Success && call.sat && param.modelIfSat {
+		mdl = s.computeModel(param.modelVars)
 	}
-	if call.ok && !call.sat && param.coreIfUnsat {
+	if call.state.Success && !call.sat && param.coreIfUnsat {
 		core = s.computeUnsatCore()
 	}
-	if call.ok && call.sat && param.upZeroIfSat {
+	if call.state.Success && call.sat && param.upZeroIfSat {
 		upZeroLits = s.computeUpZeroLits()
 	}
 	call.close()
-	return CallResult{call.ok, call.sat, model, core, upZeroLits}
+	return CallResult{call.state, call.sat, mdl, core, upZeroLits}
 }
 
 type call struct {
@@ -221,10 +227,10 @@ type call struct {
 	pgOriginalClauses int
 	initialState      *SolverState
 	sat               bool
-	ok                bool
+	state             handler.State
 }
 
-func initCall(solver *Solver, handler Handler, addProps []f.Proposition) *call {
+func initCall(solver *Solver, hdl handler.Handler, addProps []f.Proposition) *call {
 	c := call{solver: solver}
 	if c.solver.config.ProofGeneration {
 		c.pgOriginalClauses = len(c.solver.core.pgOriginalClauses)
@@ -241,8 +247,11 @@ func initCall(solver *Solver, handler Handler, addProps []f.Proposition) *call {
 		}
 	}
 	c.solver.core.startCall()
-	res, ok := c.solver.core.Solve(handler)
-	c.ok = ok
+	if hdl == nil {
+		hdl = handler.NopHandler
+	}
+	res, state := c.solver.core.Solve(hdl)
+	c.state = state
 	c.sat = res == f.TristateTrue
 	return &c
 }
@@ -274,7 +283,6 @@ func (c *call) close() {
 			panic(err)
 		}
 	}
-	c.solver.core.satHandler = nil
 	c.solver.core.finishCall()
 }
 

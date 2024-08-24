@@ -3,6 +3,7 @@ package maxsat
 import (
 	"github.com/booleworks/logicng-go/errorx"
 	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/sat"
 )
 
@@ -22,13 +23,13 @@ func newIncWBO(config *Config) *incWBO {
 	}
 }
 
-func (m *incWBO) search(handler Handler) (result, bool) {
+func (m *incWBO) search(hdl handler.Handler) (result, handler.State) {
 	m.nbInitialVariables = m.nVars()
 	if m.currentWeight == 1 {
 		m.problemType = unweighted
 		m.weightStrategy = WeightNone
 	}
-	return m.innerSearch(handler, func() (result, bool) {
+	return m.innerSearch(hdl, func() (result, handler.State) {
 		if m.symmetryStrategy {
 			m.initSymmetry()
 		}
@@ -41,12 +42,12 @@ func (m *incWBO) search(handler Handler) (result, bool) {
 	})
 }
 
-func (m *incWBO) normalSearchInc() (result, bool) {
-	switch m.unsatSearch() {
+func (m *incWBO) normalSearchInc() (result, handler.State) {
+	switch res, state := m.unsatSearch(); res {
 	case f.TristateUndef:
-		return resUndef, false
+		return resUndef, state
 	case f.TristateFalse:
-		return resUnsat, true
+		return resUnsat, succ
 	}
 
 	m.initAssumptions(&m.assumptions)
@@ -59,26 +60,25 @@ func (m *incWBO) normalSearchInc() (result, bool) {
 				m.assumptions = append(m.assumptions, sat.Not(m.softClauses[i].assumptionVar))
 			}
 		}
-		satHandler := m.satHandler()
-		res, ok := searchSatSolverWithAssumptions(m.solver, satHandler, m.assumptions)
-		if !ok {
-			return resUndef, false
+		res, state := searchSatSolverWithAssumptions(m.solver, m.hdl, m.assumptions)
+		if !state.Success {
+			return resUndef, state
 		} else if res == f.TristateFalse {
 			m.nbCores++
 			coreCost := m.computeCostCore(m.solver.Conflict())
 			m.lbCost += coreCost
 			if m.lbCost == m.ubCost {
-				return resOptimum, true
+				return resOptimum, succ
 			}
-			if !m.foundLowerBound(m.lbCost, nil) {
-				return resUndef, false
+			if state := m.foundLowerBound(m.lbCost); !state.Success {
+				return resUndef, state
 			}
 			m.relaxCoreInc(m.solver.Conflict(), coreCost)
 		} else {
 			m.nbSatisfiable++
 			m.ubCost = m.incComputeCostModel(m.solver.Model())
 			m.saveModel(m.solver.Model())
-			return resOptimum, true
+			return resOptimum, succ
 		}
 	}
 }
@@ -277,12 +277,12 @@ func (m *incWBO) symmetryBreakingInc() {
 	m.indexSoftCore = []int{}
 }
 
-func (m *incWBO) weightSearchInc() (result, bool) {
-	switch m.unsatSearch() {
+func (m *incWBO) weightSearchInc() (result, handler.State) {
+	switch res, state := m.unsatSearch(); res {
 	case f.TristateUndef:
-		return resUndef, false
+		return resUndef, state
 	case f.TristateFalse:
-		return resUnsat, true
+		return resUnsat, succ
 	}
 
 	m.initAssumptions(&m.assumptions)
@@ -296,16 +296,15 @@ func (m *incWBO) weightSearchInc() (result, bool) {
 				m.assumptions = append(m.assumptions, sat.Not(m.softClauses[i].assumptionVar))
 			}
 		}
-		satHandler := m.satHandler()
-		res, ok := searchSatSolverWithAssumptions(m.solver, satHandler, m.assumptions)
-		if !ok {
-			return resUndef, false
+		res, state := searchSatSolverWithAssumptions(m.solver, m.hdl, m.assumptions)
+		if !state.Success {
+			return resUndef, state
 		} else if res == f.TristateFalse {
 			m.nbCores++
 			coreCost := m.computeCostCore(m.solver.Conflict())
 			m.lbCost += coreCost
-			if !m.foundLowerBound(m.lbCost, nil) {
-				return resUndef, false
+			if state := m.foundLowerBound(m.lbCost); !state.Success {
+				return resUndef, state
 			}
 			m.relaxCoreInc(m.solver.Conflict(), coreCost)
 			m.incrementalBuildWeightSolver()
@@ -316,7 +315,7 @@ func (m *incWBO) weightSearchInc() (result, bool) {
 					m.ubCost = m.lbCost
 					m.saveModel(m.solver.Model())
 				}
-				return resOptimum, true
+				return resOptimum, succ
 			} else {
 				m.updateCurrentWeight(m.weightStrategy)
 				cost := m.incComputeCostModel(m.solver.Model())
@@ -325,9 +324,9 @@ func (m *incWBO) weightSearchInc() (result, bool) {
 					m.saveModel(m.solver.Model())
 				}
 				if m.lbCost == m.ubCost {
-					return resOptimum, true
-				} else if !m.foundUpperBound(m.ubCost, nil) {
-					return resUndef, false
+					return resOptimum, succ
+				} else if state := m.foundUpperBound(m.ubCost); !state.Success {
+					return resUndef, state
 				}
 				m.incrementalBuildWeightSolver()
 			}

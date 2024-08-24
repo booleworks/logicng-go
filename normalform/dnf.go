@@ -2,6 +2,7 @@ package normalform
 
 import (
 	"github.com/booleworks/logicng-go/errorx"
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/handler"
 )
@@ -41,44 +42,43 @@ func IsDNF(fac f.Factory, formula f.Formula) bool {
 // is a disjunction of conjunctions of literals.  The algorithm used is
 // factorization.  The resulting DNF can grow exponentially, therefore unless
 // you are sure that the input is sensible, prefer the DNF factorization with a
-// handler in order to be able to abort it.
+// handler in order to be able to cancel it.
 func FactorizedDNF(fac f.Factory, formula f.Formula) f.Formula {
-	cnf, _ := factorizedDNFRec(fac, formula, nil)
+	cnf, _ := factorizedDNFRec(fac, formula, handler.NopHandler)
 	return cnf
 }
 
 // FactorizedDNFWithHandler returns the given formula in disjunctive normal
 // form.  A DNF is a disjunction of conjunctions of literals.  The given
-// handler can be used to abort the factorization.  Returns the DNF and an ok
-// flag which is false when the handler aborted the computation.
-func FactorizedDNFWithHandler(
-	fac f.Factory, formula f.Formula, factorizationHandler FactorizationHandler,
-) (dnf f.Formula, ok bool) {
-	handler.Start(factorizationHandler)
-	return factorizedDNFRec(fac, formula, factorizationHandler)
+// handler can be used to cancel the factorization.  Returns the DNF and
+// the handler state.
+func FactorizedDNFWithHandler(fac f.Factory, formula f.Formula, hdl handler.Handler) (f.Formula, handler.State) {
+	if !hdl.ShouldResume(event.FactorizationStarted) {
+		return 0, handler.Cancellation(event.FactorizationStarted)
+	}
+	return factorizedDNFRec(fac, formula, hdl)
 }
 
-func factorizedDNFRec(fac f.Factory, formula f.Formula, handler FactorizationHandler) (f.Formula, bool) {
+func factorizedDNFRec(fac f.Factory, formula f.Formula, hdl handler.Handler) (f.Formula, handler.State) {
 	if formula.Sort() <= f.SortLiteral {
-		return formula, true
+		return formula, succ
 	}
 	cached, ok := f.LookupTransformationCache(fac, f.TransDNFFactorization, formula)
 	if ok {
-		return cached, true
+		return cached, succ
 	}
-	ok = true
+	state := handler.Success()
 	switch fsort := formula.Sort(); fsort {
 	case f.SortNot, f.SortImpl, f.SortEquiv, f.SortCC, f.SortPBC:
-		cached, ok = factorizedDNFRec(fac, NNF(fac, formula), handler)
+		cached, state = factorizedDNFRec(fac, NNF(fac, formula), hdl)
 	case f.SortOr:
-
 		nary, _ := fac.NaryOperands(formula)
 		nops := make([]f.Formula, 0, len(nary))
 		for _, op := range nary {
 			var apply f.Formula
-			apply, ok = factorizedDNFRec(fac, op, handler)
-			if !ok {
-				return 0, false
+			apply, state = factorizedDNFRec(fac, op, hdl)
+			if !state.Success {
+				return 0, state
 			}
 			nops = append(nops, apply)
 		}
@@ -87,38 +87,34 @@ func factorizedDNFRec(fac f.Factory, formula f.Formula, handler FactorizationHan
 		nary, _ := fac.NaryOperands(formula)
 		nops := make([]f.Formula, 0, len(nary))
 		for _, op := range nary {
-			if !ok {
-				return 0, false
+			if !state.Success {
+				return 0, state
 			}
 			var nop f.Formula
-			nop, ok = factorizedDNFRec(fac, op, handler)
+			nop, state = factorizedDNFRec(fac, op, hdl)
 			nops = append(nops, nop)
 		}
 		cached = nops[0]
 		for i := 1; i < len(nops); i++ {
-			if !ok {
-				return 0, false
+			if !state.Success {
+				return 0, state
 			}
-			cached, ok = distributeDNF(fac, cached, nops[i], handler)
+			cached, state = distributeDNF(fac, cached, nops[i], hdl)
 		}
 	default:
 		panic(errorx.UnknownEnumValue(fsort))
 	}
 
-	if ok {
+	if state.Success {
 		f.SetTransformationCache(fac, f.TransDNFFactorization, formula, cached)
-		return cached, true
+		return cached, succ
 	}
-	return 0, false
+	return 0, state
 }
 
-func distributeDNF(fac f.Factory, f1, f2 f.Formula, handler FactorizationHandler) (f.Formula, bool) {
-	proceed := true
-	if handler != nil {
-		proceed = handler.PerformedDistribution()
-	}
-	if !proceed {
-		return 0, false
+func distributeDNF(fac f.Factory, f1, f2 f.Formula, hdl handler.Handler) (f.Formula, handler.State) {
+	if !hdl.ShouldResume(event.DistributionPerformed) {
+		return 0, handler.Cancellation(event.DistributionPerformed)
 	}
 	if f1.Sort() == f.SortOr || f2.Sort() == f.SortOr {
 		nops := make([]f.Formula, 0)
@@ -132,17 +128,17 @@ func distributeDNF(fac f.Factory, f1, f2 f.Formula, handler FactorizationHandler
 			operands, _ = fac.NaryOperands(f2)
 		}
 		for _, op := range operands {
-			distribute, ok := distributeDNF(fac, op, form, handler)
-			if !ok {
-				return 0, false
+			distribute, state := distributeDNF(fac, op, form, hdl)
+			if !state.Success {
+				return 0, state
 			}
 			nops = append(nops, distribute)
 		}
-		return fac.Or(nops...), true
+		return fac.Or(nops...), succ
 	}
 	clause := fac.And(f1, f2)
-	if handler != nil {
-		proceed = handler.CreatedClause(clause)
+	if !hdl.ShouldResume(event.FactorizationCreatedClause) {
+		return clause, handler.Cancellation(event.FactorizationCreatedClause)
 	}
-	return clause, proceed
+	return clause, succ
 }

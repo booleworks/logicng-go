@@ -4,16 +4,18 @@ import (
 	"math"
 	"slices"
 
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/handler"
-	"github.com/booleworks/logicng-go/model"
 	"github.com/booleworks/logicng-go/sat"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/emirpasic/gods/sets/treeset"
 )
 
+var succ = handler.Success()
+
 type algorithm interface {
-	search(handler Handler) (result, bool)
+	search(hdl handler.Handler) (result, handler.State)
 	result() int
 	newLiteral(bool) int32
 	addHardClause(lits []int32)
@@ -30,7 +32,7 @@ type maxSatAlgorithm struct {
 	softClauses        []*softClause
 	hardClauses        []*hardClause
 	orderWeights       []int
-	handler            Handler
+	hdl                handler.Handler
 	hardWeight         int
 	problemType        problemType
 	nbVars             int
@@ -62,26 +64,30 @@ func newSatVariable(s *sat.CoreSolver) {
 	s.NewVar(true, true)
 }
 
-func searchSatSolver(s *sat.CoreSolver, satHandler sat.Handler) (f.Tristate, bool) {
-	return s.Solve(satHandler)
+func searchSatSolver(s *sat.CoreSolver, hdl handler.Handler) (f.Tristate, handler.State) {
+	return s.Solve(hdl)
 }
 
-func searchSatSolverWithAssumptions(s *sat.CoreSolver, satHandler sat.Handler, assumptions []int32) (f.Tristate, bool) {
-	return s.SolveWithAssumptions(satHandler, assumptions)
+func searchSatSolverWithAssumptions(
+	s *sat.CoreSolver, hdl handler.Handler, assumptions []int32,
+) (f.Tristate, handler.State) {
+	return s.SolveWithAssumptions(hdl, assumptions)
 }
 
 func (m *maxSatAlgorithm) innerSearch(
-	maxSatHandler Handler,
-	search func() (result, bool),
-) (result, bool) {
-	m.handler = maxSatHandler
-	handler.Start(maxSatHandler)
-	result, ok := search()
-	if m.handler != nil {
-		m.handler.FinishedSolving()
+	hdl handler.Handler,
+	search func() (result, handler.State),
+) (result, handler.State) {
+	m.hdl = hdl
+	if !hdl.ShouldResume(event.MaxSATCallStarted) {
+		return resUndef, handler.Cancellation(event.MaxSATCallStarted)
 	}
-	m.handler = nil
-	return result, ok
+	result, state := search()
+	if !hdl.ShouldResume(event.MaxSatCallFinished) {
+		return resUndef, handler.Cancellation(event.MaxSatCallFinished)
+	}
+	m.hdl = nil
+	return result, state
 }
 
 func (m *maxSatAlgorithm) nVars() int {
@@ -211,19 +217,22 @@ func (m *maxSatAlgorithm) result() int {
 	return m.ubCost
 }
 
-func (m *maxSatAlgorithm) satHandler() sat.Handler {
-	if m.handler == nil {
-		return nil
+func (m *maxSatAlgorithm) foundLowerBound(lowerBound int) handler.State {
+	e := EventMaxSatNewLowerBound{lowerBound}
+	if m.hdl.ShouldResume(e) {
+		return succ
+	} else {
+		return handler.Cancellation(e)
 	}
-	return m.handler.SatHandler()
 }
 
-func (m *maxSatAlgorithm) foundLowerBound(lowerBound int, model *model.Model) bool {
-	return m.handler == nil || m.handler.FoundLowerBound(lowerBound, model)
-}
-
-func (m *maxSatAlgorithm) foundUpperBound(upperBound int, model *model.Model) bool {
-	return m.handler == nil || m.handler.FoundUpperBound(upperBound, model)
+func (m *maxSatAlgorithm) foundUpperBound(upperBound int) handler.State {
+	e := EventMaxSatNewUpperBound{upperBound}
+	if m.hdl.ShouldResume(e) {
+		return succ
+	} else {
+		return handler.Cancellation(e)
+	}
 }
 
 func (m *maxSatAlgorithm) getCurrentWeight() int {

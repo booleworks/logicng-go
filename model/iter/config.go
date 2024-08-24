@@ -2,12 +2,13 @@ package iter
 
 import (
 	"github.com/booleworks/logicng-go/configuration"
+	"github.com/booleworks/logicng-go/handler"
 )
 
 // Config represents a model iteration configuration including a handler
 // and an iteration strategy.
 type Config struct {
-	Handler  Handler
+	Handler  handler.Handler
 	Strategy Strategy
 }
 
@@ -25,5 +26,5 @@ func (Config) DefaultConfig() configuration.Config {
 // DefaultConfig returns the default configuration for a
 // model iteration configuration.
 func DefaultConfig() *Config {
-	return &Config{nil, DefaultStrategy()}
+	return &Config{handler.NopHandler, DefaultStrategy()}
 }

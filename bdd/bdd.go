@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"github.com/booleworks/logicng-go/errorx"
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/model"
@@ -25,76 +26,75 @@ func newBdd(index int32, kernel *Kernel) *BDD {
 // Compile creates a BDD for a given formula.  The variable ordering in this
 // case is the order in which the variables occur in the formula.
 func Compile(fac f.Factory, formula f.Formula) *BDD {
-	bdd, _ := CompileWithHandler(fac, formula, nil)
+	bdd, _ := CompileWithHandler(fac, formula, handler.NopHandler)
 	return bdd
 }
 
 // CompileWithHandler creates a BDD for a given formula with the given
-// bddHandler.  The handler can abort the BDD creation based on the number of
-// nodes created during the BDD compilation process.  If the BDD compilation
-// was aborted, the ok flag is false.
-func CompileWithHandler(fac f.Factory, formula f.Formula, bddHandler Handler) (bdd *BDD, ok bool) {
-	handler.Start(bddHandler)
+// bddHandler.  The handler can cancel the BDD creation based on the number of
+// nodes created during the BDD compilation process.
+func CompileWithHandler(fac f.Factory, formula f.Formula, hdl handler.Handler) (*BDD, handler.State) {
+	if !hdl.ShouldResume(event.BddComputationStarted) {
+		return nil, handler.Cancellation(event.BddComputationStarted)
+	}
 	varNum := int32(f.Variables(fac, formula).Size())
 	kernel := NewKernel(fac, varNum, varNum*30, varNum*20)
-	bddIndex, ok := compile(fac, formula, kernel, bddHandler)
-	if !ok {
-		return nil, ok
+	bddIndex, state := compile(fac, formula, kernel, hdl)
+	if !state.Success {
+		return nil, state
 	} else {
-		return newBdd(bddIndex, kernel), ok
+		return newBdd(bddIndex, kernel), succ
 	}
 }
 
 // CompileWithVarOrder creates a BDD for a given formula and a variable
 // ordering.
 func CompileWithVarOrder(fac f.Factory, formula f.Formula, order []f.Variable) *BDD {
-	bdd, _ := CompileWithVarOrderAndHandler(fac, formula, order, nil)
+	bdd, _ := CompileWithVarOrderAndHandler(fac, formula, order, handler.NopHandler)
 	return bdd
 }
 
 // CompileWithVarOrderAndHandler creates a BDD for a given formula, variable
-// ordering, and bddHandler.  The handler can abort the BDD creation based on
-// the number of nodes created during the BDD compilation process.  If the BDD
-// compilation was aborted, the ok flag is false.
+// ordering, and bddHandler.  The handler can cancel the BDD creation based on
+// the number of nodes created during the BDD compilation process.
 func CompileWithVarOrderAndHandler(
 	fac f.Factory,
 	formula f.Formula,
 	order []f.Variable,
-	bddHandler Handler,
-) (bdd *BDD, ok bool) {
-	handler.Start(bddHandler)
+	hdl handler.Handler,
+) (*BDD, handler.State) {
+	hdl.ShouldResume(event.BddComputationStarted)
 	varNum := len(order)
 	kernel := NewKernelWithOrdering(fac, order, int32(varNum)*30, int32(varNum)*20)
-	bddIndex, ok := compile(fac, formula, kernel, bddHandler)
-	if !ok {
-		return nil, ok
+	bddIndex, state := compile(fac, formula, kernel, hdl)
+	if !state.Success {
+		return nil, state
 	} else {
-		return newBdd(bddIndex, kernel), ok
+		return newBdd(bddIndex, kernel), succ
 	}
 }
 
 // CompileWithKernel creates a BDD for a given formula with a given kernel.
 func CompileWithKernel(fac f.Factory, formula f.Formula, kernel *Kernel) *BDD {
-	bdd, _ := CompileWithKernelAndHandler(fac, formula, kernel, nil)
+	bdd, _ := CompileWithKernelAndHandler(fac, formula, kernel, handler.NopHandler)
 	return bdd
 }
 
 // CompileWithKernelAndHandler creates a BDD for a given formula with a given
-// kernel and bddHandler.  The handler can abort the BDD creation based on the
-// number of nodes created during the BDD compilation process.  If the BDD
-// compilation was aborted, the ok flag is false.
+// kernel and bddHandler.  The handler can cancel the BDD creation based on the
+// number of nodes created during the BDD compilation process.
 func CompileWithKernelAndHandler(
 	fac f.Factory,
 	formula f.Formula,
 	kernel *Kernel,
-	bddHandler Handler,
-) (bdd *BDD, ok bool) {
-	handler.Start(bddHandler)
-	bddIndex, ok := compile(fac, formula, kernel, bddHandler)
-	if !ok {
-		return nil, ok
+	hdl handler.Handler,
+) (*BDD, handler.State) {
+	hdl.ShouldResume(event.BddComputationStarted)
+	bddIndex, state := compile(fac, formula, kernel, hdl)
+	if !state.Success {
+		return nil, state
 	} else {
-		return newBdd(bddIndex, kernel), ok
+		return newBdd(bddIndex, kernel), succ
 	}
 }
 
@@ -109,18 +109,18 @@ func CompileLiterals(literals []f.Literal, kernel *Kernel) *BDD {
 		variable := lit.Variable()
 		idx := kernel.getOrAddVarIndex(variable)
 		if lit.IsPos() {
-			bdd, _ = kernel.ithVar(idx)
+			bdd = kernel.ithVar(idx)
 		} else {
-			bdd, _ = kernel.nithVar(idx)
+			bdd = kernel.nithVar(idx)
 		}
 	} else {
 		lit := literals[0]
 		variable := lit.Variable()
 		idx := kernel.getOrAddVarIndex(variable)
 		if lit.IsPos() {
-			bdd, _ = kernel.ithVar(idx)
+			bdd = kernel.ithVar(idx)
 		} else {
-			bdd, _ = kernel.nithVar(idx)
+			bdd = kernel.nithVar(idx)
 		}
 		for i := 1; i < len(literals); i++ {
 			lit = literals[i]
@@ -128,15 +128,15 @@ func CompileLiterals(literals []f.Literal, kernel *Kernel) *BDD {
 			idx = kernel.getOrAddVarIndex(variable)
 			var operand int32
 			if lit.IsPos() {
-				operand, _ = kernel.ithVar(idx)
+				operand = kernel.ithVar(idx)
 			} else {
-				operand, _ = kernel.nithVar(idx)
+				operand = kernel.nithVar(idx)
 			}
 			previous := bdd
-			var ok bool
-			bdd, ok = kernel.addRef(kernel.and(bdd, operand), nil)
-			if !ok {
-				panic(errorx.IllegalState("bdd generation was aborted by handler"))
+			var state handler.State
+			bdd, state = kernel.addRef(kernel.and(bdd, operand), handler.NopHandler)
+			if !state.Success {
+				panic(errorx.IllegalState("bdd generation was cancelled by handler"))
 			}
 			kernel.delRef(previous)
 			kernel.delRef(operand)
@@ -145,74 +145,74 @@ func CompileLiterals(literals []f.Literal, kernel *Kernel) *BDD {
 	return newBdd(bdd, kernel)
 }
 
-func compile(fac f.Factory, formula f.Formula, kernel *Kernel, handler Handler) (int32, bool) {
+func compile(fac f.Factory, formula f.Formula, kernel *Kernel, hdl handler.Handler) (int32, handler.State) {
 	switch formula.Sort() {
 	case f.SortFalse:
-		return bddFalse, true
+		return bddFalse, succ
 	case f.SortTrue:
-		return bddTrue, true
+		return bddTrue, succ
 	case f.SortLiteral:
 		variable := f.Literal(formula).Variable()
 		idx := kernel.getOrAddVarIndex(variable)
 		if formula.IsPos() {
-			return kernel.ithVar(idx)
+			return kernel.ithVar(idx), succ
 		} else {
-			return kernel.nithVar(idx)
+			return kernel.nithVar(idx), succ
 		}
 	case f.SortNot:
 		op, _ := fac.NotOperand(formula)
-		operand, ok := compile(fac, op, kernel, handler)
-		if !ok {
-			return 0, false
+		operand, state := compile(fac, op, kernel, hdl)
+		if !state.Success {
+			return 0, state
 		}
-		res, ok := kernel.addRef(kernel.not(operand), handler)
+		res, state := kernel.addRef(kernel.not(operand), hdl)
 		kernel.delRef(operand)
-		return res, ok
+		return res, state
 	case f.SortImpl, f.SortEquiv:
 		l, r, _ := fac.BinaryLeftRight(formula)
-		left, ok := compile(fac, l, kernel, handler)
-		if !ok {
-			return 0, false
+		left, state := compile(fac, l, kernel, hdl)
+		if !state.Success {
+			return 0, state
 		}
-		right, ok := compile(fac, r, kernel, handler)
-		if !ok {
-			return 0, false
+		right, state := compile(fac, r, kernel, hdl)
+		if !state.Success {
+			return 0, state
 		}
 		var res int32
 		if formula.Sort() == f.SortImpl {
-			res, ok = kernel.addRef(kernel.implication(left, right), handler)
+			res, state = kernel.addRef(kernel.implication(left, right), hdl)
 		} else {
-			res, ok = kernel.addRef(kernel.equivalence(left, right), handler)
+			res, state = kernel.addRef(kernel.equivalence(left, right), hdl)
 		}
 		kernel.delRef(left)
 		kernel.delRef(right)
-		return res, ok
+		return res, state
 	case f.SortAnd, f.SortOr:
 		ops, _ := fac.NaryOperands(formula)
-		res, ok := compile(fac, ops[0], kernel, handler)
-		if !ok {
-			return 0, false
+		res, state := compile(fac, ops[0], kernel, hdl)
+		if !state.Success {
+			return 0, state
 		}
 		for i := 1; i < len(ops); i++ {
-			operand, ok := compile(fac, ops[i], kernel, handler)
-			if !ok {
-				return 0, false
+			operand, state := compile(fac, ops[i], kernel, hdl)
+			if !state.Success {
+				return 0, state
 			}
 			previous := res
 			if formula.Sort() == f.SortAnd {
-				res, ok = kernel.addRef(kernel.and(res, operand), handler)
+				res, state = kernel.addRef(kernel.and(res, operand), hdl)
 			} else {
-				res, ok = kernel.addRef(kernel.or(res, operand), handler)
+				res, state = kernel.addRef(kernel.or(res, operand), hdl)
 			}
 			kernel.delRef(previous)
 			kernel.delRef(operand)
-			if !ok {
-				return 0, false
+			if !state.Success {
+				return 0, state
 			}
 		}
-		return res, ok
+		return res, state
 	case f.SortCC, f.SortPBC:
-		return compile(fac, normalform.NNF(fac, formula), kernel, handler)
+		return compile(fac, normalform.NNF(fac, formula), kernel, hdl)
 	default:
 		panic(errorx.UnknownEnumValue(formula.Sort()))
 	}
@@ -238,7 +238,7 @@ func (b *BDD) ToFormula(fac f.Factory, followPathsToTrue ...bool) f.Formula {
 
 // Negate returns a newBdd BDD which is the negation of the BDD.
 func (b *BDD) Negate() *BDD {
-	bdd, _ := b.Kernel.addRef(b.Kernel.not(b.Index), nil)
+	bdd, _ := b.Kernel.addRef(b.Kernel.not(b.Index), handler.NopHandler)
 	return newBdd(bdd, b.Kernel)
 }
 
@@ -249,7 +249,7 @@ func (b *BDD) Implies(other *BDD) *BDD {
 	if other.Kernel != b.Kernel {
 		panic(errorx.BadInput("other BDD and receiver BDD have different kernels"))
 	}
-	bdd, _ := b.Kernel.addRef(b.Kernel.implication(b.Index, other.Index), nil)
+	bdd, _ := b.Kernel.addRef(b.Kernel.implication(b.Index, other.Index), handler.NopHandler)
 	return newBdd(bdd, b.Kernel)
 }
 
@@ -260,7 +260,7 @@ func (b *BDD) ImpliedBy(other *BDD) *BDD {
 	if other.Kernel != b.Kernel {
 		panic(errorx.BadInput("other BDD and receiver BDD have different kernels"))
 	}
-	bdd, _ := b.Kernel.addRef(b.Kernel.implication(other.Index, b.Index), nil)
+	bdd, _ := b.Kernel.addRef(b.Kernel.implication(other.Index, b.Index), handler.NopHandler)
 	return newBdd(bdd, b.Kernel)
 }
 
@@ -271,7 +271,7 @@ func (b *BDD) Equivalence(other *BDD) *BDD {
 	if other.Kernel != b.Kernel {
 		panic(errorx.BadInput("other BDD and receiver BDD have different kernels"))
 	}
-	bdd, _ := b.Kernel.addRef(b.Kernel.equivalence(b.Index, other.Index), nil)
+	bdd, _ := b.Kernel.addRef(b.Kernel.equivalence(b.Index, other.Index), handler.NopHandler)
 	return newBdd(bdd, b.Kernel)
 }
 
@@ -282,7 +282,7 @@ func (b *BDD) And(other *BDD) *BDD {
 	if other.Kernel != b.Kernel {
 		panic(errorx.BadInput("other BDD and receiver BDD have different kernels"))
 	}
-	bdd, _ := b.Kernel.addRef(b.Kernel.and(b.Index, other.Index), nil)
+	bdd, _ := b.Kernel.addRef(b.Kernel.and(b.Index, other.Index), handler.NopHandler)
 	return newBdd(bdd, b.Kernel)
 }
 
@@ -292,7 +292,7 @@ func (b *BDD) Or(other *BDD) *BDD {
 	if other.Kernel != b.Kernel {
 		panic(errorx.BadInput("other BDD and receiver BDD have different kernels"))
 	}
-	bdd, _ := b.Kernel.addRef(b.Kernel.or(b.Index, other.Index), nil)
+	bdd, _ := b.Kernel.addRef(b.Kernel.or(b.Index, other.Index), handler.NopHandler)
 	return newBdd(bdd, b.Kernel)
 }
 
@@ -395,11 +395,11 @@ func (b *BDD) PathCountZero() *big.Int {
 // Support returns all the variables the BDD depends on.
 func (b *BDD) Support() []f.Variable {
 	supportBdd := b.Kernel.support(b.Index)
-	model, err := b.createModel(supportBdd)
+	mdl, err := b.createModel(supportBdd)
 	if err != nil {
 		return []f.Variable{}
 	} else {
-		return model.PosVars()
+		return mdl.PosVars()
 	}
 }
 

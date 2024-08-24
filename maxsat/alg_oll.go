@@ -4,6 +4,7 @@ import (
 	"math"
 
 	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/sat"
 	"github.com/emirpasic/gods/sets/treeset"
 	"github.com/emirpasic/gods/utils"
@@ -30,8 +31,8 @@ func newOLL() *oll {
 	}
 }
 
-func (m *oll) search(handler Handler) (result, bool) {
-	return m.innerSearch(handler, func() (result, bool) {
+func (m *oll) search(hdl handler.Handler) (result, handler.State) {
+	return m.innerSearch(hdl, func() (result, handler.State) {
 		if m.problemType == weighted {
 			return m.weighted()
 		} else {
@@ -40,7 +41,7 @@ func (m *oll) search(handler Handler) (result, bool) {
 	})
 }
 
-func (m *oll) unweighted() (result, bool) {
+func (m *oll) unweighted() (result, handler.State) {
 	m.nbInitialVariables = m.nVars()
 	m.initRelaxation()
 	m.solver = m.rebuildSolver()
@@ -56,10 +57,9 @@ func (m *oll) unweighted() (result, bool) {
 	var softCardinality []*encoder
 
 	for {
-		satHandler := m.satHandler()
-		res, ok := searchSatSolverWithAssumptions(m.solver, satHandler, assumptions)
-		if !ok {
-			return resUndef, false
+		res, state := searchSatSolverWithAssumptions(m.solver, m.hdl, assumptions)
+		if !state.Success {
+			return resUndef, state
 		} else if res == f.TristateTrue {
 			m.nbSatisfiable++
 			model := m.solver.Model()
@@ -69,22 +69,22 @@ func (m *oll) unweighted() (result, bool) {
 			m.ubCost = newCost
 			if m.nbSatisfiable == 1 {
 				if newCost == 0 {
-					return resOptimum, true
+					return resOptimum, succ
 				}
 				for i := 0; i < m.nSoft(); i++ {
 					assumptions = append(assumptions, sat.Not(m.softClauses[i].assumptionVar))
 				}
 			} else {
-				return resOptimum, true
+				return resOptimum, succ
 			}
 		} else {
 			m.lbCost++
 			m.nbCores++
 			if m.nbSatisfiable == 0 {
-				return resUnsat, true
+				return resUnsat, succ
 			}
 			if m.lbCost == m.ubCost {
-				return resOptimum, true
+				return resOptimum, succ
 			}
 
 			m.sumSizeCores += len(m.solver.Conflict())
@@ -148,7 +148,7 @@ func (m *oll) unweighted() (result, bool) {
 	}
 }
 
-func (m *oll) weighted() (result, bool) {
+func (m *oll) weighted() (result, handler.State) {
 	m.nbInitialVariables = m.nVars()
 	m.initRelaxation()
 	m.solver = m.rebuildSolver()
@@ -167,10 +167,9 @@ func (m *oll) weighted() (result, bool) {
 	m.minWeight = m.currentWeight
 
 	for {
-		satHandler := m.satHandler()
-		res, ok := searchSatSolverWithAssumptions(m.solver, satHandler, assumptions)
-		if !ok {
-			return resUndef, false
+		res, state := searchSatSolverWithAssumptions(m.solver, m.hdl, assumptions)
+		if !state.Success {
+			return resUndef, state
 		} else if res == f.TristateTrue {
 			m.nbSatisfiable++
 			model := m.solver.Model()
@@ -215,7 +214,7 @@ func (m *oll) weighted() (result, bool) {
 						}
 					})
 				} else {
-					return resOptimum, true
+					return resOptimum, succ
 				}
 			}
 		} else if res == f.TristateFalse {
@@ -237,10 +236,10 @@ func (m *oll) weighted() (result, bool) {
 			m.lbCost += minCore
 			m.nbCores++
 			if m.nbSatisfiable == 0 {
-				return resUnsat, true
+				return resUnsat, succ
 			}
 			if m.lbCost == m.ubCost {
-				return resOptimum, true
+				return resOptimum, succ
 			}
 			m.sumSizeCores += len(m.solver.Conflict())
 			var softRelax []int32
