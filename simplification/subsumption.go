@@ -4,7 +4,9 @@ import (
 	"github.com/emirpasic/gods/lists/arraylist"
 
 	"github.com/booleworks/logicng-go/errorx"
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/normalform"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/emirpasic/gods/sets/linkedhashset"
@@ -14,18 +16,34 @@ import (
 // CNFSubsumption performs subsumption on a given CNF formula and returns a new
 // CNF. I.e. it performs as many subsumptions as possible. A subsumption in a
 // CNF means, that e.g. a clause A | B | C is subsumed by another clause A | B
-// and can therefore be deleted for an equivalent CNF.  Returns with an error
-// if the input formula was not in CNF.
+// and can therefore be deleted for an equivalent CNF. Returns with an error if
+// the input formula was not in CNF.
 func CNFSubsumption(fac f.Factory, formula f.Formula) (f.Formula, error) {
+	sub, err, _ := CNFSubsumptionWithHandler(fac, formula, handler.NopHandler)
+	return sub, err
+}
+
+// CNFSubsumptionWithHandler performs subsumption on a given CNF formula and
+// returns a new CNF. I.e. it performs as many subsumptions as possible. A
+// subsumption in a CNF means, that e.g. a clause A | B | C is subsumed by
+// another clause A | B and can therefore be deleted for an equivalent CNF.
+// Returns with an error if the input formula was not in CNF.  It takes a
+// handler which can cancel the computation.
+func CNFSubsumptionWithHandler(
+	fac f.Factory, formula f.Formula, hdl handler.Handler,
+) (f.Formula, error, handler.State) {
 	if !normalform.IsCNF(fac, formula) {
-		return 0, errorx.BadInput("Formula not in CNF")
+		return 0, errorx.BadInput("Formula not in CNF"), handler.Success()
 	}
 	if formula.Sort() <= f.SortLiteral || formula.Sort() == f.SortOr {
-		return formula, nil
+		return formula, nil, handler.Success()
 	}
-	ubTree := generateSubsumedUBTree(fac, formula)
+	ubTree, state := generateSubsumedUBTree(fac, formula, hdl)
+	if !state.Success {
+		return 0, nil, state
+	}
 	sets := ubTree.allSets()
-	return combine(sets, fac.Or, fac.And), nil
+	return combine(sets, fac.Or, fac.And), nil, handler.Success()
 }
 
 // DNFSubsumption performs subsumption on a given DNF formula and returns a new
@@ -34,15 +52,31 @@ func CNFSubsumption(fac f.Factory, formula f.Formula) (f.Formula, error) {
 // and can therefore be deleted for an equivalent DNF.  Returns with an error
 // if the input formula was not in DNF.
 func DNFSubsumption(fac f.Factory, formula f.Formula) (f.Formula, error) {
+	sub, err, _ := DNFSubsumptionWithHandler(fac, formula, handler.NopHandler)
+	return sub, err
+}
+
+// DNFSubsumptionWithHandler performs subsumption on a given DNF formula and
+// returns a new DNF. I.e. it performs as many subsumptions as possible. A
+// subsumption in a DNF means, that e.g. a minterm A & B is subsumed by another
+// clause A & B & C and can therefore be deleted for an equivalent DNF. Returns
+// with an error if the input formula was not in DNF.  It takes a handler which
+// can cancel the computation.
+func DNFSubsumptionWithHandler(
+	fac f.Factory, formula f.Formula, hdl handler.Handler,
+) (f.Formula, error, handler.State) {
 	if !normalform.IsDNF(fac, formula) {
-		return 0, errorx.BadInput("Formula not in DNF")
+		return 0, errorx.BadInput("Formula not in DNF"), handler.Success()
 	}
 	if formula.Sort() <= f.SortLiteral || formula.Sort() == f.SortAnd {
-		return formula, nil
+		return formula, nil, handler.Success()
 	}
-	ubTree := generateSubsumedUBTree(fac, formula)
+	ubTree, state := generateSubsumedUBTree(fac, formula, hdl)
+	if !state.Success {
+		return 0, nil, state
+	}
 	sets := ubTree.allSets()
-	return combine(sets, fac.And, fac.Or), nil
+	return combine(sets, fac.And, fac.Or), nil, handler.Success()
 }
 
 func combine(sets *linkedhashset.Set, innerFunc, outerFunc func(...f.Formula) f.Formula) f.Formula {
@@ -56,7 +90,7 @@ func combine(sets *linkedhashset.Set, innerFunc, outerFunc func(...f.Formula) f.
 	return outerFunc(clauses...)
 }
 
-func generateSubsumedUBTree(fac f.Factory, formula f.Formula) *ubtree {
+func generateSubsumedUBTree(fac f.Factory, formula f.Formula, hdl handler.Handler) (*ubtree, handler.State) {
 	mapping := treemap.NewWithIntComparator()
 	for _, term := range fac.Operands(formula) {
 		lits := f.Literals(fac, term)
@@ -67,16 +101,27 @@ func generateSubsumedUBTree(fac f.Factory, formula f.Formula) *ubtree {
 		}
 		terms.(*arraylist.List).Add(lits)
 	}
+	if !hdl.ShouldResume(event.SubsumptionStartingUbTreeGeneration) {
+		return nil, handler.Cancellation(event.SubsumptionStartingUbTreeGeneration)
+	}
 	ubTree := newUbtree()
+	e := event.Nothing
 	mapping.Each(func(_ interface{}, value interface{}) {
 		value.(*arraylist.List).Each(func(_ int, _set interface{}) {
 			set := _set.(*f.LitSet)
 			if ubTree.firstSubset(set) == nil {
 				ubTree.addSet(set)
+				if !hdl.ShouldResume(event.SubsumptionAddedNewSet) {
+					e = event.SubsumptionAddedNewSet
+					return
+				}
 			}
 		})
 	})
-	return ubTree
+	if e != event.Nothing {
+		return nil, handler.Cancellation(e)
+	}
+	return ubTree, handler.Success()
 }
 
 type ubnode struct {

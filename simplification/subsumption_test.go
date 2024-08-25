@@ -2,8 +2,11 @@ package simplification
 
 import (
 	"testing"
+	"time"
 
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/io"
 	"github.com/booleworks/logicng-go/normalform"
 	"github.com/booleworks/logicng-go/parser"
@@ -286,6 +289,20 @@ func TestCnfSubsumptionLarge(t *testing.T) {
 	subsumed := cnfs(t, fac, cnf)
 	assert.True(sat.IsEquivalent(fac, cnf, formula))
 	assert.Greater(len(fac.Operands(cnf)), len(fac.Operands(subsumed)))
+}
+
+func TestCnfSubsumptionWithHandler(t *testing.T) {
+	assert := assert.New(t)
+	fac := f.NewFactory()
+	formula, _ := io.ReadFormula(fac, "./../test/data/formulas/large2.txt")
+	cnf := normalform.FactorizedCNF(fac, formula)
+	duration, _ := time.ParseDuration("5ms")
+	hdl := handler.NewTimeoutWithDuration(duration)
+	subsumed, err, state := CNFSubsumptionWithHandler(fac, cnf, hdl)
+	assert.Nil(err)
+	assert.False(state.Success)
+	assert.NotEqual(event.Nothing, state.CancelCause)
+	assert.Equal(fac.Falsum(), subsumed)
 }
 
 func TestDnfSubsumptionLarge(t *testing.T) {

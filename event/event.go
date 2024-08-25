@@ -30,15 +30,15 @@ var (
 	SatCallFinished    = event{"SAT Call Finished"}
 	MaxSatCallFinished = event{"Max-SAT Call Finished"}
 
-	ModelEnumerationCommit                   = event{"Model Enumeration Commit"}
-	ModelEnumerationRollback                 = event{"Model Enumeration Rollback"}
-	FactorizationCreatedClause               = event{"Factorization Created Clause"}
-	DistributionPerformed                    = event{"Distribution Performed"}
-	BddNewRefAdded                           = event{"BDD New Ref Added"}
-	DnnfShannonExpansion                     = event{"DNNF Shannon Expansion"}
-	SatConflictDetected                      = event{"SAT Conflict Detected"}
-	EventSubsumptionStartingUbTreeGeneration = event{"Subsumption Starting UB Tree Generation"}
-	EventSubsumptionAddedNewSet              = event{"Subsumption Added New Set"}
+	ModelEnumerationCommit              = event{"Model Enumeration Commit"}
+	ModelEnumerationRollback            = event{"Model Enumeration Rollback"}
+	FactorizationCreatedClause          = event{"Factorization Created Clause"}
+	DistributionPerformed               = event{"Distribution Performed"}
+	BddNewRefAdded                      = event{"BDD New Ref Added"}
+	DnnfShannonExpansion                = event{"DNNF Shannon Expansion"}
+	SatConflictDetected                 = event{"SAT Conflict Detected"}
+	SubsumptionStartingUbTreeGeneration = event{"Subsumption Starting UB Tree Generation"}
+	SubsumptionAddedNewSet              = event{"Subsumption Added New Set"}
 
 	Nothing = event{"Nothing"}
 )
