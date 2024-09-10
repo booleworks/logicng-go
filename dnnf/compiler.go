@@ -138,7 +138,7 @@ func (c *compiler) compileWithTree(dtree dtree, hdl handler.Handler) (f.Formula,
 	c.initializeCaches(dtree)
 	c.hdl = hdl
 	if !hdl.ShouldResume(event.DnnfComputationStarted) {
-		return 0, handler.Cancellation(event.DnnfComputationStarted)
+		return 0, handler.Cancelation(event.DnnfComputationStarted)
 	}
 
 	result, state := c.cnf2ddnnf(dtree)
@@ -192,7 +192,7 @@ func (c *compiler) cnf2ddnnfInner(tree dtree, currentShannons int) (f.Formula, h
 	} else {
 		variable := c.chooseShannonVariable(tree, separator, currentShannons)
 		if !c.hdl.ShouldResume(event.DnnfShannonExpansion) {
-			return 0, handler.Cancellation(event.DnnfShannonExpansion)
+			return 0, handler.Cancelation(event.DnnfShannonExpansion)
 		}
 
 		positiveDnnf := c.fac.Falsum()

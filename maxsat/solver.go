@@ -235,7 +235,7 @@ func (m *Solver) Solve() Result {
 }
 
 // SolveWithHandler solves the MAX-SAT problem currently on the solver.  The
-// computation can be cancelled with the given handler.  The computation result
+// computation can be canceled with the given handler.  The computation result
 // is returned and handler state.
 func (m *Solver) SolveWithHandler(hdl handler.Handler) (Result, handler.State) {
 	if m.result != nil {

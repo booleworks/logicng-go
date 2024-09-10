@@ -28,7 +28,7 @@ func ComputeInsertionBasedWithHandler(
 	fac f.Factory, propositions *[]f.Proposition, hdl handler.Handler,
 ) (*e.UnsatCore, handler.State, error) {
 	if !hdl.ShouldResume(event.MusComputationStarted) {
-		return nil, handler.Cancellation(event.MusComputationStarted), nil
+		return nil, handler.Cancelation(event.MusComputationStarted), nil
 	}
 	currentFormula := make([]f.Proposition, len(*propositions))
 	copy(currentFormula, *propositions)
@@ -42,7 +42,7 @@ func ComputeInsertionBasedWithHandler(
 		count := len(currentFormula)
 		for {
 			sat := solver.Call(s.Params().Handler(hdl))
-			if sat.Cancelled() {
+			if sat.Canceled() {
 				return nil, sat.State(), nil
 			}
 			if !sat.Sat() {
@@ -91,7 +91,7 @@ func ComputeDeletionBasedWithHandler(
 	fac f.Factory, propositions *[]f.Proposition, hdl handler.Handler,
 ) (*e.UnsatCore, handler.State, error) {
 	if !hdl.ShouldResume(event.MusComputationStarted) {
-		return nil, handler.Cancellation(event.MusComputationStarted), nil
+		return nil, handler.Cancelation(event.MusComputationStarted), nil
 	}
 	mus := make([]f.Proposition, 0, len(*propositions))
 	solverStates := make([]*s.SolverState, len(*propositions))
@@ -101,7 +101,7 @@ func ComputeDeletionBasedWithHandler(
 		solver.AddProposition(p)
 	}
 	sResult := solver.Call(s.Params().Handler(hdl))
-	if sResult.Cancelled() {
+	if sResult.Canceled() {
 		return nil, sResult.State(), nil
 	}
 	if sResult.Sat() {
@@ -116,7 +116,7 @@ func ComputeDeletionBasedWithHandler(
 			solver.AddProposition(prop)
 		}
 		sResult := solver.Call(s.Params().Handler(hdl))
-		if sResult.Cancelled() {
+		if sResult.Canceled() {
 			return nil, sResult.State(), nil
 		}
 		if sResult.Sat() {

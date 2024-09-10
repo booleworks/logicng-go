@@ -443,7 +443,7 @@ func (k *Kernel) applyRec(l, r int32, op operand) (int32, bool) {
 
 func (k *Kernel) addRef(root int32, hdl handler.Handler) (int32, handler.State) {
 	if !hdl.ShouldResume(event.BddNewRefAdded) {
-		return -1, handler.Cancellation(event.BddNewRefAdded)
+		return -1, handler.Cancelation(event.BddNewRefAdded)
 	}
 	if root < 2 {
 		return root, succ

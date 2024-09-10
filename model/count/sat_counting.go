@@ -72,7 +72,7 @@ func (c *modelCountCollector) AddModel(
 	c.uncommittedModels = append(c.uncommittedModels, modelFromSolver)
 	c.uncommittedIndices = append(c.uncommittedIndices, relevantAllIndices)
 	if !hdl.ShouldResume(e) {
-		return handler.Cancellation(e)
+		return handler.Cancelation(e)
 	}
 	return succ
 }
@@ -82,7 +82,7 @@ func (c *modelCountCollector) Commit(hdl handler.Handler) handler.State {
 	c.committedCount.Add(c.committedCount, mul)
 	c.clearUncommitted()
 	if !hdl.ShouldResume(event.ModelEnumerationCommit) {
-		return handler.Cancellation(event.ModelEnumerationCommit)
+		return handler.Cancelation(event.ModelEnumerationCommit)
 	}
 	return succ
 }
@@ -90,7 +90,7 @@ func (c *modelCountCollector) Commit(hdl handler.Handler) handler.State {
 func (c *modelCountCollector) Rollback(hdl handler.Handler) handler.State {
 	c.clearUncommitted()
 	if !hdl.ShouldResume(event.ModelEnumerationRollback) {
-		return handler.Cancellation(event.ModelEnumerationRollback)
+		return handler.Cancelation(event.ModelEnumerationRollback)
 	}
 	return succ
 }

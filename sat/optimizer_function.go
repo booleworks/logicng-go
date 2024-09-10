@@ -87,7 +87,7 @@ func (s *Solver) maximize(
 	hdl handler.Handler,
 ) (*model.Model, handler.State) {
 	if !hdl.ShouldResume(event.OptimizationFunctionStarted) {
-		return nil, handler.Cancellation(event.OptimizationFunctionStarted)
+		return nil, handler.Cancelation(event.OptimizationFunctionStarted)
 	}
 	fac := s.fac
 	selectorMap := make(map[f.Variable]f.Literal)
@@ -112,7 +112,7 @@ func (s *Solver) maximize(
 
 	params := Params().Handler(hdl).WithModel(selectors)
 	sResult := s.Call(params)
-	if sResult.Cancelled() {
+	if sResult.Canceled() {
 		return nil, sResult.state
 	}
 	if !sResult.Sat() {
@@ -125,7 +125,7 @@ func (s *Solver) maximize(
 	if currentBound == 0 {
 		s.Add(fac.CC(f.GE, 1, selectors...))
 		sResult = s.Call(params)
-		if sResult.Cancelled() {
+		if sResult.Canceled() {
 			return nil, sResult.state
 		} else if !sResult.Sat() {
 			return s.core.CreateModel(s.fac, internalModel, relevantIndices), succ
@@ -142,7 +142,7 @@ func (s *Solver) maximize(
 
 	incrementalData, _ := s.AddIncrementalCC(cc)
 	sResult = s.Call(params)
-	if sResult.Cancelled() {
+	if sResult.Canceled() {
 		return nil, sResult.state
 	}
 
@@ -152,7 +152,7 @@ func (s *Solver) maximize(
 			return s.core.CreateModel(s.fac, internalModel, relevantIndices)
 		}}
 		if !hdl.ShouldResume(betterBoundEvent) {
-			return nil, handler.Cancellation(betterBoundEvent)
+			return nil, handler.Cancelation(betterBoundEvent)
 		}
 		currentModel = sResult.Model()
 		currentBound = len(currentModel.PosVars())
@@ -161,7 +161,7 @@ func (s *Solver) maximize(
 		}
 		incrementalData.NewLowerBoundForSolver(currentBound + 1)
 		sResult = s.Call(params)
-		if sResult.Cancelled() {
+		if sResult.Canceled() {
 			return nil, sResult.state
 		}
 	}

@@ -70,7 +70,7 @@ func ComputeWithHandler(
 	additionalConstraints ...f.Formula,
 ) ([]f.Proposition, handler.State) {
 	if !hdl.ShouldResume(event.SmusComputationStarted) {
-		return nil, handler.Cancellation(event.SmusComputationStarted)
+		return nil, handler.Cancelation(event.SmusComputationStarted)
 	}
 	growSolver := sat.NewSolver(fac)
 	for _, formula := range additionalConstraints {
@@ -85,7 +85,7 @@ func ComputeWithHandler(
 		growSolver.Add(fac.Equivalence(selector.AsFormula(), proposition.Formula()))
 	}
 	sResult := growSolver.Call(sat.Params().Handler(hdl).Variable(assumptions...))
-	if sResult.Cancelled() {
+	if sResult.Canceled() {
 		return nil, sResult.State()
 	}
 	if sResult.Sat() {

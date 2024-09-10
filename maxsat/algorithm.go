@@ -80,11 +80,11 @@ func (m *maxSatAlgorithm) innerSearch(
 ) (result, handler.State) {
 	m.hdl = hdl
 	if !hdl.ShouldResume(event.MaxSATCallStarted) {
-		return resUndef, handler.Cancellation(event.MaxSATCallStarted)
+		return resUndef, handler.Cancelation(event.MaxSATCallStarted)
 	}
 	result, state := search()
 	if !hdl.ShouldResume(event.MaxSatCallFinished) {
-		return resUndef, handler.Cancellation(event.MaxSatCallFinished)
+		return resUndef, handler.Cancelation(event.MaxSatCallFinished)
 	}
 	m.hdl = nil
 	return result, state
@@ -222,7 +222,7 @@ func (m *maxSatAlgorithm) foundLowerBound(lowerBound int) handler.State {
 	if m.hdl.ShouldResume(e) {
 		return succ
 	} else {
-		return handler.Cancellation(e)
+		return handler.Cancelation(e)
 	}
 }
 
@@ -231,7 +231,7 @@ func (m *maxSatAlgorithm) foundUpperBound(upperBound int) handler.State {
 	if m.hdl.ShouldResume(e) {
 		return succ
 	} else {
-		return handler.Cancellation(e)
+		return handler.Cancelation(e)
 	}
 }
 

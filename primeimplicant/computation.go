@@ -83,7 +83,7 @@ func compute(
 	hdl handler.Handler,
 ) (*PrimeResult, handler.State) {
 	if !hdl.ShouldResume(event.PrimeComputationStarted) {
-		return nil, handler.Cancellation(event.PrimeComputationStarted)
+		return nil, handler.Cancelation(event.PrimeComputationStarted)
 	}
 	completeImplicants := coverSort == CoverImplicants
 	var formulaForComputation f.Formula
@@ -141,7 +141,7 @@ func computeGeneric(
 			WithModel(f.Variables(fac, formula).Content()).
 			Literal(fModel.Literals...)
 		fResult := fSolver.Call(params)
-		if fResult.Cancelled() {
+		if fResult.Canceled() {
 			return nil, nil, fResult.State()
 		}
 		if !fResult.Sat() {
@@ -235,13 +235,13 @@ func newPrimeReduction(fac f.Factory, formula f.Formula) *primeReduction {
 
 func (p *primeReduction) reduceImplicant(implicant []f.Literal, hdl handler.Handler) ([]f.Literal, handler.State) {
 	if !hdl.ShouldResume(event.ImplicateReductionStarted) {
-		return nil, handler.Cancellation(event.ImplicateReductionStarted)
+		return nil, handler.Cancelation(event.ImplicateReductionStarted)
 	}
 	primeImplicant := f.NewMutableLitSet(implicant...)
 	for _, lit := range implicant {
 		primeImplicant.Remove(lit)
 		sResult := p.implicantSolver.Call(sat.Params().Handler(hdl).Literal(primeImplicant.Content()...))
-		if sResult.Cancelled() {
+		if sResult.Canceled() {
 			return nil, sResult.State()
 		}
 		if sResult.Sat() {
@@ -255,7 +255,7 @@ func (p *primeReduction) reduceImplicate(
 	fac f.Factory, implicate []f.Literal, hdl handler.Handler,
 ) ([]f.Literal, handler.State) {
 	if !hdl.ShouldResume(event.ImplicateReductionStarted) {
-		return nil, handler.Cancellation(event.ImplicateReductionStarted)
+		return nil, handler.Cancelation(event.ImplicateReductionStarted)
 	}
 	primeImplicate := f.NewMutableLitSet(implicate...)
 	for _, lit := range implicate {
@@ -265,7 +265,7 @@ func (p *primeReduction) reduceImplicate(
 			assumptions[i] = lit.Negate(fac)
 		}
 		sResult := p.implicateSolver.Call(sat.Params().Handler(hdl).Literal(assumptions...))
-		if sResult.Cancelled() {
+		if sResult.Canceled() {
 			return nil, sResult.State()
 		}
 		if sResult.Sat() {

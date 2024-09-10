@@ -101,7 +101,7 @@ func (c *modelEnumCollector) AddModel(
 	modelLiterals = append(modelLiterals, mdl.Literals...)
 	c.uncommittedModels = append(c.uncommittedModels, modelLiterals)
 	if !hdl.ShouldResume(e) {
-		return handler.Cancellation(e)
+		return handler.Cancelation(e)
 	}
 	return succ
 }
@@ -110,7 +110,7 @@ func (c *modelEnumCollector) Commit(hdl handler.Handler) handler.State {
 	c.committedModels = append(c.committedModels, c.expandUncommittedModels()...)
 	c.uncommittedModels = make([][]f.Literal, 0, 4)
 	if !hdl.ShouldResume(event.ModelEnumerationCommit) {
-		return handler.Cancellation(event.ModelEnumerationCommit)
+		return handler.Cancelation(event.ModelEnumerationCommit)
 	}
 	return succ
 }
@@ -118,7 +118,7 @@ func (c *modelEnumCollector) Commit(hdl handler.Handler) handler.State {
 func (c *modelEnumCollector) Rollback(hdl handler.Handler) handler.State {
 	c.uncommittedModels = make([][]f.Literal, 0, 4)
 	if !hdl.ShouldResume(event.ModelEnumerationRollback) {
-		return handler.Cancellation(event.ModelEnumerationRollback)
+		return handler.Cancelation(event.ModelEnumerationRollback)
 	}
 	return succ
 }

@@ -21,7 +21,7 @@ func HandlerWithLimit(limit int) *LimitHandler {
 }
 
 // ShouldResume processes the given event and returns true if the
-// computation should be resumed and false if it should be cancelled.
+// computation should be resumed and false if it should be canceled.
 func (h *LimitHandler) ShouldResume(e event.Event) bool {
 	if e == event.ModelEnumerationStarted {
 		h.countCommitted = 0

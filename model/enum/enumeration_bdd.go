@@ -99,7 +99,7 @@ func (c *modelEnumBddCollector) AddModel(
 	mdl := solver.CoreSolver().CreateModel(solver.Factory(), modelFromSolver, relevantAllIndices)
 	c.uncommittedModels = append(c.uncommittedModels, mdl)
 	if !hdl.ShouldResume(e) {
-		return handler.Cancellation(e)
+		return handler.Cancelation(e)
 	}
 	return succ
 }
@@ -112,7 +112,7 @@ func (c *modelEnumBddCollector) Commit(hdl handler.Handler) handler.State {
 	}
 	c.uncommittedModels = make([]*model.Model, 0)
 	if !hdl.ShouldResume(event.ModelEnumerationCommit) {
-		return handler.Cancellation(event.ModelEnumerationCommit)
+		return handler.Cancelation(event.ModelEnumerationCommit)
 	}
 	return succ
 }
@@ -120,7 +120,7 @@ func (c *modelEnumBddCollector) Commit(hdl handler.Handler) handler.State {
 func (c *modelEnumBddCollector) Rollback(hdl handler.Handler) handler.State {
 	c.uncommittedModels = make([]*model.Model, 0)
 	if !hdl.ShouldResume(event.ModelEnumerationRollback) {
-		return handler.Cancellation(event.ModelEnumerationRollback)
+		return handler.Cancelation(event.ModelEnumerationRollback)
 	}
 	return succ
 }

@@ -57,7 +57,7 @@ func TestSolverCallSequence(t *testing.T) {
 		result := solver.Call()
 		assert.True(result.OK())
 		assert.True(result.Sat())
-		assert.False(result.Cancelled())
+		assert.False(result.Canceled())
 		assert.Nil(result.Model())
 		assert.Nil(result.UnsatCore())
 		assert.Nil(result.UpZeroLits())
@@ -65,7 +65,7 @@ func TestSolverCallSequence(t *testing.T) {
 		result = solver.Call(WithModel(vars))
 		assert.True(result.OK())
 		assert.True(result.Sat())
-		assert.False(result.Cancelled())
+		assert.False(result.Canceled())
 		assert.NotNil(result.Model())
 		assert.Nil(result.UnsatCore())
 		assert.Nil(result.UpZeroLits())
@@ -195,16 +195,16 @@ func TestSolverCallHandler(t *testing.T) {
 
 		result := solver.Call(WithHandler(newMaxConflictHandler(0)))
 		assert.False(result.OK())
-		assert.True(result.Cancelled())
+		assert.True(result.Canceled())
 
 		result = solver.Call(WithHandler(newMaxConflictHandler(0)))
 		assert.False(result.OK())
-		assert.True(result.Cancelled())
+		assert.True(result.Canceled())
 
 		result = solver.Call(WithHandler(newMaxConflictHandler(100)))
 		assert.True(result.OK())
 		assert.True(result.Sat())
-		assert.False(result.Cancelled())
+		assert.False(result.Canceled())
 	}
 }
 
@@ -283,7 +283,7 @@ func TestSolverCallAdditionalFormulas(t *testing.T) {
 type maxConflictHander struct {
 	maxConflicts int
 	numConflicts int
-	cancelled    bool
+	canceled     bool
 }
 
 func newMaxConflictHandler(maxConflicts int) *maxConflictHander {
@@ -291,9 +291,9 @@ func newMaxConflictHandler(maxConflicts int) *maxConflictHander {
 }
 
 func (h *maxConflictHander) ShouldResume(e event.Event) bool {
-	h.cancelled = h.numConflicts > h.maxConflicts
+	h.canceled = h.numConflicts > h.maxConflicts
 	h.numConflicts++
-	return !h.cancelled
+	return !h.canceled
 }
 
 func verifyUnsatCore(t *testing.T, fac f.Factory, unsatCore *explanation.UnsatCore) {

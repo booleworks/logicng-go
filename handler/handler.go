@@ -6,7 +6,7 @@ import "github.com/booleworks/logicng-go/event"
 // of events.
 type Handler interface {
 	// ShouldResume processes the given event and returns true if the
-	// computation should be resumed and false if it should be cancelled.
+	// computation should be resumed and false if it should be canceled.
 	ShouldResume(event.Event) bool
 }
 
@@ -19,22 +19,22 @@ func (nopHandler) ShouldResume(event.Event) bool {
 	return true
 }
 
-// The State contains the information if a handler was cancelled and
-// if so, which was the event which caused the cancellation.  If the handler
-// was not cancelled, the cause is the "Nothing" event.
+// The State contains the information if a handler was canceled and
+// if so, which was the event which caused the cancelation.  If the handler
+// was not canceled, the cause is the "Nothing" event.
 type State struct {
 	Success     bool
 	CancelCause event.Event
 }
 
 // Success generates a new successful handler state where the handler was
-// not cancelled.
+// not canceled.
 func Success() State {
 	return State{true, event.Nothing}
 }
 
-// Cancellation generates a new handler state where the handler was cancelled
+// Cancelation generates a new handler state where the handler was canceled
 // with the given event as cause.
-func Cancellation(cancelCause event.Event) State {
+func Cancelation(cancelCause event.Event) State {
 	return State{false, cancelCause}
 }

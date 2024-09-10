@@ -148,14 +148,14 @@ type CallResult struct {
 }
 
 // OK reports whether the call to the SAT solver yielded a result and was not
-// cancelled.
+// canceled.
 func (r CallResult) OK() bool {
 	return r.state.Success
 }
 
-// Cancelled reports whether the SAT solver call was cancelled by the given
+// Canceled reports whether the SAT solver call was canceled by the given
 // handler.
-func (r CallResult) Cancelled() bool {
+func (r CallResult) Canceled() bool {
 	return !r.state.Success
 }
 

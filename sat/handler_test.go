@@ -22,7 +22,7 @@ func TestTimeoutHandlerWithDuration(t *testing.T) {
 	sResult := solver.Call(Params().Handler(satHandler))
 
 	assert.False(sResult.OK())
-	assert.True(sResult.Cancelled())
+	assert.True(sResult.Canceled())
 	assert.NotEqual(event.Nothing, sResult.state.CancelCause)
 	assert.False(sResult.Sat())
 
@@ -35,7 +35,7 @@ func TestTimeoutHandlerWithDuration(t *testing.T) {
 	sResult = solver.Call(Params().Handler(satHandler))
 
 	assert.True(sResult.OK())
-	assert.False(sResult.Cancelled())
+	assert.False(sResult.Canceled())
 	assert.Equal(event.Nothing, sResult.state.CancelCause)
 	assert.False(sResult.Sat())
 }
@@ -53,7 +53,7 @@ func TestTimeoutHandlerWithEnd(t *testing.T) {
 	sResult := solver.Call(Params().Handler(handler))
 
 	assert.False(sResult.OK())
-	assert.True(sResult.Cancelled())
+	assert.True(sResult.Canceled())
 	assert.NotEqual(event.Nothing, sResult.state.CancelCause)
 	assert.False(sResult.Sat())
 }

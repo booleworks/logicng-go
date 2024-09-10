@@ -48,7 +48,7 @@ func (m *ModelIterator[R]) Iterate(
 	emptyElement R,
 ) (R, handler.State) {
 	if !m.hdl.ShouldResume(event.ModelEnumerationStarted) {
-		return emptyElement, handler.Cancellation(event.ModelEnumerationStarted)
+		return emptyElement, handler.Cancelation(event.ModelEnumerationStarted)
 	}
 	knownVariables := solver.CoreSolver().KnownVariables(solver.Factory())
 	additionalVarsNotOnSolver := difference(m.additionalVars, knownVariables)

@@ -35,7 +35,7 @@ func Compile(fac f.Factory, formula f.Formula) *BDD {
 // nodes created during the BDD compilation process.
 func CompileWithHandler(fac f.Factory, formula f.Formula, hdl handler.Handler) (*BDD, handler.State) {
 	if !hdl.ShouldResume(event.BddComputationStarted) {
-		return nil, handler.Cancellation(event.BddComputationStarted)
+		return nil, handler.Cancelation(event.BddComputationStarted)
 	}
 	varNum := int32(f.Variables(fac, formula).Size())
 	kernel := NewKernel(fac, varNum, varNum*30, varNum*20)
@@ -136,7 +136,7 @@ func CompileLiterals(literals []f.Literal, kernel *Kernel) *BDD {
 			var state handler.State
 			bdd, state = kernel.addRef(kernel.and(bdd, operand), handler.NopHandler)
 			if !state.Success {
-				panic(errorx.IllegalState("bdd generation was cancelled by handler"))
+				panic(errorx.IllegalState("bdd generation was canceled by handler"))
 			}
 			kernel.delRef(previous)
 			kernel.delRef(operand)
