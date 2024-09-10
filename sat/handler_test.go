@@ -73,7 +73,7 @@ func TestOptimizationTimeoutHandler(t *testing.T) {
 
 	assert.False(state.Success)
 	assert.NotEqual(event.Nothing, state.CancelCause)
-	assert.Nil(result)
+	assert.NotNil(result)
 
 	nq = GenerateNQueens(fac, 4)
 	vars = f.VariablesAsLiterals(f.Variables(fac, nq).Content())

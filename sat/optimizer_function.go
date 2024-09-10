@@ -126,7 +126,7 @@ func (s *Solver) maximize(
 		s.Add(fac.CC(f.GE, 1, selectors...))
 		sResult = s.Call(params)
 		if sResult.Canceled() {
-			return nil, sResult.state
+			return s.core.CreateModel(s.fac, internalModel, relevantIndices), sResult.state
 		} else if !sResult.Sat() {
 			return s.core.CreateModel(s.fac, internalModel, relevantIndices), succ
 		} else {
@@ -143,7 +143,7 @@ func (s *Solver) maximize(
 	incrementalData, _ := s.AddIncrementalCC(cc)
 	sResult = s.Call(params)
 	if sResult.Canceled() {
-		return nil, sResult.state
+		return s.core.CreateModel(s.fac, internalModel, relevantIndices), sResult.state
 	}
 
 	for sResult.Sat() {
@@ -152,7 +152,7 @@ func (s *Solver) maximize(
 			return s.core.CreateModel(s.fac, internalModel, relevantIndices)
 		}}
 		if !hdl.ShouldResume(betterBoundEvent) {
-			return nil, handler.Cancelation(betterBoundEvent)
+			return s.core.CreateModel(s.fac, internalModel, relevantIndices), handler.Cancelation(betterBoundEvent)
 		}
 		currentModel = sResult.Model()
 		currentBound = len(currentModel.PosVars())
@@ -162,7 +162,7 @@ func (s *Solver) maximize(
 		incrementalData.NewLowerBoundForSolver(currentBound + 1)
 		sResult = s.Call(params)
 		if sResult.Canceled() {
-			return nil, sResult.state
+			return s.core.CreateModel(s.fac, internalModel, relevantIndices), sResult.state
 		}
 	}
 	return s.core.CreateModel(s.fac, internalModel, relevantIndices), succ
