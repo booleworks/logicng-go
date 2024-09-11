@@ -43,6 +43,13 @@ func newWBO(fac f.Factory, config *Config) *wbo {
 
 func (m *wbo) search(hdl handler.Handler) (result, handler.State) {
 	m.nbInitialVariables = m.nVars()
+	m.coreMapping = make(map[int32]int)
+	m.assumptions = []int32{}
+	m.indexSoftCore = []int{}
+	m.softMapping = [][]int{}
+	m.relaxationMapping = [][]int32{}
+	m.duplicatedSymmetryClauses = make(map[intPair]present)
+
 	if m.currentWeight == 1 {
 		m.problemType = unweighted
 		m.weightStrategy = WeightNone
@@ -75,7 +82,7 @@ func (m *wbo) normalSearch() (result, handler.State) {
 		return resUnsat, succ
 	}
 
-	m.initAssumptions(&m.assumptions)
+	m.initAssumptions()
 	m.solver = m.rebuildSolver()
 	for {
 		res, state := searchSatSolverWithAssumptions(m.solver, m.hdl, m.assumptions)
@@ -129,12 +136,12 @@ func (m *wbo) rebuildHardSolver() *sat.CoreSolver {
 	return s
 }
 
-func (m *wbo) initAssumptions(assumps *[]int32) {
+func (m *wbo) initAssumptions() {
 	for i := 0; i < m.nSoft(); i++ {
 		l := m.newLiteral(false)
 		m.softClauses[i].assumptionVar = l
 		m.coreMapping[l] = i
-		*assumps = append(*assumps, sat.Not(l))
+		m.assumptions = append(m.assumptions, sat.Not(l))
 	}
 }
 
@@ -327,7 +334,7 @@ func (m *wbo) weightSearch() (result, handler.State) {
 		return resUnsat, succ
 	}
 
-	m.initAssumptions(&m.assumptions)
+	m.initAssumptions()
 	m.updateCurrentWeight(m.weightStrategy)
 	m.solver = m.rebuildWeightSolver()
 

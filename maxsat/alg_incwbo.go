@@ -17,14 +17,22 @@ type incWBO struct {
 func newIncWBO(fac f.Factory, config *Config) *incWBO {
 	return &incWBO{
 		wbo:        newWBO(fac, config),
-		encoder:    newEncoder(),
 		incSoft:    []bool{},
 		firstBuild: true,
 	}
 }
 
 func (m *incWBO) search(hdl handler.Handler) (result, handler.State) {
+	m.encoder = newEncoder()
 	m.nbInitialVariables = m.nVars()
+	m.coreMapping = make(map[int32]int)
+	m.assumptions = []int32{}
+	m.indexSoftCore = []int{}
+	m.softMapping = [][]int{}
+	m.relaxationMapping = [][]int32{}
+	m.duplicatedSymmetryClauses = make(map[intPair]present)
+	m.incSoft = []bool{}
+	m.firstBuild = true
 	if m.currentWeight == 1 {
 		m.problemType = unweighted
 		m.weightStrategy = WeightNone
@@ -50,7 +58,7 @@ func (m *incWBO) normalSearchInc() (result, handler.State) {
 		return resUnsat, succ
 	}
 
-	m.initAssumptions(&m.assumptions)
+	m.initAssumptions()
 	m.solver = m.rebuildSolver()
 	m.incSoft = make([]bool, m.nSoft())
 	for {
@@ -285,7 +293,7 @@ func (m *incWBO) weightSearchInc() (result, handler.State) {
 		return resUnsat, succ
 	}
 
-	m.initAssumptions(&m.assumptions)
+	m.initAssumptions()
 	m.updateCurrentWeight(m.weightStrategy)
 	m.incrementalBuildWeightSolver()
 	m.incSoft = make([]bool, m.nSoft())

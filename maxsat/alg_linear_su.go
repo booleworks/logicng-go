@@ -28,7 +28,6 @@ func newLinearSU(fac f.Factory, config ...*Config) *linearSU {
 	return &linearSU{
 		maxSatAlgorithm: newAlgorithm(fac, cfg),
 		solver:          nil,
-		encoder:         newEncoder(),
 		bmoMode:         cfg.BMO,
 		bmo:             false,
 		objFunction:     []int32{},
@@ -38,12 +37,15 @@ func newLinearSU(fac f.Factory, config ...*Config) *linearSU {
 
 func (m *linearSU) search(hdl handler.Handler) (result, handler.State) {
 	return m.innerSearch(hdl, func() (result, handler.State) {
+		m.encoder = newEncoder()
 		m.nbInitialVariables = m.nVars()
 		if m.currentWeight == 1 {
 			m.problemType = unweighted
 		} else {
 			m.bmo = m.isBmo(true)
 		}
+		m.objFunction = []int32{}
+		m.coeffs = []int{}
 		if m.problemType == weighted {
 			if m.bmoMode && m.bmo {
 				return m.bmoSearch()

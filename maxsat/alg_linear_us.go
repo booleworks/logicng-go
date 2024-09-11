@@ -13,8 +13,6 @@ type linearUS struct {
 	*maxSatAlgorithm
 	encoder             *encoder
 	incrementalStrategy IncrementalStrategy
-	objFunction         []int32
-	solver              *sat.CoreSolver
 }
 
 func newLinearUS(fac f.Factory, config ...*Config) *linearUS {
@@ -26,14 +24,12 @@ func newLinearUS(fac f.Factory, config ...*Config) *linearUS {
 	}
 	return &linearUS{
 		maxSatAlgorithm:     newAlgorithm(fac, cfg),
-		solver:              nil,
-		encoder:             newEncoder(),
 		incrementalStrategy: cfg.IncrementalStrategy,
-		objFunction:         []int32{},
 	}
 }
 
 func (m *linearUS) search(hdl handler.Handler) (result, handler.State) {
+	m.encoder = newEncoder()
 	if m.problemType == weighted {
 		panic(errorx.BadInput("linearUS does not support weighted MaxSAT instances"))
 	}
@@ -51,23 +47,24 @@ func (m *linearUS) search(hdl handler.Handler) (result, handler.State) {
 
 func (m *linearUS) none() (result, handler.State) {
 	m.nbInitialVariables = m.nVars()
-	m.initRelaxation()
-	m.solver = m.rebuildSolver()
+	objFunction := []int32{}
+	m.initRelaxation(&objFunction)
+	solver := m.rebuildSolver()
 	m.encoder.setIncremental(IncNone)
 	for {
-		res, state := searchSatSolver(m.solver, m.hdl)
+		res, state := searchSatSolver(solver, m.hdl)
 		if !state.Success {
 			return resUndef, state
 		} else if res == f.TristateTrue {
 			m.nbSatisfiable++
-			newCost := m.computeCostModel(m.solver.Model(), math.MaxInt)
-			m.saveModel(m.solver.Model())
+			newCost := m.computeCostModel(solver.Model(), math.MaxInt)
+			m.saveModel(solver.Model())
 			m.ubCost = newCost
 			if m.nbSatisfiable == 1 {
 				if state := m.foundUpperBound(m.ubCost); !state.Success {
 					return resUndef, state
 				}
-				m.encoder.encodeCardinality(m.solver, m.objFunction, 0)
+				m.encoder.encodeCardinality(solver, objFunction, 0)
 			} else {
 				return resOptimum, succ
 			}
@@ -84,33 +81,34 @@ func (m *linearUS) none() (result, handler.State) {
 			} else if state := m.foundLowerBound(m.lbCost); !state.Success {
 				return resUndef, state
 			}
-			m.solver = m.rebuildSolver()
-			m.encoder.encodeCardinality(m.solver, m.objFunction, m.lbCost)
+			solver = m.rebuildSolver()
+			m.encoder.encodeCardinality(solver, objFunction, m.lbCost)
 		}
 	}
 }
 
 func (m *linearUS) iterative() (result, handler.State) {
+	objFunction := []int32{}
 	m.nbInitialVariables = m.nVars()
-	m.initRelaxation()
-	m.solver = m.rebuildSolver()
+	m.initRelaxation(&objFunction)
+	solver := m.rebuildSolver()
 	var assumptions []int32
 	m.encoder.setIncremental(IncIterative)
 	for {
-		res, state := searchSatSolverWithAssumptions(m.solver, m.hdl, assumptions)
+		res, state := searchSatSolverWithAssumptions(solver, m.hdl, assumptions)
 		if !state.Success {
 			return resUndef, state
 		} else if res == f.TristateTrue {
 			m.nbSatisfiable++
-			newCost := m.computeCostModel(m.solver.Model(), math.MaxInt)
-			m.saveModel(m.solver.Model())
+			newCost := m.computeCostModel(solver.Model(), math.MaxInt)
+			m.saveModel(solver.Model())
 			m.ubCost = newCost
 			if m.nbSatisfiable == 1 {
 				if state := m.foundUpperBound(m.ubCost); !state.Success {
 					return resUndef, state
 				}
-				for i := 0; i < len(m.objFunction); i++ {
-					assumptions = append(assumptions, sat.Not(m.objFunction[i]))
+				for i := 0; i < len(objFunction); i++ {
+					assumptions = append(assumptions, sat.Not(objFunction[i]))
 				}
 			} else {
 				return resOptimum, succ
@@ -132,9 +130,9 @@ func (m *linearUS) iterative() (result, handler.State) {
 				return resUndef, state
 			}
 			if !m.encoder.hasCardEncoding() {
-				m.encoder.buildCardinality(m.solver, m.objFunction, m.lbCost)
+				m.encoder.buildCardinality(solver, objFunction, m.lbCost)
 			}
-			m.encoder.incUpdateCardinality(m.solver, []int32{}, m.lbCost, &assumptions)
+			m.encoder.incUpdateCardinality(solver, []int32{}, m.lbCost, &assumptions)
 		}
 	}
 }
@@ -156,11 +154,11 @@ func (m *linearUS) rebuildSolver() *sat.CoreSolver {
 	return s
 }
 
-func (m *linearUS) initRelaxation() {
+func (m *linearUS) initRelaxation(objFunction *[]int32) {
 	for i := 0; i < m.nSoft(); i++ {
 		l := m.newLiteral(false)
 		m.softClauses[i].relaxationVars = append(m.softClauses[i].relaxationVars, l)
 		m.softClauses[i].assumptionVar = l
-		m.objFunction = append(m.objFunction, l)
+		*objFunction = append(*objFunction, l)
 	}
 }

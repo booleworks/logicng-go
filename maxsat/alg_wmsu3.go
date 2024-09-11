@@ -14,13 +14,6 @@ type wmsu3 struct {
 	encoder             *encoder
 	bmoMode             bool
 	incrementalStrategy IncrementalStrategy
-	assumptions         []int32
-	objFunction         []int32
-	coeffs              []int
-	coreMapping         map[int32]int
-	activeSoft          []bool
-	solver              *sat.CoreSolver
-	bmo                 bool
 }
 
 func newWMSU3(fac f.Factory, config ...*Config) *wmsu3 {
@@ -33,16 +26,8 @@ func newWMSU3(fac f.Factory, config ...*Config) *wmsu3 {
 	}
 	return &wmsu3{
 		maxSatAlgorithm:     newAlgorithm(fac, cfg),
-		solver:              nil,
 		incrementalStrategy: cfg.IncrementalStrategy,
-		encoder:             newEncoder(),
 		bmoMode:             cfg.BMO,
-		bmo:                 false,
-		assumptions:         []int32{},
-		objFunction:         []int32{},
-		coeffs:              []int{},
-		coreMapping:         make(map[int32]int),
-		activeSoft:          []bool{},
 	}
 }
 
@@ -50,10 +35,9 @@ func (m *wmsu3) search(hdl handler.Handler) (result, handler.State) {
 	if m.problemType == unweighted {
 		panic(errorx.BadInput("wmsu3 does not support unweighted MaxSAT instances"))
 	}
-	if m.bmoMode {
-		m.bmo = m.isBmo(true)
-	}
-	if !m.bmo {
+	m.encoder = newEncoder()
+	isBMO := m.bmoMode && m.isBmo(true)
+	if !isBMO {
 		m.currentWeight = 1
 	}
 	return m.innerSearch(hdl, func() (result, handler.State) {
@@ -61,7 +45,7 @@ func (m *wmsu3) search(hdl handler.Handler) (result, handler.State) {
 		case IncNone:
 			return m.none()
 		case IncIterative:
-			if m.bmo {
+			if isBMO {
 				return m.iterativeBmo()
 			} else {
 				return m.iterative()
@@ -73,24 +57,26 @@ func (m *wmsu3) search(hdl handler.Handler) (result, handler.State) {
 }
 
 func (m *wmsu3) none() (result, handler.State) {
+	coreMapping := make(map[int32]int)
 	m.nbInitialVariables = m.nVars()
 	m.initRelaxation()
-	m.solver = m.rebuildSolver()
+	solver := m.rebuildSolver()
 	m.encoder.setIncremental(IncNone)
-	m.activeSoft = make([]bool, m.nSoft())
+	activeSoft := make([]bool, m.nSoft())
 	for i := 0; i < m.nSoft(); i++ {
-		m.coreMapping[m.softClauses[i].assumptionVar] = i
+		coreMapping[m.softClauses[i].assumptionVar] = i
 	}
-	m.assumptions = []int32{}
+	assumptions := []int32{}
+	coeffs := []int{}
 	for {
-		res, state := searchSatSolverWithAssumptions(m.solver, m.hdl, m.assumptions)
+		res, state := searchSatSolverWithAssumptions(solver, m.hdl, assumptions)
 		if !state.Success {
 			return resUndef, state
 		} else if res == f.TristateTrue {
 			m.nbSatisfiable++
-			newCost := m.computeCostModel(m.solver.Model(), math.MaxInt)
+			newCost := m.computeCostModel(solver.Model(), math.MaxInt)
 			if newCost < m.ubCost || m.nbSatisfiable == 1 {
-				m.saveModel(m.solver.Model())
+				m.saveModel(solver.Model())
 				m.ubCost = newCost
 			}
 			if m.ubCost == 0 || m.lbCost == m.ubCost || (m.currentWeight == 1 && m.nbSatisfiable > 1) {
@@ -99,8 +85,8 @@ func (m *wmsu3) none() (result, handler.State) {
 				return resUndef, state
 			}
 			for i := 0; i < m.nSoft(); i++ {
-				if m.softClauses[i].weight >= m.currentWeight && !m.activeSoft[i] {
-					m.assumptions = append(m.assumptions, sat.Not(m.softClauses[i].assumptionVar))
+				if m.softClauses[i].weight >= m.currentWeight && !activeSoft[i] {
+					assumptions = append(assumptions, sat.Not(m.softClauses[i].assumptionVar))
 				}
 			}
 		} else {
@@ -112,52 +98,54 @@ func (m *wmsu3) none() (result, handler.State) {
 			} else if state := m.foundLowerBound(m.lbCost); !state.Success {
 				return resUndef, state
 			}
-			m.sumSizeCores += len(m.solver.Conflict())
-			for i := 0; i < len(m.solver.Conflict()); i++ {
-				indexSoft := m.coreMapping[m.solver.Conflict()[i]]
-				m.activeSoft[indexSoft] = true
+			m.sumSizeCores += len(solver.Conflict())
+			for i := 0; i < len(solver.Conflict()); i++ {
+				indexSoft := coreMapping[solver.Conflict()[i]]
+				activeSoft[indexSoft] = true
 			}
-			m.objFunction = []int32{}
-			m.coeffs = []int{}
-			m.assumptions = []int32{}
+			objFunction := []int32{}
+			coeffs = []int{}
+			assumptions = []int32{}
 			for i := 0; i < m.nSoft(); i++ {
-				if m.activeSoft[i] {
-					m.objFunction = append(m.objFunction, m.softClauses[i].relaxationVars[0])
-					m.coeffs = append(m.coeffs, m.softClauses[i].weight)
+				if activeSoft[i] {
+					objFunction = append(objFunction, m.softClauses[i].relaxationVars[0])
+					coeffs = append(coeffs, m.softClauses[i].weight)
 				} else if m.softClauses[i].weight >= m.currentWeight {
-					m.assumptions = append(m.assumptions, sat.Not(m.softClauses[i].assumptionVar))
+					assumptions = append(assumptions, sat.Not(m.softClauses[i].assumptionVar))
 				}
 			}
-			m.solver = m.rebuildSolver()
+			solver = m.rebuildSolver()
 			m.lbCost++
-			for !subsetSum(m.coeffs, m.lbCost) {
+			for !subsetSum(coeffs, m.lbCost) {
 				m.lbCost++
 			}
-			m.encoder.encodePB(m.solver, &m.objFunction, &m.coeffs, m.lbCost)
+			m.encoder.encodePB(solver, &objFunction, &coeffs, m.lbCost)
 		}
 	}
 }
 
 func (m *wmsu3) iterative() (result, handler.State) {
+	coreMapping := make(map[int32]int)
 	m.nbInitialVariables = m.nVars()
 	m.initRelaxation()
-	m.solver = m.rebuildSolver()
+	solver := m.rebuildSolver()
 	m.encoder.setIncremental(IncIterative)
-	m.activeSoft = make([]bool, m.nSoft())
+	activeSoft := make([]bool, m.nSoft())
 	for i := 0; i < m.nSoft(); i++ {
-		m.coreMapping[m.softClauses[i].assumptionVar] = i
+		coreMapping[m.softClauses[i].assumptionVar] = i
 	}
-	m.assumptions = []int32{}
+	assumptions := []int32{}
+	coeffs := []int{}
 	var fullCoeffsFunction []int
 	for {
-		res, state := searchSatSolverWithAssumptions(m.solver, m.hdl, m.assumptions)
+		res, state := searchSatSolverWithAssumptions(solver, m.hdl, assumptions)
 		if !state.Success {
 			return resUndef, state
 		} else if res == f.TristateTrue {
 			m.nbSatisfiable++
-			newCost := m.computeCostModel(m.solver.Model(), math.MaxInt)
+			newCost := m.computeCostModel(solver.Model(), math.MaxInt)
 			if newCost < m.ubCost || m.nbSatisfiable == 1 {
-				m.saveModel(m.solver.Model())
+				m.saveModel(solver.Model())
 				m.ubCost = newCost
 			}
 			if m.ubCost == 0 || m.lbCost == m.ubCost || (m.currentWeight == 1 && m.nbSatisfiable > 1) {
@@ -166,8 +154,8 @@ func (m *wmsu3) iterative() (result, handler.State) {
 				return resUndef, state
 			}
 			for i := 0; i < m.nSoft(); i++ {
-				if m.softClauses[i].weight >= m.currentWeight && !m.activeSoft[i] {
-					m.assumptions = append(m.assumptions, sat.Not(m.softClauses[i].assumptionVar))
+				if m.softClauses[i].weight >= m.currentWeight && !activeSoft[i] {
+					assumptions = append(assumptions, sat.Not(m.softClauses[i].assumptionVar))
 				}
 			}
 		} else {
@@ -179,52 +167,53 @@ func (m *wmsu3) iterative() (result, handler.State) {
 			} else if state := m.foundLowerBound(m.lbCost); !state.Success {
 				return resUndef, state
 			}
-			m.sumSizeCores += len(m.solver.Conflict())
-			m.objFunction = []int32{}
-			m.coeffs = []int{}
-			m.assumptions = []int32{}
-			for i := 0; i < len(m.solver.Conflict()); i++ {
-				indexSoft, ok := m.coreMapping[m.solver.Conflict()[i]]
+			m.sumSizeCores += len(solver.Conflict())
+			objFunction := []int32{}
+			coeffs = []int{}
+			assumptions = []int32{}
+			for i := 0; i < len(solver.Conflict()); i++ {
+				indexSoft, ok := coreMapping[solver.Conflict()[i]]
 				if !ok {
 					continue
 				}
-				if !m.activeSoft[indexSoft] {
-					m.activeSoft[indexSoft] = true
-					m.objFunction = append(m.objFunction, m.softClauses[indexSoft].relaxationVars[0])
-					m.coeffs = append(m.coeffs, m.softClauses[indexSoft].weight)
+				if !activeSoft[indexSoft] {
+					activeSoft[indexSoft] = true
+					objFunction = append(objFunction, m.softClauses[indexSoft].relaxationVars[0])
+					coeffs = append(coeffs, m.softClauses[indexSoft].weight)
 				}
 			}
 			for i := 0; i < m.nSoft(); i++ {
-				if !m.activeSoft[i] && m.softClauses[i].weight >= m.currentWeight {
-					m.assumptions = append(m.assumptions, sat.Not(m.softClauses[i].assumptionVar))
+				if !activeSoft[i] && m.softClauses[i].weight >= m.currentWeight {
+					assumptions = append(assumptions, sat.Not(m.softClauses[i].assumptionVar))
 				}
 			}
-			for i := 0; i < len(m.coeffs); i++ {
-				fullCoeffsFunction = append(fullCoeffsFunction, m.coeffs[i])
+			for i := 0; i < len(coeffs); i++ {
+				fullCoeffsFunction = append(fullCoeffsFunction, coeffs[i])
 			}
 			m.lbCost++
 			for !subsetSum(fullCoeffsFunction, m.lbCost) {
 				m.lbCost++
 			}
 			if !m.encoder.hasPBEncoding() {
-				m.encoder.incEncodePB(m.solver, &m.objFunction, &m.coeffs, m.lbCost, &m.assumptions, m.nSoft())
+				m.encoder.incEncodePB(solver, &objFunction, &coeffs, m.lbCost, &assumptions, m.nSoft())
 			} else {
-				m.encoder.incUpdatePB(m.solver, m.objFunction, m.coeffs, m.lbCost)
-				m.encoder.incUpdatePBAssumptions(&m.assumptions)
+				m.encoder.incUpdatePB(solver, objFunction, coeffs, m.lbCost)
+				m.encoder.incUpdatePBAssumptions(&assumptions)
 			}
 		}
 	}
 }
 
 func (m *wmsu3) iterativeBmo() (result, handler.State) {
+	coreMapping := make(map[int32]int)
 	m.nbInitialVariables = m.nVars()
 	m.initRelaxation()
-	m.solver = m.rebuildSolver()
+	solver := m.rebuildSolver()
 	m.encoder.setIncremental(IncIterative)
 	var encodingAssumptions []int32
-	m.activeSoft = make([]bool, m.nSoft())
+	activeSoft := make([]bool, m.nSoft())
 	for i := 0; i < m.nSoft(); i++ {
-		m.coreMapping[m.softClauses[i].assumptionVar] = i
+		coreMapping[m.softClauses[i].assumptionVar] = i
 	}
 	var minWeight, posWeight, localCost int
 	functions := [][]int32{{}}
@@ -233,15 +222,18 @@ func (m *wmsu3) iterativeBmo() (result, handler.State) {
 	e.setIncremental(IncIterative)
 	bmoEncodings := []*encoder{e}
 	firstEncoding := []bool{true}
+	objFunction := []int32{}
+	assumptions := []int32{}
+	coeffs := []int{}
 	for {
-		res, state := searchSatSolverWithAssumptions(m.solver, m.hdl, m.assumptions)
+		res, state := searchSatSolverWithAssumptions(solver, m.hdl, assumptions)
 		if !state.Success {
 			return resUndef, state
 		} else if res == f.TristateTrue {
 			m.nbSatisfiable++
-			newCost := m.computeCostModel(m.solver.Model(), math.MaxInt)
+			newCost := m.computeCostModel(solver.Model(), math.MaxInt)
 			if newCost < m.ubCost || m.nbSatisfiable == 1 {
-				m.saveModel(m.solver.Model())
+				m.saveModel(solver.Model())
 				m.ubCost = newCost
 			}
 			if m.nbSatisfiable == 1 {
@@ -254,7 +246,7 @@ func (m *wmsu3) iterativeBmo() (result, handler.State) {
 				m.currentWeight = m.orderWeights[0]
 				for i := 0; i < m.nSoft(); i++ {
 					if m.softClauses[i].weight >= m.currentWeight {
-						m.assumptions = append(m.assumptions, sat.Not(m.softClauses[i].assumptionVar))
+						assumptions = append(assumptions, sat.Not(m.softClauses[i].assumptionVar))
 					}
 				}
 			} else {
@@ -264,13 +256,13 @@ func (m *wmsu3) iterativeBmo() (result, handler.State) {
 					if state := m.foundUpperBound(m.ubCost); !state.Success {
 						return resUndef, state
 					}
-					m.assumptions = []int32{}
+					assumptions = []int32{}
 					previousWeight := m.currentWeight
 					posWeight++
 					m.currentWeight = m.orderWeights[posWeight]
-					if len(m.objFunction) > 0 {
-						cpy := make([]int32, len(m.objFunction))
-						copy(cpy, m.objFunction)
+					if len(objFunction) > 0 {
+						cpy := make([]int32, len(objFunction))
+						copy(cpy, objFunction)
 						functions[len(functions)-1] = cpy
 					}
 					functions = append(functions, []int32{})
@@ -281,18 +273,18 @@ func (m *wmsu3) iterativeBmo() (result, handler.State) {
 					bmoEncodings = append(bmoEncodings, e)
 					firstEncoding = append(firstEncoding, true)
 					for i := 0; i < len(encodingAssumptions); i++ {
-						m.solver.AddClause([]int32{encodingAssumptions[i]}, nil)
+						solver.AddClause([]int32{encodingAssumptions[i]}, nil)
 					}
 					encodingAssumptions = []int32{}
 					for i := 0; i < m.nSoft(); i++ {
-						if !m.activeSoft[i] && previousWeight == m.softClauses[i].weight {
-							m.solver.AddClause([]int32{sat.Not(m.softClauses[i].assumptionVar)}, nil)
+						if !activeSoft[i] && previousWeight == m.softClauses[i].weight {
+							solver.AddClause([]int32{sat.Not(m.softClauses[i].assumptionVar)}, nil)
 						}
 						if m.currentWeight == m.softClauses[i].weight {
-							m.assumptions = append(m.assumptions, sat.Not(m.softClauses[i].assumptionVar))
+							assumptions = append(assumptions, sat.Not(m.softClauses[i].assumptionVar))
 						}
-						if m.activeSoft[i] {
-							m.activeSoft[i] = false
+						if activeSoft[i] {
+							activeSoft[i] = false
 						}
 					}
 				}
@@ -308,47 +300,47 @@ func (m *wmsu3) iterativeBmo() (result, handler.State) {
 			} else if state := m.foundLowerBound(m.lbCost); !state.Success {
 				return resUndef, state
 			}
-			m.sumSizeCores += len(m.solver.Conflict())
+			m.sumSizeCores += len(solver.Conflict())
 			var joinObjFunction []int32
-			for i := 0; i < len(m.solver.Conflict()); i++ {
-				entry, ok := m.coreMapping[m.solver.Conflict()[i]]
+			for i := 0; i < len(solver.Conflict()); i++ {
+				entry, ok := coreMapping[solver.Conflict()[i]]
 				if ok {
-					if m.activeSoft[entry] {
+					if activeSoft[entry] {
 						continue
 					}
-					m.activeSoft[entry] = true
+					activeSoft[entry] = true
 					joinObjFunction = append(joinObjFunction, m.softClauses[entry].relaxationVars[0])
 				}
 			}
-			m.objFunction = []int32{}
-			m.coeffs = []int{}
-			m.assumptions = []int32{}
+			objFunction = []int32{}
+			coeffs = []int{}
+			assumptions = []int32{}
 			for i := 0; i < m.nSoft(); i++ {
-				if m.activeSoft[i] {
-					m.objFunction = append(m.objFunction, m.softClauses[i].relaxationVars[0])
-					m.coeffs = append(m.coeffs, m.softClauses[i].weight)
+				if activeSoft[i] {
+					objFunction = append(objFunction, m.softClauses[i].relaxationVars[0])
+					coeffs = append(coeffs, m.softClauses[i].weight)
 				} else if m.currentWeight == m.softClauses[i].weight {
-					m.assumptions = append(m.assumptions, sat.Not(m.softClauses[i].assumptionVar))
+					assumptions = append(assumptions, sat.Not(m.softClauses[i].assumptionVar))
 				}
 			}
-			cpy := make([]int32, len(m.objFunction))
-			copy(cpy, m.objFunction)
+			cpy := make([]int32, len(objFunction))
+			copy(cpy, objFunction)
 			functions[posWeight] = cpy
 			weights[posWeight] = localCost
 			if firstEncoding[posWeight] {
-				if weights[posWeight] != len(m.objFunction) {
-					bmoEncodings[posWeight].buildCardinality(m.solver, m.objFunction, weights[posWeight])
+				if weights[posWeight] != len(objFunction) {
+					bmoEncodings[posWeight].buildCardinality(solver, objFunction, weights[posWeight])
 					joinObjFunction = []int32{}
-					bmoEncodings[posWeight].incUpdateCardinality(m.solver, joinObjFunction,
+					bmoEncodings[posWeight].incUpdateCardinality(solver, joinObjFunction,
 						weights[posWeight], &encodingAssumptions)
 					firstEncoding[posWeight] = false
 				}
 			} else {
-				bmoEncodings[posWeight].incUpdateCardinality(m.solver, joinObjFunction,
+				bmoEncodings[posWeight].incUpdateCardinality(solver, joinObjFunction,
 					weights[posWeight], &encodingAssumptions)
 			}
 			for i := 0; i < len(encodingAssumptions); i++ {
-				m.assumptions = append(m.assumptions, encodingAssumptions[i])
+				assumptions = append(assumptions, encodingAssumptions[i])
 			}
 		}
 	}
