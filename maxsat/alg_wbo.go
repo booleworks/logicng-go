@@ -25,9 +25,9 @@ type wbo struct {
 	symmetryBreakingLimit     int
 }
 
-func newWBO(config *Config) *wbo {
+func newWBO(fac f.Factory, config *Config) *wbo {
 	return &wbo{
-		maxSatAlgorithm:           newAlgorithm(),
+		maxSatAlgorithm:           newAlgorithm(fac, config),
 		solver:                    nil,
 		weightStrategy:            config.WeightStrategy,
 		symmetryStrategy:          config.Symmetry,
@@ -130,7 +130,7 @@ func (m *wbo) rebuildHardSolver() *sat.CoreSolver {
 }
 
 func (m *wbo) initAssumptions(assumps *[]int32) {
-	for i := 0; i < m.nbSoft; i++ {
+	for i := 0; i < m.nSoft(); i++ {
 		l := m.newLiteral(false)
 		m.softClauses[i].assumptionVar = l
 		m.coreMapping[l] = i

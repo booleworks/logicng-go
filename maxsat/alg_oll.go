@@ -20,9 +20,9 @@ type oll struct {
 	minWeight    int
 }
 
-func newOLL() *oll {
+func newOLL(fac f.Factory) *oll {
 	return &oll{
-		maxSatAlgorithm: newAlgorithm(),
+		maxSatAlgorithm: newAlgorithm(fac, DefaultConfig()),
 		encoder:         newEncoder(),
 		coreMapping:     make(map[int32]int),
 		boundMapping:    make(map[int32]intTriple),
@@ -363,7 +363,7 @@ func (m *oll) weighted() (result, handler.State) {
 }
 
 func (m *oll) initRelaxation() {
-	for i := 0; i < m.nbSoft; i++ {
+	for i := 0; i < m.nSoft(); i++ {
 		l := m.newLiteral(false)
 		m.softClauses[i].relaxationVars = append(m.softClauses[i].relaxationVars, l)
 		m.softClauses[i].assumptionVar = l

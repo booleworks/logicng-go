@@ -20,7 +20,7 @@ type msu3 struct {
 	solver              *sat.CoreSolver
 }
 
-func newMSU3(config ...*Config) *msu3 {
+func newMSU3(fac f.Factory, config ...*Config) *msu3 {
 	var cfg *Config
 	if len(config) > 0 {
 		cfg = config[0]
@@ -28,7 +28,7 @@ func newMSU3(config ...*Config) *msu3 {
 		cfg = DefaultConfig()
 	}
 	return &msu3{
-		maxSatAlgorithm:     newAlgorithm(),
+		maxSatAlgorithm:     newAlgorithm(fac, cfg),
 		solver:              nil,
 		incrementalStrategy: cfg.IncrementalStrategy,
 		encoder:             newEncoder(),
@@ -209,7 +209,7 @@ func (m *msu3) rebuildSolver() *sat.CoreSolver {
 }
 
 func (m *msu3) initRelaxation() {
-	for i := 0; i < m.nbSoft; i++ {
+	for i := 0; i < m.nSoft(); i++ {
 		l := m.newLiteral(false)
 		m.softClauses[i].relaxationVars = append(m.softClauses[i].relaxationVars, l)
 		m.softClauses[i].assumptionVar = l

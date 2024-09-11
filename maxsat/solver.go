@@ -10,6 +10,7 @@ import (
 	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/model"
 	"github.com/booleworks/logicng-go/normalform"
+	"github.com/booleworks/logicng-go/sat"
 )
 
 // Result represents the result of a MAX-SAT computation.  It holds a flag
@@ -18,6 +19,19 @@ import (
 type Result struct {
 	Satisfiable bool
 	Optimum     int
+}
+
+// A SolverState can be extracted from the solver by the SaveState method and be
+// loaded again with the LoadState method.  It is used to mark certain states
+// of the solver and be able to come back to them.
+type SolverState struct {
+	id            int32
+	nbVars        int
+	nbHard        int
+	nbSoft        int
+	ubCost        int
+	currentWeight int
+	softWeights   []int
 }
 
 const selPrefix = "@SEL_SOFT_"
@@ -31,8 +45,7 @@ type Solver struct {
 	fac               f.Factory
 	result            *Result
 	solver            algorithm
-	var2index         map[f.Variable]int32
-	index2var         map[int32]f.Variable
+	pgTransformation  *pgOnSolver
 	selectorVariables []f.Variable
 }
 
@@ -42,7 +55,28 @@ func newSolver(fac f.Factory, algorithm Algorithm, config ...*Config) *Solver {
 		algorithm:     algorithm,
 		configuration: determineConfig(fac, config),
 	}
-	solver.Reset()
+	solver.result = nil
+	solver.selectorVariables = []f.Variable{}
+	switch solver.algorithm {
+	case AlgLinearSU:
+		solver.solver = newLinearSU(fac, solver.configuration)
+	case AlgLinearUS:
+		solver.solver = newLinearUS(fac, solver.configuration)
+	case AlgMSU3:
+		solver.solver = newMSU3(fac, solver.configuration)
+	case AlgWMSU3:
+		solver.solver = newWMSU3(fac, solver.configuration)
+	case AlgWBO:
+		solver.solver = newWBO(fac, solver.configuration)
+	case AlgIncWBO:
+		solver.solver = newIncWBO(fac, solver.configuration)
+	case AlgOLL:
+		solver.solver = newOLL(fac)
+	}
+	if solver.configuration.CNFMethod != sat.CNFFactory {
+		withNNF := solver.configuration.CNFMethod == sat.CNFPG
+		solver.pgTransformation = newPGOnSolver(fac, withNNF, solver.solver)
+	}
 	return solver
 }
 
@@ -128,40 +162,13 @@ func OLL(fac f.Factory, config ...*Config) *Solver {
 	return newSolver(fac, AlgOLL, cfg)
 }
 
-// Reset resets the MAX-SAT solver by clearing all internal data structures.
-func (m *Solver) Reset() {
-	m.result = nil
-	m.var2index = make(map[f.Variable]int32)
-	m.index2var = make(map[int32]f.Variable)
-	m.selectorVariables = []f.Variable{}
-	switch m.algorithm {
-	case AlgLinearSU:
-		m.solver = newLinearSU(m.configuration)
-	case AlgLinearUS:
-		m.solver = newLinearUS(m.configuration)
-	case AlgMSU3:
-		m.solver = newMSU3(m.configuration)
-	case AlgWMSU3:
-		m.solver = newWMSU3(m.configuration)
-	case AlgWBO:
-		m.solver = newWBO(m.configuration)
-	case AlgIncWBO:
-		m.solver = newIncWBO(m.configuration)
-	case AlgOLL:
-		m.solver = newOLL()
-	}
-}
-
 // AddHardFormula adds the given formulas as hard formulas to the solver which
 // must always be satisfied.  Since MAX-SAT solvers in LogicNG do not support
 // an incremental interface, this function returns an error if the solver was
 // already solved once.
 func (m *Solver) AddHardFormula(formula ...f.Formula) error {
-	if m.result != nil {
-		return errorx.IllegalState("MAX-SAT solver does not support an incremental interface")
-	}
 	for _, formula := range formula {
-		m.addCNF(normalform.CNF(m.fac, formula), -1)
+		m.addFormulaAsCNF(formula, -1)
 	}
 	return nil
 }
@@ -171,18 +178,44 @@ func (m *Solver) AddHardFormula(formula ...f.Formula) error {
 // Since MAX-SAT solvers in LogicNG do not support an incremental interface,
 // this function returns an error if the solver was already solved once.
 func (m *Solver) AddSoftFormula(formula f.Formula, weight int) error {
-	if m.result != nil {
-		return errorx.IllegalState("MAX-SAT solver does not support an incremental interface")
-	}
 	if weight < 1 {
 		return errorx.BadInput("the weight of a formula must be > 0")
 	}
 	selVar := m.fac.Var(fmt.Sprintf("%s%d", selPrefix, len(m.selectorVariables)))
 	m.selectorVariables = append(m.selectorVariables, selVar)
-	_ = m.AddHardFormula(m.fac.Or(selVar.Negate(m.fac).AsFormula(), formula))
-	_ = m.AddHardFormula(m.fac.Or(formula.Negate(m.fac), selVar.AsFormula()))
-	m.addClause(selVar.AsFormula(), weight)
+	m.addFormulaAsCNF(m.fac.Or(selVar.Negate(m.fac).AsFormula(), formula), -1)
+	m.addFormulaAsCNF(m.fac.Or(formula.Negate(m.fac), selVar.AsFormula()), -1)
+	m.addFormulaAsCNF(selVar.AsFormula(), weight)
 	return nil
+}
+
+// SaveState saves and returns the current solver state.
+func (m *Solver) SaveState() *SolverState {
+	return m.solver.saveState()
+}
+
+// LoadState loads the given state to the solver. ATTENTION: You can only load
+// a state which was created by this instance of the solver before the current
+// state. Only the sizes of the internal data structures are stored, meaning
+// you can go back in time and restore a solver state with fewer variables
+// and/or fewer clauses. It is not possible to import a solver state from
+// another solver or another solving execution.  Returns with an error if the
+// state is not valid on the solver.
+func (m *Solver) LoadState(state *SolverState) error {
+	err := m.solver.loadState(state)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *Solver) addFormulaAsCNF(formula f.Formula, weight int) {
+	m.result = nil
+	if m.configuration.CNFMethod == sat.CNFFactory {
+		m.addCNF(normalform.CNF(m.fac, formula), weight)
+	} else {
+		m.pgTransformation.addCNFToSolver(formula, weight)
+	}
 }
 
 func (m *Solver) addCNF(formula f.Formula, weight int) {
@@ -190,40 +223,13 @@ func (m *Solver) addCNF(formula f.Formula, weight int) {
 	case f.SortTrue:
 		break
 	case f.SortFalse, f.SortLiteral, f.SortOr:
-		m.addClause(formula, weight)
+		m.solver.addClause(formula, weight)
 	case f.SortAnd:
 		for _, op := range m.fac.Operands(formula) {
-			m.addClause(op, weight)
+			m.solver.addClause(op, weight)
 		}
 	default:
 		panic(errorx.IllegalState("input formula is not a valid CNF: %s", formula.Sprint(m.fac)))
-	}
-}
-
-func (m *Solver) addClause(formula f.Formula, weight int) {
-	clauseVec := make([]int32, f.NumberOfAtoms(m.fac, formula))
-	for i, lit := range f.Literals(m.fac, formula).Content() {
-		variable := lit.Variable()
-		index, ok := m.var2index[variable]
-		if !ok {
-			index = m.solver.newLiteral(false) >> 1
-			m.var2index[variable] = index
-			m.index2var[index] = variable
-		}
-		var litNum int32
-		if lit.IsPos() {
-			litNum = index * 2
-		} else {
-			litNum = (index * 2) ^ 1
-		}
-		clauseVec[i] = litNum
-	}
-	if weight == -1 {
-		m.solver.addHardClause(clauseVec)
-	} else {
-		m.solver.setCurrentWeight(weight)
-		m.solver.updateSumWeights(weight)
-		m.solver.addSoftClause(weight, clauseVec)
 	}
 }
 
@@ -284,7 +290,7 @@ func (m *Solver) SupportsUnweighted() bool {
 func (m *Solver) createModel(vec []bool) *model.Model {
 	var mdl []f.Literal
 	for i := 0; i < len(vec); i++ {
-		variable, ok := m.index2var[int32(i)]
+		variable, ok := m.solver.varForIndex(i)
 		if ok && !slices.Contains(m.selectorVariables, variable) {
 			if vec[i] {
 				mdl = append(mdl, variable.AsLiteral())

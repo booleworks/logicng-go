@@ -19,9 +19,9 @@ const (
 type CNFMethod byte
 
 const (
-	CNFFactorization CNFMethod = iota // formula factories CNF method
-	CNFPG                             // Plaisted-Greenbaum with NNF generation directly on solver
-	CNFFullPG                         // Plaisted-Greenbaum without NNF generation directly on solver
+	CNFFactory CNFMethod = iota // formula factories CNF method
+	CNFPG                       // Plaisted-Greenbaum with NNF generation directly on solver
+	CNFFullPG                   // Plaisted-Greenbaum without NNF generation directly on solver
 )
 
 //go:generate stringer -type=CNFMethod

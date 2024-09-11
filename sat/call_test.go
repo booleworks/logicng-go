@@ -214,7 +214,7 @@ func TestSolverCallAdditionalFormulas(t *testing.T) {
 	p := parser.New(fac)
 	for _, config := range allConfigs {
 		if config.ProofGeneration {
-			config.CNFMethod = CNFFactorization
+			config.CNFMethod = CNFFactory
 			solver := NewSolver(fac, config)
 			solver.Add(p.ParseUnsafe("a | b | c | d"))
 			solver.AddProposition(f.NewStandardProposition(p.ParseUnsafe("a => b")))

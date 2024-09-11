@@ -4,6 +4,7 @@ import (
 	"math"
 	"slices"
 
+	"github.com/booleworks/logicng-go/errorx"
 	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/handler"
@@ -18,6 +19,7 @@ type algorithm interface {
 	search(hdl handler.Handler) (result, handler.State)
 	result() int
 	newLiteral(bool) int32
+	newVar() int32
 	addHardClause(lits []int32)
 	addSoftClause(weight int, lits []int32)
 	setCurrentWeight(weight int)
@@ -25,10 +27,20 @@ type algorithm interface {
 	getCurrentWeight() int
 	setProblemType(problemType problemType)
 	getModel() []bool
+	addClause(formula f.Formula, weight int)
+	saveState() *SolverState
+	loadState(state *SolverState) error
+	literal(lit f.Literal) int32
+	addClauseVec(clauseVec []int32, weight int)
+	varForIndex(index int) (f.Variable, bool)
 }
 
 type maxSatAlgorithm struct {
+	fac                f.Factory
+	cfg                *Config
 	model              []bool
+	var2index          map[f.Variable]int32
+	index2var          map[int32]f.Variable
 	softClauses        []*softClause
 	hardClauses        []*hardClause
 	orderWeights       []int
@@ -36,8 +48,6 @@ type maxSatAlgorithm struct {
 	hardWeight         int
 	problemType        problemType
 	nbVars             int
-	nbSoft             int
-	nbHard             int
 	nbInitialVariables int
 	nbCores            int
 	nbSymmetryClauses  int
@@ -46,17 +56,25 @@ type maxSatAlgorithm struct {
 	ubCost             int
 	lbCost             int
 	currentWeight      int
+
+	stateId     int32
+	validStates []int32
 }
 
-func newAlgorithm() *maxSatAlgorithm {
+func newAlgorithm(fac f.Factory, cfg *Config) *maxSatAlgorithm {
 	return &maxSatAlgorithm{
+		fac:           fac,
+		cfg:           cfg,
+		var2index:     make(map[f.Variable]int32),
+		index2var:     make(map[int32]f.Variable),
 		hardClauses:   []*hardClause{},
 		softClauses:   []*softClause{},
 		hardWeight:    math.MaxInt,
 		problemType:   unweighted,
 		currentWeight: 1,
-		model:         make([]bool, 0),
+		model:         []bool{},
 		orderWeights:  []int{},
+		validStates:   []int32{},
 	}
 }
 
@@ -82,10 +100,12 @@ func (m *maxSatAlgorithm) innerSearch(
 	if e := event.MaxSATCallStarted; !hdl.ShouldResume(e) {
 		return resUndef, handler.Cancelation(e)
 	}
+	stateBeforeSolving := m.saveState()
 	result, state := search()
 	if e := event.MaxSatCallFinished; !hdl.ShouldResume(e) {
 		return resUndef, handler.Cancelation(e)
 	}
+	m.loadState(stateBeforeSolving)
 	m.hdl = nil
 	return result, state
 }
@@ -95,30 +115,29 @@ func (m *maxSatAlgorithm) nVars() int {
 }
 
 func (m *maxSatAlgorithm) nSoft() int {
-	return m.nbSoft
+	return len(m.softClauses)
 }
 
 func (m *maxSatAlgorithm) nHard() int {
-	return m.nbHard
+	return len(m.hardClauses)
 }
 
-func (m *maxSatAlgorithm) newVar() {
+func (m *maxSatAlgorithm) newVar() int32 {
+	n := m.nbVars
 	m.nbVars++
+	return int32(n)
 }
 
 func (m *maxSatAlgorithm) addHardClause(lits []int32) {
 	m.hardClauses = append(m.hardClauses, newHardClause(lits))
-	m.nbHard++
 }
 
 func (m *maxSatAlgorithm) addSoftClause(weight int, lits []int32) {
 	m.softClauses = append(m.softClauses, newSoftClause(lits, []int32{}, weight, sat.LitUndef))
-	m.nbSoft++
 }
 
 func (m *maxSatAlgorithm) addSoftClauseWithAssumptions(weight int, lits, vars []int32) {
 	m.softClauses = append(m.softClauses, newSoftClause(lits, vars, weight, sat.LitUndef))
-	m.nbSoft++
 }
 
 func (m *maxSatAlgorithm) newLiteral(sign bool) int32 {
@@ -245,4 +264,118 @@ func (m *maxSatAlgorithm) setProblemType(problemType problemType) {
 
 func (m *maxSatAlgorithm) getModel() []bool {
 	return m.model
+}
+
+func (m *maxSatAlgorithm) addClause(formula f.Formula, weight int) {
+	clauseVec := make([]int32, f.NumberOfAtoms(m.fac, formula))
+	for i, lit := range f.Literals(m.fac, formula).Content() {
+		variable := lit.Variable()
+		index, ok := m.var2index[variable]
+		if !ok {
+			index = m.newLiteral(false) >> 1
+			m.var2index[variable] = index
+			m.index2var[index] = variable
+		}
+		var litNum int32
+		if lit.IsPos() {
+			litNum = index * 2
+		} else {
+			litNum = (index * 2) ^ 1
+		}
+		clauseVec[i] = litNum
+		m.addClauseVec(clauseVec, weight)
+	}
+}
+
+func (m *maxSatAlgorithm) addClauseVec(clauseVec []int32, weight int) {
+	if weight == -1 {
+		m.addHardClause(clauseVec)
+	} else {
+		m.setCurrentWeight(weight)
+		m.updateSumWeights(weight)
+		m.addSoftClause(weight, clauseVec)
+	}
+}
+
+func (m *maxSatAlgorithm) literal(lit f.Literal) int32 {
+	variable := lit.Variable()
+	index, ok := m.var2index[variable]
+	if !ok {
+		index = m.newLiteral(false) >> 1
+		m.var2index[variable] = index
+		m.index2var[index] = variable
+	}
+	if lit.IsPos() {
+		return index * 2
+	} else {
+		return (index * 2) ^ 1
+	}
+}
+
+func (m *maxSatAlgorithm) saveState() *SolverState {
+	softWeights := make([]int, len(m.softClauses))
+	for i, c := range m.softClauses {
+		softWeights[i] = c.weight
+	}
+	id := m.stateId
+	m.stateId++
+	m.validStates = append(m.validStates, id)
+	return &SolverState{
+		id:            id,
+		nbVars:        m.nbVars,
+		nbHard:        len(m.hardClauses),
+		nbSoft:        len(m.softClauses),
+		ubCost:        m.ubCost,
+		currentWeight: m.currentWeight,
+		softWeights:   softWeights,
+	}
+}
+
+func (m *maxSatAlgorithm) loadState(state *SolverState) error {
+	index := -1
+	for i := len(m.validStates) - 1; i >= 0 && index == -1; i-- {
+		if m.validStates[i] == state.id {
+			index = i
+		}
+	}
+	if index == -1 {
+		return errorx.BadInput("solver state %d is not valid any more", state.id)
+	}
+	shrinkTo(&m.validStates, index+1)
+
+	shrinkTo(&m.hardClauses, state.nbHard)
+	shrinkTo(&m.softClauses, state.nbSoft)
+	m.orderWeights = []int{}
+	for i := int32(state.nbVars); i < int32(m.nbVars); i++ {
+		if v, ok := m.index2var[i]; ok {
+			delete(m.index2var, i)
+			delete(m.var2index, v)
+		}
+	}
+	m.nbVars = int(state.nbVars)
+	m.nbCores = 0
+	m.nbSymmetryClauses = 0
+	m.sumSizeCores = 0
+	m.nbSatisfiable = 0
+	m.ubCost = state.ubCost
+	m.lbCost = 0
+	m.currentWeight = state.currentWeight
+	for i := 0; i < len(m.softClauses); i++ {
+		clause := m.softClauses[i]
+		clause.relaxationVars = []int32{}
+		clause.weight = state.softWeights[i]
+		clause.assumptionVar = sat.LitUndef
+	}
+	return nil
+}
+
+func (m *maxSatAlgorithm) varForIndex(index int) (f.Variable, bool) {
+	v, ok := m.index2var[int32(index)]
+	return v, ok
+}
+
+func shrinkTo[T any](slice *[]T, newSize int) {
+	if newSize < len(*slice) {
+		*slice = (*slice)[:newSize]
+	}
 }

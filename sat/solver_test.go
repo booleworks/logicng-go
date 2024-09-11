@@ -18,7 +18,7 @@ func getSolvers(fac f.Factory) []*Solver {
 		NewSolver(fac, DefaultConfig().ClauseMin(ClauseMinNone)),
 		NewSolver(fac, DefaultConfig().ClauseMin(ClauseMinBasic)),
 		NewSolver(fac, DefaultConfig().ClauseMin(ClauseMinDeep)),
-		NewSolver(fac, DefaultConfig().CNF(CNFFactorization)),
+		NewSolver(fac, DefaultConfig().CNF(CNFFactory)),
 		NewSolver(fac, DefaultConfig().CNF(CNFPG)),
 		NewSolver(fac, DefaultConfig().CNF(CNFFullPG)),
 	}

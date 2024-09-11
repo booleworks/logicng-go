@@ -23,7 +23,7 @@ type wmsu3 struct {
 	bmo                 bool
 }
 
-func newWMSU3(config ...*Config) *wmsu3 {
+func newWMSU3(fac f.Factory, config ...*Config) *wmsu3 {
 	var cfg *Config
 	if len(config) > 0 {
 		cfg = config[0]
@@ -32,7 +32,7 @@ func newWMSU3(config ...*Config) *wmsu3 {
 		cfg.IncrementalStrategy = IncIterative
 	}
 	return &wmsu3{
-		maxSatAlgorithm:     newAlgorithm(),
+		maxSatAlgorithm:     newAlgorithm(fac, cfg),
 		solver:              nil,
 		incrementalStrategy: cfg.IncrementalStrategy,
 		encoder:             newEncoder(),
@@ -374,7 +374,7 @@ func (m *wmsu3) rebuildSolver() *sat.CoreSolver {
 }
 
 func (m *wmsu3) initRelaxation() {
-	for i := 0; i < m.nbSoft; i++ {
+	for i := 0; i < m.nSoft(); i++ {
 		l := m.newLiteral(false)
 		m.softClauses[i].relaxationVars = append(m.softClauses[i].relaxationVars, l)
 		m.softClauses[i].assumptionVar = l

@@ -4,6 +4,7 @@ import (
 	"math"
 
 	"github.com/booleworks/logicng-go/configuration"
+	"github.com/booleworks/logicng-go/sat"
 )
 
 // Algorithm encodes the different MAX-SAT algorithms.
@@ -46,6 +47,7 @@ const (
 // and weight strategy can be configured as well as flags for symmetry usage,
 // and BMO as well as the symmetry limit.
 type Config struct {
+	CNFMethod           sat.CNFMethod
 	IncrementalStrategy IncrementalStrategy
 	WeightStrategy      WeightStrategy
 	Symmetry            bool
@@ -68,6 +70,7 @@ func (Config) DefaultConfig() configuration.Config {
 // MAX-SAT configuration.
 func DefaultConfig() *Config {
 	return &Config{
+		CNFMethod:           sat.CNFPG,
 		IncrementalStrategy: IncNone,
 		WeightStrategy:      WeightNone,
 		Symmetry:            true,

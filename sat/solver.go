@@ -112,7 +112,7 @@ func (s *Solver) addWithProp(formula f.Formula, proposition f.Proposition) {
 
 func (s *Solver) addFormulaAsCNF(formula f.Formula, proposition f.Proposition) {
 	switch s.config.CNFMethod {
-	case CNFFactorization:
+	case CNFFactory:
 		s.addClauseSet(normalform.CNF(s.fac, formula), proposition)
 	case CNFPG:
 		s.pgTransformation.addCNFToSolver(formula, proposition)

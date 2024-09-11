@@ -17,7 +17,7 @@ type linearUS struct {
 	solver              *sat.CoreSolver
 }
 
-func newLinearUS(config ...*Config) *linearUS {
+func newLinearUS(fac f.Factory, config ...*Config) *linearUS {
 	var cfg *Config
 	if len(config) > 0 {
 		cfg = config[0]
@@ -25,7 +25,7 @@ func newLinearUS(config ...*Config) *linearUS {
 		cfg = DefaultConfig()
 	}
 	return &linearUS{
-		maxSatAlgorithm:     newAlgorithm(),
+		maxSatAlgorithm:     newAlgorithm(fac, cfg),
 		solver:              nil,
 		encoder:             newEncoder(),
 		incrementalStrategy: cfg.IncrementalStrategy,
@@ -157,7 +157,7 @@ func (m *linearUS) rebuildSolver() *sat.CoreSolver {
 }
 
 func (m *linearUS) initRelaxation() {
-	for i := 0; i < m.nbSoft; i++ {
+	for i := 0; i < m.nSoft(); i++ {
 		l := m.newLiteral(false)
 		m.softClauses[i].relaxationVars = append(m.softClauses[i].relaxationVars, l)
 		m.softClauses[i].assumptionVar = l

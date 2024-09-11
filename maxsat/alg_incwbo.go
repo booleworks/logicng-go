@@ -14,9 +14,9 @@ type incWBO struct {
 	firstBuild bool
 }
 
-func newIncWBO(config *Config) *incWBO {
+func newIncWBO(fac f.Factory, config *Config) *incWBO {
 	return &incWBO{
-		wbo:        newWBO(config),
+		wbo:        newWBO(fac, config),
 		encoder:    newEncoder(),
 		incSoft:    []bool{},
 		firstBuild: true,

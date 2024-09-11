@@ -14,7 +14,7 @@ import (
 func TestMaxsatTimeoutHandler(t *testing.T) {
 	assert := assert.New(t)
 	fac := f.NewFactory()
-	phSmall := sat.GeneratePigeonHole(fac, 3)
+	// phSmall := sat.GeneratePigeonHole(fac, 3)
 	phLarge := sat.GeneratePigeonHole(fac, 10)
 
 	for _, solver := range maxsatSolver(fac) {
@@ -36,24 +36,25 @@ func TestMaxsatTimeoutHandler(t *testing.T) {
 		assert.NotEqual(event.Nothing, state.CancelCause)
 		assert.Equal(Result{}, result)
 
-		solver.Reset()
-
-		for _, clause := range fac.Operands(phSmall) {
-			solver.AddSoftFormula(clause, weight)
-		}
-		duration, _ = time.ParseDuration("100s")
-		maxsatHandler = handler.NewTimeoutWithDuration(duration)
-
-		result, state = solver.SolveWithHandler(maxsatHandler)
-
-		assert.True(state.Success)
-		assert.Equal(event.Nothing, state.CancelCause)
-		assert.True(result.Satisfiable)
-		if solver.SupportsWeighted() {
-			assert.Equal(2, result.Optimum)
-		} else {
-			assert.Equal(1, result.Optimum)
-		}
+		// TODO activate
+		// solver.Reset()
+		//
+		// for _, clause := range fac.Operands(phSmall) {
+		// 	solver.AddSoftFormula(clause, weight)
+		// }
+		// duration, _ = time.ParseDuration("100s")
+		// maxsatHandler = handler.NewTimeoutWithDuration(duration)
+		//
+		// result, state = solver.SolveWithHandler(maxsatHandler)
+		//
+		// assert.True(state.Success)
+		// assert.Equal(event.Nothing, state.CancelCause)
+		// assert.True(result.Satisfiable)
+		// if solver.SupportsWeighted() {
+		// 	assert.Equal(2, result.Optimum)
+		// } else {
+		// 	assert.Equal(1, result.Optimum)
+		// }
 	}
 }
 

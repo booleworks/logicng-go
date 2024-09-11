@@ -18,7 +18,7 @@ type linearSU struct {
 	bmo         bool
 }
 
-func newLinearSU(config ...*Config) *linearSU {
+func newLinearSU(fac f.Factory, config ...*Config) *linearSU {
 	var cfg *Config
 	if len(config) > 0 {
 		cfg = config[0]
@@ -26,7 +26,7 @@ func newLinearSU(config ...*Config) *linearSU {
 		cfg = DefaultConfig()
 	}
 	return &linearSU{
-		maxSatAlgorithm: newAlgorithm(),
+		maxSatAlgorithm: newAlgorithm(fac, cfg),
 		solver:          nil,
 		encoder:         newEncoder(),
 		bmoMode:         cfg.BMO,
