@@ -81,16 +81,16 @@ func (c *modelCountCollector) Commit(hdl handler.Handler) handler.State {
 	mul := big.NewInt(1).Mul(big.NewInt(int64(len(c.uncommittedModels))), c.dontCareFactor)
 	c.committedCount.Add(c.committedCount, mul)
 	c.clearUncommitted()
-	if !hdl.ShouldResume(event.ModelEnumerationCommit) {
-		return handler.Cancelation(event.ModelEnumerationCommit)
+	if e := event.ModelEnumerationCommit; !hdl.ShouldResume(e) {
+		return handler.Cancelation(e)
 	}
 	return succ
 }
 
 func (c *modelCountCollector) Rollback(hdl handler.Handler) handler.State {
 	c.clearUncommitted()
-	if !hdl.ShouldResume(event.ModelEnumerationRollback) {
-		return handler.Cancelation(event.ModelEnumerationRollback)
+	if e := event.ModelEnumerationRollback; !hdl.ShouldResume(e) {
+		return handler.Cancelation(e)
 	}
 	return succ
 }

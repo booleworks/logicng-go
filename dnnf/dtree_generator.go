@@ -4,21 +4,34 @@ import (
 	"math"
 
 	"github.com/booleworks/logicng-go/errorx"
+	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
+	"github.com/booleworks/logicng-go/handler"
 	"github.com/booleworks/logicng-go/normalform"
 )
 
-func generateMinFillDtree(fac f.Factory, cnf f.Formula) dtree {
+func generateMinFillDtree(fac f.Factory, cnf f.Formula, hdl handler.Handler) (dtree, handler.State) {
 	graph := newGraph(fac, cnf)
-	ordering := graph.getMinFillOrdering()
-	return generateWithEliminatingOrder(fac, cnf, ordering)
+	if e := event.DnnfDtreeMinFillGraphInitialized; !hdl.ShouldResume(e) {
+		return nil, handler.Cancelation(e)
+	}
+	ordering, state := graph.getMinFillOrdering(hdl)
+	if !state.Success {
+		return nil, state
+	}
+	return generateWithEliminatingOrder(fac, cnf, ordering, hdl)
 }
 
-func generateWithEliminatingOrder(fac f.Factory, cnf f.Formula, ordering []f.Variable) dtree {
+func generateWithEliminatingOrder(
+	fac f.Factory,
+	cnf f.Formula,
+	ordering []f.Variable,
+	hdl handler.Handler,
+) (dtree, handler.State) {
 	if !normalform.IsCNF(fac, cnf) || cnf.IsAtomic() {
 		panic(errorx.IllegalState("cannot generate DTree from a non-cnf or atomic formula"))
 	} else if cnf.Sort() != f.SortAnd {
-		return newDtreeLeaf(fac, 0, cnf)
+		return newDtreeLeaf(fac, 0, cnf), succ
 	}
 
 	ops := fac.Operands(cnf)
@@ -28,6 +41,9 @@ func generateWithEliminatingOrder(fac f.Factory, cnf f.Formula, ordering []f.Var
 	}
 
 	for _, variable := range ordering {
+		if e := event.DnnfDtreeProcessingNextOrderVar; !hdl.ShouldResume(e) {
+			return nil, handler.Cancelation(e)
+		}
 		var gamma []dtree
 		newSigma := make([]dtree, 0, len(sigma))
 		for _, tree := range sigma {
@@ -42,7 +58,7 @@ func generateWithEliminatingOrder(fac f.Factory, cnf f.Formula, ordering []f.Var
 			sigma = append(sigma, compose(fac, gamma))
 		}
 	}
-	return compose(fac, sigma)
+	return compose(fac, sigma), succ
 }
 
 func compose(fac f.Factory, trees []dtree) dtree {
@@ -111,7 +127,7 @@ func newGraph(fac f.Factory, cnf f.Formula) *graph {
 	return &graph
 }
 
-func (g *graph) getMinFillOrdering() []f.Variable {
+func (g *graph) getMinFillOrdering(hdl handler.Handler) ([]f.Variable, handler.State) {
 	fillAdjMatrix := g.getCopyOfAdjMatrix()
 	fillEdgeList := g.getCopyOfEdgeList()
 
@@ -120,6 +136,9 @@ func (g *graph) getMinFillOrdering() []f.Variable {
 	treewidth := 0
 
 	for iteration := 0; iteration < g.numberOfVertices; iteration++ {
+		if e := event.DnnfDtreeMinFillNewIteration; !hdl.ShouldResume(e) {
+			return nil, handler.Cancelation(e)
+		}
 		var possiblyBestVertices []int32
 		minEdges := math.MaxInt
 		for currentVertex := 0; currentVertex < g.numberOfVertices; currentVertex++ {
@@ -188,7 +207,7 @@ func (g *graph) getMinFillOrdering() []f.Variable {
 		processed[bestVertex] = true
 		ordering[iteration] = g.vertices[bestVertex]
 	}
-	return ordering
+	return ordering, succ
 }
 
 func (g *graph) getCopyOfAdjMatrix() [][]bool {

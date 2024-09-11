@@ -66,8 +66,8 @@ func (s *Solver) ComputeBackbone(
 func (s *Solver) ComputeBackboneWithHandler(
 	fac f.Factory, variables []f.Variable, hdl handler.Handler, backboneSort ...BackboneSort,
 ) (*Backbone, handler.State) {
-	if !hdl.ShouldResume(event.BackboneComputationStarted) {
-		return nil, handler.Cancelation(event.BackboneComputationStarted)
+	if e := event.BackboneComputationStarted; !hdl.ShouldResume(e) {
+		return nil, handler.Cancelation(e)
 	}
 	m := s.core
 	var bbSort BackboneSort

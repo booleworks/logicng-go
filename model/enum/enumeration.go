@@ -109,16 +109,16 @@ func (c *modelEnumCollector) AddModel(
 func (c *modelEnumCollector) Commit(hdl handler.Handler) handler.State {
 	c.committedModels = append(c.committedModels, c.expandUncommittedModels()...)
 	c.uncommittedModels = make([][]f.Literal, 0, 4)
-	if !hdl.ShouldResume(event.ModelEnumerationCommit) {
-		return handler.Cancelation(event.ModelEnumerationCommit)
+	if e := event.ModelEnumerationCommit; !hdl.ShouldResume(e) {
+		return handler.Cancelation(e)
 	}
 	return succ
 }
 
 func (c *modelEnumCollector) Rollback(hdl handler.Handler) handler.State {
 	c.uncommittedModels = make([][]f.Literal, 0, 4)
-	if !hdl.ShouldResume(event.ModelEnumerationRollback) {
-		return handler.Cancelation(event.ModelEnumerationRollback)
+	if e := event.ModelEnumerationRollback; !hdl.ShouldResume(e) {
+		return handler.Cancelation(e)
 	}
 	return succ
 }

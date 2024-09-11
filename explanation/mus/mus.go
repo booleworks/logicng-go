@@ -27,8 +27,8 @@ func ComputeInsertionBased(fac f.Factory, propositions *[]f.Proposition) (*e.Uns
 func ComputeInsertionBasedWithHandler(
 	fac f.Factory, propositions *[]f.Proposition, hdl handler.Handler,
 ) (*e.UnsatCore, handler.State, error) {
-	if !hdl.ShouldResume(event.MusComputationStarted) {
-		return nil, handler.Cancelation(event.MusComputationStarted), nil
+	if e := event.MusComputationStarted; !hdl.ShouldResume(e) {
+		return nil, handler.Cancelation(e), nil
 	}
 	currentFormula := make([]f.Proposition, len(*propositions))
 	copy(currentFormula, *propositions)
@@ -90,8 +90,8 @@ func ComputeDeletionBased(fac f.Factory, propositions *[]f.Proposition) (*e.Unsa
 func ComputeDeletionBasedWithHandler(
 	fac f.Factory, propositions *[]f.Proposition, hdl handler.Handler,
 ) (*e.UnsatCore, handler.State, error) {
-	if !hdl.ShouldResume(event.MusComputationStarted) {
-		return nil, handler.Cancelation(event.MusComputationStarted), nil
+	if e := event.MusComputationStarted; !hdl.ShouldResume(e) {
+		return nil, handler.Cancelation(e), nil
 	}
 	mus := make([]f.Proposition, 0, len(*propositions))
 	solverStates := make([]*s.SolverState, len(*propositions))

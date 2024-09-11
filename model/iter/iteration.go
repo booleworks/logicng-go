@@ -47,8 +47,8 @@ func (m *ModelIterator[R]) Iterate(
 	newCollector func(fac f.Factory, knownVars, dontCareVars, additionalVars *f.VarSet) Collector[R],
 	emptyElement R,
 ) (R, handler.State) {
-	if !m.hdl.ShouldResume(event.ModelEnumerationStarted) {
-		return emptyElement, handler.Cancelation(event.ModelEnumerationStarted)
+	if e := event.ModelEnumerationStarted; !m.hdl.ShouldResume(e) {
+		return emptyElement, handler.Cancelation(e)
 	}
 	knownVariables := solver.CoreSolver().KnownVariables(solver.Factory())
 	additionalVarsNotOnSolver := difference(m.additionalVars, knownVariables)

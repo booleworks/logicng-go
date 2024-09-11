@@ -387,8 +387,8 @@ func (m *CoreSolver) addAtMost(ps []int32, rhs int) {
 // Solve solves the formula on the solver with the given handler.  Returns the
 // result as tristate and the handler state.
 func (m *CoreSolver) Solve(hdl handler.Handler) (f.Tristate, handler.State) {
-	if !hdl.ShouldResume(event.SatCallStarted) {
-		return f.TristateFalse, handler.Cancelation(event.SatCallStarted)
+	if e := event.SatCallStarted; !hdl.ShouldResume(e) {
+		return f.TristateFalse, handler.Cancelation(e)
 	}
 	m.model = []bool{}
 	m.conflict = []int32{}
@@ -415,8 +415,8 @@ func (m *CoreSolver) Solve(hdl handler.Handler) (f.Tristate, handler.State) {
 		m.ok = false
 	}
 	m.cancelUntil(0)
-	if !hdl.ShouldResume(event.SatCallFinished) {
-		return f.TristateFalse, handler.Cancelation(event.SatCallFinished)
+	if e := event.SatCallFinished; !hdl.ShouldResume(e) {
+		return f.TristateFalse, handler.Cancelation(e)
 	}
 	return status, succ
 }
@@ -439,8 +439,8 @@ func (m *CoreSolver) search(hdl handler.Handler) (f.Tristate, handler.State) {
 	for {
 		confl := m.propagate()
 		if confl != nil {
-			if !hdl.ShouldResume(event.SatConflictDetected) {
-				return f.TristateUndef, handler.Cancelation(event.SatConflictDetected)
+			if e := event.SatConflictDetected; !hdl.ShouldResume(e) {
+				return f.TristateUndef, handler.Cancelation(e)
 			}
 			m.conflicts++
 			m.conflictsRestarts++

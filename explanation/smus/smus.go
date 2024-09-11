@@ -69,8 +69,8 @@ func ComputeWithHandler(
 	hdl handler.Handler,
 	additionalConstraints ...f.Formula,
 ) ([]f.Proposition, handler.State) {
-	if !hdl.ShouldResume(event.SmusComputationStarted) {
-		return nil, handler.Cancelation(event.SmusComputationStarted)
+	if e := event.SmusComputationStarted; !hdl.ShouldResume(e) {
+		return nil, handler.Cancelation(e)
 	}
 	growSolver := sat.NewSolver(fac)
 	for _, formula := range additionalConstraints {

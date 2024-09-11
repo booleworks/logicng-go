@@ -153,7 +153,9 @@ func FactorizedCNF(fac f.Factory, formula f.Formula) f.Formula {
 // form.  The given handler can be used to cancel the factorization.  Returns
 // the CNF and the handler state.
 func FactorizedCNFWithHandler(fac f.Factory, formula f.Formula, hdl handler.Handler) (f.Formula, handler.State) {
-	hdl.ShouldResume(event.FactorizationStarted)
+	if e := event.FactorizationStarted; !hdl.ShouldResume(e) {
+		return 0, handler.Cancelation(e)
+	}
 	return factorizedCNFRec(fac, formula, hdl)
 }
 
@@ -212,8 +214,8 @@ func factorizedCNFRec(fac f.Factory, formula f.Formula, hdl handler.Handler) (f.
 }
 
 func distributeCNF(fac f.Factory, f1, f2 f.Formula, hdl handler.Handler) (f.Formula, handler.State) {
-	if !hdl.ShouldResume(event.DistributionPerformed) {
-		return 0, handler.Cancelation(event.DistributionPerformed)
+	if e := event.DistributionPerformed; !hdl.ShouldResume(e) {
+		return 0, handler.Cancelation(e)
 	}
 	if f1.Sort() == f.SortAnd || f2.Sort() == f.SortAnd {
 		nops := make([]f.Formula, 0)
@@ -236,8 +238,8 @@ func distributeCNF(fac f.Factory, f1, f2 f.Formula, hdl handler.Handler) (f.Form
 		return fac.And(nops...), succ
 	}
 	clause := fac.Or(f1, f2)
-	if !hdl.ShouldResume(event.FactorizationCreatedClause) {
-		return clause, handler.Cancelation(event.FactorizationCreatedClause)
+	if e := event.FactorizationCreatedClause; !hdl.ShouldResume(e) {
+		return clause, handler.Cancelation(e)
 	}
 	return clause, succ
 }

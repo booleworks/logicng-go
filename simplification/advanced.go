@@ -103,8 +103,8 @@ func AdvancedWithHandler(
 	config ...*Config,
 ) (f.Formula, handler.State) {
 	cfg := determineConfig(fac, config)
-	if !hdl.ShouldResume(event.AdvancedSimplificationStarted) {
-		return 0, handler.Cancelation(event.AdvancedSimplificationStarted)
+	if e := event.AdvancedSimplificationStarted; !hdl.ShouldResume(e) {
+		return 0, handler.Cancelation(e)
 	}
 	simplified := formula
 	var backboneLiterals []f.Literal

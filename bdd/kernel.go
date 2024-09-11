@@ -442,8 +442,8 @@ func (k *Kernel) applyRec(l, r int32, op operand) (int32, bool) {
 }
 
 func (k *Kernel) addRef(root int32, hdl handler.Handler) (int32, handler.State) {
-	if !hdl.ShouldResume(event.BddNewRefAdded) {
-		return -1, handler.Cancelation(event.BddNewRefAdded)
+	if e := event.BddNewRefAdded; !hdl.ShouldResume(e) {
+		return -1, handler.Cancelation(e)
 	}
 	if root < 2 {
 		return root, succ

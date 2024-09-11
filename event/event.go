@@ -21,6 +21,7 @@ var (
 	BackboneComputationStarted    = event{"Backbone Computation Started"}
 	AdvancedSimplificationStarted = event{"Advanced Simplification Started"}
 	PrimeComputationStarted       = event{"Prime Computation Started"}
+	ImplicantReductionStarted     = event{"Implicant Reduction Started"}
 	ImplicateReductionStarted     = event{"Implicate Reduction Started"}
 	MusComputationStarted         = event{"MUS Computation Started"}
 	SmusComputationStarted        = event{"SMUS Computation Started"}
@@ -36,6 +37,9 @@ var (
 	DistributionPerformed               = event{"Distribution Performed"}
 	BddNewRefAdded                      = event{"BDD New Ref Added"}
 	DnnfShannonExpansion                = event{"DNNF Shannon Expansion"}
+	DnnfDtreeMinFillGraphInitialized    = event{"DNNF DTree MinFill Graph initialized"}
+	DnnfDtreeMinFillNewIteration        = event{"DNNF DTree MinFill new iteration"}
+	DnnfDtreeProcessingNextOrderVar     = event{"DNNF DTree processing next order variable"}
 	SatConflictDetected                 = event{"SAT Conflict Detected"}
 	SubsumptionStartingUbTreeGeneration = event{"Subsumption Starting UB Tree Generation"}
 	SubsumptionAddedNewSet              = event{"Subsumption Added New Set"}

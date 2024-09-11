@@ -111,16 +111,16 @@ func (c *modelEnumBddCollector) Commit(hdl handler.Handler) handler.State {
 		c.committedModels = c.committedModels.Or(modelBdd)
 	}
 	c.uncommittedModels = make([]*model.Model, 0)
-	if !hdl.ShouldResume(event.ModelEnumerationCommit) {
-		return handler.Cancelation(event.ModelEnumerationCommit)
+	if e := event.ModelEnumerationCommit; !hdl.ShouldResume(e) {
+		return handler.Cancelation(e)
 	}
 	return succ
 }
 
 func (c *modelEnumBddCollector) Rollback(hdl handler.Handler) handler.State {
 	c.uncommittedModels = make([]*model.Model, 0)
-	if !hdl.ShouldResume(event.ModelEnumerationRollback) {
-		return handler.Cancelation(event.ModelEnumerationRollback)
+	if e := event.ModelEnumerationRollback; !hdl.ShouldResume(e) {
+		return handler.Cancelation(e)
 	}
 	return succ
 }

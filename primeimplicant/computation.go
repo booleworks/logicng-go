@@ -82,8 +82,8 @@ func compute(
 	maximize bool,
 	hdl handler.Handler,
 ) (*PrimeResult, handler.State) {
-	if !hdl.ShouldResume(event.PrimeComputationStarted) {
-		return nil, handler.Cancelation(event.PrimeComputationStarted)
+	if e := event.PrimeComputationStarted; !hdl.ShouldResume(e) {
+		return nil, handler.Cancelation(e)
 	}
 	completeImplicants := coverSort == CoverImplicants
 	var formulaForComputation f.Formula
@@ -234,8 +234,8 @@ func newPrimeReduction(fac f.Factory, formula f.Formula) *primeReduction {
 }
 
 func (p *primeReduction) reduceImplicant(implicant []f.Literal, hdl handler.Handler) ([]f.Literal, handler.State) {
-	if !hdl.ShouldResume(event.ImplicateReductionStarted) {
-		return nil, handler.Cancelation(event.ImplicateReductionStarted)
+	if e := event.ImplicantReductionStarted; !hdl.ShouldResume(e) {
+		return nil, handler.Cancelation(e)
 	}
 	primeImplicant := f.NewMutableLitSet(implicant...)
 	for _, lit := range implicant {
@@ -254,8 +254,8 @@ func (p *primeReduction) reduceImplicant(implicant []f.Literal, hdl handler.Hand
 func (p *primeReduction) reduceImplicate(
 	fac f.Factory, implicate []f.Literal, hdl handler.Handler,
 ) ([]f.Literal, handler.State) {
-	if !hdl.ShouldResume(event.ImplicateReductionStarted) {
-		return nil, handler.Cancelation(event.ImplicateReductionStarted)
+	if e := event.ImplicateReductionStarted; !hdl.ShouldResume(e) {
+		return nil, handler.Cancelation(e)
 	}
 	primeImplicate := f.NewMutableLitSet(implicate...)
 	for _, lit := range implicate {

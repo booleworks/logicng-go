@@ -86,8 +86,8 @@ func (s *Solver) maximize(
 	relevantIndices []int32,
 	hdl handler.Handler,
 ) (*model.Model, handler.State) {
-	if !hdl.ShouldResume(event.OptimizationFunctionStarted) {
-		return nil, handler.Cancelation(event.OptimizationFunctionStarted)
+	if e := event.OptimizationFunctionStarted; !hdl.ShouldResume(e) {
+		return nil, handler.Cancelation(e)
 	}
 	fac := s.fac
 	selectorMap := make(map[f.Variable]f.Literal)

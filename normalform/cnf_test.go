@@ -180,6 +180,7 @@ func TestCNFWithHandler(t *testing.T) {
 	assert.NotEqual(event.Nothing, state.CancelCause)
 
 	formula = p.ParseUnsafe("~(a | b)")
+	handler = NewFactorizationHandler(-1, 2)
 	cnf, state = FactorizedCNFWithHandler(fac, formula, handler)
 	assert.Equal(p.ParseUnsafe("~a & ~b"), cnf)
 	assert.True(state.Success)

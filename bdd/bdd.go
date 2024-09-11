@@ -34,8 +34,8 @@ func Compile(fac f.Factory, formula f.Formula) *BDD {
 // bddHandler.  The handler can cancel the BDD creation based on the number of
 // nodes created during the BDD compilation process.
 func CompileWithHandler(fac f.Factory, formula f.Formula, hdl handler.Handler) (*BDD, handler.State) {
-	if !hdl.ShouldResume(event.BddComputationStarted) {
-		return nil, handler.Cancelation(event.BddComputationStarted)
+	if e := event.BddComputationStarted; !hdl.ShouldResume(e) {
+		return nil, handler.Cancelation(e)
 	}
 	varNum := int32(f.Variables(fac, formula).Size())
 	kernel := NewKernel(fac, varNum, varNum*30, varNum*20)
@@ -63,7 +63,9 @@ func CompileWithVarOrderAndHandler(
 	order []f.Variable,
 	hdl handler.Handler,
 ) (*BDD, handler.State) {
-	hdl.ShouldResume(event.BddComputationStarted)
+	if e := event.BddComputationStarted; !hdl.ShouldResume(e) {
+		return nil, handler.Cancelation(e)
+	}
 	varNum := len(order)
 	kernel := NewKernelWithOrdering(fac, order, int32(varNum)*30, int32(varNum)*20)
 	bddIndex, state := compile(fac, formula, kernel, hdl)
@@ -89,7 +91,9 @@ func CompileWithKernelAndHandler(
 	kernel *Kernel,
 	hdl handler.Handler,
 ) (*BDD, handler.State) {
-	hdl.ShouldResume(event.BddComputationStarted)
+	if e := event.BddComputationStarted; !hdl.ShouldResume(e) {
+		return nil, handler.Cancelation(e)
+	}
 	bddIndex, state := compile(fac, formula, kernel, hdl)
 	if !state.Success {
 		return nil, state

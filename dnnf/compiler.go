@@ -37,13 +37,12 @@ func CompileWithHandler(fac f.Factory, formula f.Formula, hdl handler.Handler) (
 
 type compiler struct {
 	fac               f.Factory
-	cnf               f.Formula
+	originalCNF       f.Formula
 	unitClauses       f.Formula
 	nonUnitClauses    f.Formula
 	solver            sat.DnnfSatSolver
 	numberOfVariables int32
 	cache             *treemap.Map
-	hdl               handler.Handler
 	localCacheKeys    [][]*bitset
 	localOccurrences  [][][]int32
 }
@@ -59,7 +58,7 @@ func newCompiler(fac f.Factory, formula f.Formula) *compiler {
 	units, nonUnits := initializeClauses(fac, formula)
 	compiler := compiler{
 		fac:               fac,
-		cnf:               formula,
+		originalCNF:       formula,
 		unitClauses:       units,
 		nonUnitClauses:    nonUnits,
 		solver:            sat.NewDnnfSolver(fac, numVars),
@@ -92,10 +91,13 @@ func bitsetComp(a, b interface{}) int {
 }
 
 func (c *compiler) compile(hdl handler.Handler) (f.Formula, handler.State) {
-	if !sat.IsSatisfiable(c.fac, c.cnf) {
+	if !sat.IsSatisfiable(c.fac, c.originalCNF) {
 		return c.fac.Falsum(), succ
 	}
-	dTree := c.generateDtree(c.fac)
+	dTree, state := c.generateDtree(c.fac, hdl)
+	if !state.Success {
+		return 0, state
+	}
 	return c.compileWithTree(dTree, hdl)
 }
 
@@ -119,30 +121,31 @@ func initializeClauses(fac f.Factory, cnf f.Formula) (f.Formula, f.Formula) {
 	return fac.And(units...), fac.And(nonUnits...)
 }
 
-func (c *compiler) generateDtree(fac f.Factory) dtree {
+func (c *compiler) generateDtree(fac f.Factory, hdl handler.Handler) (dtree, handler.State) {
 	if c.nonUnitClauses.IsAtomic() {
-		return nil
+		return nil, succ
 	}
-	tree := generateMinFillDtree(fac, c.nonUnitClauses)
+	tree, state := generateMinFillDtree(fac, c.nonUnitClauses, hdl)
+	if !state.Success {
+		return nil, state
+	}
 	tree.initialize(c.solver)
-	return tree
+	return tree, succ
 }
 
 func (c *compiler) compileWithTree(dtree dtree, hdl handler.Handler) (f.Formula, handler.State) {
 	if c.nonUnitClauses.IsAtomic() {
-		return c.cnf, succ
+		return c.originalCNF, succ
 	}
 	if !c.solver.Start() {
 		return c.fac.Falsum(), succ
 	}
 	c.initializeCaches(dtree)
-	c.hdl = hdl
-	if !hdl.ShouldResume(event.DnnfComputationStarted) {
-		return 0, handler.Cancelation(event.DnnfComputationStarted)
+	if e := event.DnnfComputationStarted; !hdl.ShouldResume(e) {
+		return 0, handler.Cancelation(e)
 	}
 
-	result, state := c.cnf2ddnnf(dtree)
-	c.hdl = nil
+	result, state := c.cnf2ddnnf(dtree, hdl)
 	if !state.Success {
 		return 0, state
 	} else {
@@ -153,7 +156,7 @@ func (c *compiler) compileWithTree(dtree dtree, hdl handler.Handler) (f.Formula,
 func (c *compiler) initializeCaches(dtree dtree) {
 	depth := dtree.depth() + 1
 	sep := dtree.widestSeparator() + 1
-	variables := f.Variables(c.fac, c.cnf).Size()
+	variables := f.Variables(c.fac, c.originalCNF).Size()
 
 	c.localCacheKeys = make([][]*bitset, depth)
 	for i := 0; i < depth; i++ {
@@ -174,11 +177,11 @@ func (c *compiler) initializeCaches(dtree dtree) {
 	}
 }
 
-func (c *compiler) cnf2ddnnf(tree dtree) (f.Formula, handler.State) {
-	return c.cnf2ddnnfInner(tree, 0)
+func (c *compiler) cnf2ddnnf(tree dtree, hdl handler.Handler) (f.Formula, handler.State) {
+	return c.cnf2ddnnfInner(tree, 0, hdl)
 }
 
-func (c *compiler) cnf2ddnnfInner(tree dtree, currentShannons int) (f.Formula, handler.State) {
+func (c *compiler) cnf2ddnnfInner(tree dtree, currentShannons int, hdl handler.Handler) (f.Formula, handler.State) {
 	separator := tree.dynamicSeparator()
 	implied := c.newlyImpliedLiterals(tree.staticVarSet())
 
@@ -187,17 +190,17 @@ func (c *compiler) cnf2ddnnfInner(tree dtree, currentShannons int) (f.Formula, h
 		case *dtreeLeaf:
 			return c.fac.And(implied, c.leaf2ddnnf(node)), succ
 		default:
-			return c.conjoin(implied, node.(*dtreeNode), currentShannons)
+			return c.conjoin(implied, node.(*dtreeNode), currentShannons, hdl)
 		}
 	} else {
 		variable := c.chooseShannonVariable(tree, separator, currentShannons)
-		if !c.hdl.ShouldResume(event.DnnfShannonExpansion) {
-			return 0, handler.Cancelation(event.DnnfShannonExpansion)
+		if e := event.DnnfShannonExpansion; !hdl.ShouldResume(e) {
+			return 0, handler.Cancelation(e)
 		}
 
 		positiveDnnf := c.fac.Falsum()
 		if c.solver.Decide(variable, true) {
-			res, state := c.cnf2ddnnfInner(tree, currentShannons+1)
+			res, state := c.cnf2ddnnfInner(tree, currentShannons+1, hdl)
 			if !state.Success {
 				return 0, state
 			} else {
@@ -207,7 +210,7 @@ func (c *compiler) cnf2ddnnfInner(tree dtree, currentShannons int) (f.Formula, h
 		c.solver.UndoDecide(variable)
 		if positiveDnnf.Sort() == f.SortFalse {
 			if c.solver.AtAssertionLevel() && c.solver.AssertCdLiteral() {
-				return c.cnf2ddnnf(tree)
+				return c.cnf2ddnnf(tree, hdl)
 			} else {
 				return c.fac.Falsum(), succ
 			}
@@ -215,7 +218,7 @@ func (c *compiler) cnf2ddnnfInner(tree dtree, currentShannons int) (f.Formula, h
 
 		negativeDnnf := c.fac.Falsum()
 		if c.solver.Decide(variable, false) {
-			res, state := c.cnf2ddnnfInner(tree, currentShannons+1)
+			res, state := c.cnf2ddnnfInner(tree, currentShannons+1, hdl)
 			if !state.Success {
 				return 0, state
 			} else {
@@ -225,7 +228,7 @@ func (c *compiler) cnf2ddnnfInner(tree dtree, currentShannons int) (f.Formula, h
 		c.solver.UndoDecide(variable)
 		if negativeDnnf == c.fac.Falsum() {
 			if c.solver.AtAssertionLevel() && c.solver.AssertCdLiteral() {
-				return c.cnf2ddnnf(tree)
+				return c.cnf2ddnnf(tree, hdl)
 			} else {
 				return c.fac.Falsum(), succ
 			}
@@ -261,18 +264,20 @@ func (c *compiler) chooseShannonVariable(tree dtree, separator *bitset, currentS
 	return max
 }
 
-func (c *compiler) conjoin(implied f.Formula, tree *dtreeNode, currentShannons int) (f.Formula, handler.State) {
+func (c *compiler) conjoin(
+	implied f.Formula, tree *dtreeNode, currentShannons int, hdl handler.Handler,
+) (f.Formula, handler.State) {
 	if implied.Sort() == f.SortFalse {
 		return c.fac.Falsum(), succ
 	}
-	left, state := c.cnfAux(tree.left, currentShannons)
+	left, state := c.cnfAux(tree.left, currentShannons, hdl)
 	if !state.Success {
 		return 0, state
 	}
 	if left.Sort() == f.SortFalse {
 		return c.fac.Falsum(), succ
 	}
-	right, state := c.cnfAux(tree.right, currentShannons)
+	right, state := c.cnfAux(tree.right, currentShannons, hdl)
 	if !state.Success {
 		return 0, state
 	}
@@ -282,7 +287,7 @@ func (c *compiler) conjoin(implied f.Formula, tree *dtreeNode, currentShannons i
 	return c.fac.And(implied, left, right), succ
 }
 
-func (c *compiler) cnfAux(tree dtree, currentShannons int) (f.Formula, handler.State) {
+func (c *compiler) cnfAux(tree dtree, currentShannons int, hdl handler.Handler) (f.Formula, handler.State) {
 	switch node := tree.(type) {
 	case *dtreeLeaf:
 		return c.leaf2ddnnf(node), succ
@@ -291,7 +296,7 @@ func (c *compiler) cnfAux(tree dtree, currentShannons int) (f.Formula, handler.S
 		if val, ok := c.cache.Get(key); ok {
 			return val.(f.Formula), succ
 		} else {
-			dnnf, state := c.cnf2ddnnf(tree)
+			dnnf, state := c.cnf2ddnnf(tree, hdl)
 			if !state.Success {
 				return 0, state
 			}

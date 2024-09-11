@@ -101,8 +101,8 @@ func generateSubsumedUBTree(fac f.Factory, formula f.Formula, hdl handler.Handle
 		}
 		terms.(*arraylist.List).Add(lits)
 	}
-	if !hdl.ShouldResume(event.SubsumptionStartingUbTreeGeneration) {
-		return nil, handler.Cancelation(event.SubsumptionStartingUbTreeGeneration)
+	if e := event.SubsumptionStartingUbTreeGeneration; !hdl.ShouldResume(e) {
+		return nil, handler.Cancelation(e)
 	}
 	ubTree := newUbtree()
 	e := event.Nothing
@@ -111,8 +111,8 @@ func generateSubsumedUBTree(fac f.Factory, formula f.Formula, hdl handler.Handle
 			set := _set.(*f.LitSet)
 			if ubTree.firstSubset(set) == nil {
 				ubTree.addSet(set)
-				if !hdl.ShouldResume(event.SubsumptionAddedNewSet) {
-					e = event.SubsumptionAddedNewSet
+				if ev := event.SubsumptionAddedNewSet; !hdl.ShouldResume(ev) {
+					e = ev
 					return
 				}
 			}

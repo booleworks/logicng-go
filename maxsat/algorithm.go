@@ -79,12 +79,12 @@ func (m *maxSatAlgorithm) innerSearch(
 	search func() (result, handler.State),
 ) (result, handler.State) {
 	m.hdl = hdl
-	if !hdl.ShouldResume(event.MaxSATCallStarted) {
-		return resUndef, handler.Cancelation(event.MaxSATCallStarted)
+	if e := event.MaxSATCallStarted; !hdl.ShouldResume(e) {
+		return resUndef, handler.Cancelation(e)
 	}
 	result, state := search()
-	if !hdl.ShouldResume(event.MaxSatCallFinished) {
-		return resUndef, handler.Cancelation(event.MaxSatCallFinished)
+	if e := event.MaxSatCallFinished; !hdl.ShouldResume(e) {
+		return resUndef, handler.Cancelation(e)
 	}
 	m.hdl = nil
 	return result, state

@@ -53,8 +53,8 @@ func FactorizedDNF(fac f.Factory, formula f.Formula) f.Formula {
 // handler can be used to cancel the factorization.  Returns the DNF and
 // the handler state.
 func FactorizedDNFWithHandler(fac f.Factory, formula f.Formula, hdl handler.Handler) (f.Formula, handler.State) {
-	if !hdl.ShouldResume(event.FactorizationStarted) {
-		return 0, handler.Cancelation(event.FactorizationStarted)
+	if e := event.FactorizationStarted; !hdl.ShouldResume(e) {
+		return 0, handler.Cancelation(e)
 	}
 	return factorizedDNFRec(fac, formula, hdl)
 }
@@ -113,8 +113,8 @@ func factorizedDNFRec(fac f.Factory, formula f.Formula, hdl handler.Handler) (f.
 }
 
 func distributeDNF(fac f.Factory, f1, f2 f.Formula, hdl handler.Handler) (f.Formula, handler.State) {
-	if !hdl.ShouldResume(event.DistributionPerformed) {
-		return 0, handler.Cancelation(event.DistributionPerformed)
+	if e := event.DistributionPerformed; !hdl.ShouldResume(e) {
+		return 0, handler.Cancelation(e)
 	}
 	if f1.Sort() == f.SortOr || f2.Sort() == f.SortOr {
 		nops := make([]f.Formula, 0)
@@ -137,8 +137,8 @@ func distributeDNF(fac f.Factory, f1, f2 f.Formula, hdl handler.Handler) (f.Form
 		return fac.Or(nops...), succ
 	}
 	clause := fac.And(f1, f2)
-	if !hdl.ShouldResume(event.FactorizationCreatedClause) {
-		return clause, handler.Cancelation(event.FactorizationCreatedClause)
+	if e := event.FactorizationCreatedClause; !hdl.ShouldResume(e) {
+		return clause, handler.Cancelation(e)
 	}
 	return clause, succ
 }
