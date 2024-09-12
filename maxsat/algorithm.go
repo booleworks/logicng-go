@@ -105,7 +105,7 @@ func (m *maxSatAlgorithm) innerSearch(
 	if e := event.MaxSatCallFinished; !hdl.ShouldResume(e) {
 		return resUndef, handler.Cancelation(e)
 	}
-	m.loadState(stateBeforeSolving)
+	_ = m.loadState(stateBeforeSolving)
 	m.hdl = nil
 	return result, state
 }
@@ -141,9 +141,7 @@ func (m *maxSatAlgorithm) addSoftClauseWithAssumptions(weight int, lits, vars []
 }
 
 func (m *maxSatAlgorithm) newLiteral(sign bool) int32 {
-	p := sat.MkLit(int32(m.nVars()), sign)
-	m.newVar()
-	return p
+	return sat.MkLit(m.newVar(), sign)
 }
 
 func (m *maxSatAlgorithm) updateSumWeights(weight int) {
@@ -283,8 +281,8 @@ func (m *maxSatAlgorithm) addClause(formula f.Formula, weight int) {
 			litNum = (index * 2) ^ 1
 		}
 		clauseVec[i] = litNum
-		m.addClauseVec(clauseVec, weight)
 	}
+	m.addClauseVec(clauseVec, weight)
 }
 
 func (m *maxSatAlgorithm) addClauseVec(clauseVec []int32, weight int) {
@@ -352,7 +350,7 @@ func (m *maxSatAlgorithm) loadState(state *SolverState) error {
 			delete(m.var2index, v)
 		}
 	}
-	m.nbVars = int(state.nbVars)
+	m.nbVars = state.nbVars
 	m.nbCores = 0
 	m.nbSymmetryClauses = 0
 	m.sumSizeCores = 0

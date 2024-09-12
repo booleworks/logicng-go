@@ -47,7 +47,7 @@ func (m *linearUS) search(hdl handler.Handler) (result, handler.State) {
 
 func (m *linearUS) none() (result, handler.State) {
 	m.nbInitialVariables = m.nVars()
-	objFunction := []int32{}
+	var objFunction []int32
 	m.initRelaxation(&objFunction)
 	solver := m.rebuildSolver()
 	m.encoder.setIncremental(IncNone)
@@ -88,7 +88,7 @@ func (m *linearUS) none() (result, handler.State) {
 }
 
 func (m *linearUS) iterative() (result, handler.State) {
-	objFunction := []int32{}
+	var objFunction []int32
 	m.nbInitialVariables = m.nVars()
 	m.initRelaxation(&objFunction)
 	solver := m.rebuildSolver()

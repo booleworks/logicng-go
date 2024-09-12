@@ -66,8 +66,8 @@ func (m *wmsu3) none() (result, handler.State) {
 	for i := 0; i < m.nSoft(); i++ {
 		coreMapping[m.softClauses[i].assumptionVar] = i
 	}
-	assumptions := []int32{}
-	coeffs := []int{}
+	var assumptions []int32
+	var coeffs []int
 	for {
 		res, state := searchSatSolverWithAssumptions(solver, m.hdl, assumptions)
 		if !state.Success {
@@ -103,7 +103,7 @@ func (m *wmsu3) none() (result, handler.State) {
 				indexSoft := coreMapping[solver.Conflict()[i]]
 				activeSoft[indexSoft] = true
 			}
-			objFunction := []int32{}
+			var objFunction []int32
 			coeffs = []int{}
 			assumptions = []int32{}
 			for i := 0; i < m.nSoft(); i++ {
@@ -134,8 +134,8 @@ func (m *wmsu3) iterative() (result, handler.State) {
 	for i := 0; i < m.nSoft(); i++ {
 		coreMapping[m.softClauses[i].assumptionVar] = i
 	}
-	assumptions := []int32{}
-	coeffs := []int{}
+	var assumptions []int32
+	var coeffs []int
 	var fullCoeffsFunction []int
 	for {
 		res, state := searchSatSolverWithAssumptions(solver, m.hdl, assumptions)
@@ -168,7 +168,7 @@ func (m *wmsu3) iterative() (result, handler.State) {
 				return resUndef, state
 			}
 			m.sumSizeCores += len(solver.Conflict())
-			objFunction := []int32{}
+			var objFunction []int32
 			coeffs = []int{}
 			assumptions = []int32{}
 			for i := 0; i < len(solver.Conflict()); i++ {
@@ -222,9 +222,9 @@ func (m *wmsu3) iterativeBmo() (result, handler.State) {
 	e.setIncremental(IncIterative)
 	bmoEncodings := []*encoder{e}
 	firstEncoding := []bool{true}
-	objFunction := []int32{}
-	assumptions := []int32{}
-	coeffs := []int{}
+	var objFunction []int32
+	var assumptions []int32
+	var coeffs []int
 	for {
 		res, state := searchSatSolverWithAssumptions(solver, m.hdl, assumptions)
 		if !state.Success {

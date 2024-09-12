@@ -65,7 +65,7 @@ func (m *linearSU) bmoSearch() (result, handler.State) {
 	posWeight := 0
 	var functions [][]int32
 	var weights []int
-	m.solver = m.rebuildBmo(functions, weights, currentWeight)
+	m.solver = m.rebuildBMO(functions, weights, currentWeight)
 	localCost := 0
 	m.ubCost = 0
 	for {
@@ -96,7 +96,7 @@ func (m *linearSU) bmoSearch() (result, handler.State) {
 					weights = append(weights, 0)
 					posWeight++
 					currentWeight = m.orderWeights[posWeight]
-					m.solver = m.rebuildBmo(functions, weights, currentWeight)
+					m.solver = m.rebuildBMO(functions, weights, currentWeight)
 				} else {
 					if localCost == 0 {
 						m.encoder.encodeCardinality(m.solver, m.objFunction, newCost/currentWeight-1)
@@ -126,7 +126,7 @@ func (m *linearSU) bmoSearch() (result, handler.State) {
 				if state := m.foundLowerBound(m.lbCost); !state.Success {
 					return resUndef, state
 				}
-				m.solver = m.rebuildBmo(functions, weights, currentWeight)
+				m.solver = m.rebuildBMO(functions, weights, currentWeight)
 			}
 		}
 	}
@@ -198,7 +198,7 @@ func (m *linearSU) rebuildSolver(minWeight int) *sat.CoreSolver {
 	return s
 }
 
-func (m *linearSU) rebuildBmo(functions [][]int32, rhs []int, currentWeight int) *sat.CoreSolver {
+func (m *linearSU) rebuildBMO(functions [][]int32, rhs []int, currentWeight int) *sat.CoreSolver {
 	s := m.rebuildSolver(currentWeight)
 	m.objFunction = []int32{}
 	m.coeffs = []int{}

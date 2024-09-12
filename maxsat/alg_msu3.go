@@ -47,7 +47,7 @@ func (m *msu3) search(maxHandler handler.Handler) (result, handler.State) {
 
 func (m *msu3) none() (result, handler.State) {
 	m.nbInitialVariables = m.nVars()
-	objFunction := []int32{}
+	var objFunction []int32
 	coreMapping := make(map[int32]int)
 	m.initRelaxation(&objFunction)
 	solver := m.rebuildSolver()
@@ -107,7 +107,7 @@ func (m *msu3) none() (result, handler.State) {
 
 func (m *msu3) iterative() (result, handler.State) {
 	m.nbInitialVariables = m.nVars()
-	objFunction := []int32{}
+	var objFunction []int32
 	coreMapping := make(map[int32]int)
 	m.initRelaxation(&objFunction)
 	solver := m.rebuildSolver()

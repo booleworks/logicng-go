@@ -265,7 +265,7 @@ func (m *Solver) SolveWithHandler(hdl handler.Handler) (Result, handler.State) {
 }
 
 // Model returns the model for the last MAX-SAT computation.  It returns an
-// error if the problem is not yet solved or it was unsatisfiable.
+// error if the problem is not yet solved, or it was unsatisfiable.
 func (m *Solver) Model() (*model.Model, error) {
 	if m.result == nil {
 		return nil, errorx.IllegalState("MAX-SAT solver is not yet solved")
