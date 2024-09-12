@@ -28,12 +28,12 @@ func newMSU3(fac f.Factory, config ...*Config) *msu3 {
 	}
 }
 
-func (m *msu3) search(maxHandler handler.Handler) (result, handler.State) {
+func (m *msu3) search(maxHandler handler.Handler) (Result, handler.State) {
 	m.encoder = newEncoder()
 	if m.problemType == weighted {
 		panic(errorx.BadInput("msu3 does not support weighted MaxSAT instances"))
 	}
-	return m.innerSearch(maxHandler, func() (result, handler.State) {
+	return m.innerSearch(maxHandler, func() (Result, handler.State) {
 		switch m.incrementalStrategy {
 		case IncNone:
 			return m.none()
@@ -45,7 +45,7 @@ func (m *msu3) search(maxHandler handler.Handler) (result, handler.State) {
 	})
 }
 
-func (m *msu3) none() (result, handler.State) {
+func (m *msu3) none() (Result, handler.State) {
 	m.nbInitialVariables = m.nVars()
 	var objFunction []int32
 	coreMapping := make(map[int32]int)
@@ -60,7 +60,7 @@ func (m *msu3) none() (result, handler.State) {
 	for {
 		res, state := searchSatSolverWithAssumptions(solver, m.hdl, assumptions)
 		if !state.Success {
-			return resUndef, state
+			return Result{}, state
 		} else if res == f.TristateTrue {
 			m.nbSatisfiable++
 			newCost := m.computeCostModel(solver.Model(), math.MaxInt)
@@ -68,23 +68,23 @@ func (m *msu3) none() (result, handler.State) {
 			m.ubCost = newCost
 			if m.nbSatisfiable == 1 {
 				if state := m.foundUpperBound(m.ubCost); !state.Success {
-					return resUndef, state
+					return Result{}, state
 				}
 				for i := 0; i < len(objFunction); i++ {
 					assumptions = append(assumptions, sat.Not(objFunction[i]))
 				}
 			} else {
-				return resOptimum, succ
+				return m.optimum(), succ
 			}
 		} else {
 			m.lbCost++
 			m.nbCores++
 			if m.nbSatisfiable == 0 {
-				return resUnsat, succ
+				return unsat(), succ
 			} else if m.lbCost == m.ubCost {
-				return resOptimum, succ
+				return m.optimum(), succ
 			} else if state := m.foundLowerBound(m.lbCost); !state.Success {
-				return resUndef, state
+				return Result{}, state
 			}
 			m.sumSizeCores += len(solver.Conflict())
 			for i := 0; i < len(solver.Conflict()); i++ {
@@ -105,7 +105,7 @@ func (m *msu3) none() (result, handler.State) {
 	}
 }
 
-func (m *msu3) iterative() (result, handler.State) {
+func (m *msu3) iterative() (Result, handler.State) {
 	m.nbInitialVariables = m.nVars()
 	var objFunction []int32
 	coreMapping := make(map[int32]int)
@@ -120,7 +120,7 @@ func (m *msu3) iterative() (result, handler.State) {
 	for {
 		res, state := searchSatSolverWithAssumptions(solver, m.hdl, assumptions)
 		if !state.Success {
-			return resUndef, state
+			return Result{}, state
 		} else if res == f.TristateTrue {
 			m.nbSatisfiable++
 			newCost := m.computeCostModel(solver.Model(), math.MaxInt)
@@ -128,29 +128,29 @@ func (m *msu3) iterative() (result, handler.State) {
 			m.ubCost = newCost
 			if m.nbSatisfiable == 1 {
 				if state := m.foundUpperBound(m.ubCost); !state.Success {
-					return resUndef, state
+					return Result{}, state
 				}
 				for i := 0; i < len(objFunction); i++ {
 					assumptions = append(assumptions, sat.Not(objFunction[i]))
 				}
 			} else {
-				return resOptimum, succ
+				return m.optimum(), succ
 			}
 		} else {
 			m.lbCost++
 			m.nbCores++
 			if m.nbSatisfiable == 0 {
-				return resUnsat, succ
+				return unsat(), succ
 			}
 			if m.lbCost == m.ubCost {
-				return resOptimum, succ
+				return m.optimum(), succ
 			}
 			m.sumSizeCores += len(solver.Conflict())
 			if len(solver.Conflict()) == 0 {
-				return resUnsat, succ
+				return unsat(), succ
 			}
 			if state := m.foundLowerBound(m.lbCost); !state.Success {
-				return resUndef, state
+				return Result{}, state
 			}
 			var joinObjFunction []int32
 			for i := 0; i < len(solver.Conflict()); i++ {

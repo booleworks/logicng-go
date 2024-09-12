@@ -9,16 +9,6 @@ const (
 
 //go:generate stringer -type=problemType
 
-type result byte
-
-const (
-	resUnsat result = iota
-	resOptimum
-	resUndef
-)
-
-//go:generate stringer -type=result
-
 type softClause struct {
 	clause         []int32
 	relaxationVars []int32

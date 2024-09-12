@@ -2,7 +2,6 @@ package maxsat
 
 import (
 	"fmt"
-	"slices"
 
 	"github.com/booleworks/logicng-go/configuration"
 	"github.com/booleworks/logicng-go/errorx"
@@ -15,10 +14,16 @@ import (
 
 // Result represents the result of a MAX-SAT computation.  It holds a flag
 // whether the problem was satisfiable or not.  In case it was satisfiable, the
-// final lower bound of the solver is stored as the Optimum.
+// final lower bound of the solver is stored as the Optimum and a model for this
+// optimum is retained.
 type Result struct {
 	Satisfiable bool
 	Optimum     int
+	Model       *model.Model
+}
+
+func unsat() Result {
+	return Result{false, -1, nil}
 }
 
 // A SolverState can be extracted from the solver by the SaveState method and be
@@ -40,13 +45,14 @@ const selPrefix = "@SEL_SOFT_"
 // underlying solving algorithm it supports also partial and/or weighted
 // MAX-SAT problems.
 type Solver struct {
-	configuration     *Config
-	algorithm         Algorithm
-	fac               f.Factory
-	result            *Result
-	solver            algorithm
-	pgTransformation  *pgOnSolver
-	selectorVariables []f.Variable
+	configuration    *Config
+	algorithm        Algorithm
+	fac              f.Factory
+	result           Result
+	ok               bool
+	solver           algorithm
+	pgTransformation *pgOnSolver
+	selectorCounter  int
 }
 
 func newSolver(fac f.Factory, algorithm Algorithm, config ...*Config) *Solver {
@@ -55,8 +61,6 @@ func newSolver(fac f.Factory, algorithm Algorithm, config ...*Config) *Solver {
 		algorithm:     algorithm,
 		configuration: determineConfig(fac, config),
 	}
-	solver.result = nil
-	solver.selectorVariables = []f.Variable{}
 	switch solver.algorithm {
 	case AlgLinearSU:
 		solver.solver = newLinearSU(fac, solver.configuration)
@@ -181,8 +185,8 @@ func (m *Solver) AddSoftFormula(formula f.Formula, weight int) error {
 	if weight < 1 {
 		return errorx.BadInput("the weight of a formula must be > 0")
 	}
-	selVar := m.fac.Var(fmt.Sprintf("%s%d", selPrefix, len(m.selectorVariables)))
-	m.selectorVariables = append(m.selectorVariables, selVar)
+	selVar := m.fac.Var(fmt.Sprintf("%s%d", selPrefix, m.selectorCounter))
+	m.selectorCounter++
 	m.addFormulaAsCNF(m.fac.Or(selVar.Negate(m.fac).AsFormula(), formula), -1)
 	m.addFormulaAsCNF(m.fac.Or(formula.Negate(m.fac), selVar.AsFormula()), -1)
 	m.addFormulaAsCNF(selVar.AsFormula(), weight)
@@ -202,15 +206,54 @@ func (m *Solver) SaveState() *SolverState {
 // another solver or another solving execution.  Returns with an error if the
 // state is not valid on the solver.
 func (m *Solver) LoadState(state *SolverState) error {
+	m.ok = false
 	err := m.solver.loadState(state)
 	if err != nil {
 		return err
 	}
+	if m.pgTransformation != nil {
+		m.pgTransformation.clearCache()
+	}
 	return nil
 }
 
+// Solve solves the MAX-SAT problem currently on the solver and returns the
+// computation result.
+func (m *Solver) Solve() Result {
+	result, _ := m.SolveWithHandler(handler.NopHandler)
+	return result
+}
+
+// SolveWithHandler solves the MAX-SAT problem currently on the solver.  The
+// computation can be canceled with the given handler.  The computation result
+// is returned and handler state.
+func (m *Solver) SolveWithHandler(hdl handler.Handler) (Result, handler.State) {
+	if m.ok {
+		return m.result, succ
+	}
+	if m.solver.getCurrentWeight() == 1 {
+		m.solver.setProblemType(unweighted)
+	} else {
+		m.solver.setProblemType(weighted)
+	}
+	var state handler.State
+	m.result, state = m.solver.search(hdl)
+	m.ok = true
+	return m.result, state
+}
+
+// SupportsWeighted reports whether the solver supports weighted problems.
+func (m *Solver) SupportsWeighted() bool {
+	return m.algorithm != AlgLinearUS && m.algorithm != AlgMSU3
+}
+
+// SupportsUnweighted reports whether the solver supports unweighted problems.
+func (m *Solver) SupportsUnweighted() bool {
+	return m.algorithm != AlgWMSU3
+}
+
 func (m *Solver) addFormulaAsCNF(formula f.Formula, weight int) {
-	m.result = nil
+	m.ok = false
 	if m.configuration.CNFMethod == sat.CNFFactory {
 		m.addCNF(normalform.CNF(m.fac, formula), weight)
 	} else {
@@ -231,73 +274,4 @@ func (m *Solver) addCNF(formula f.Formula, weight int) {
 	default:
 		panic(errorx.IllegalState("input formula is not a valid CNF: %s", formula.Sprint(m.fac)))
 	}
-}
-
-// Solve solves the MAX-SAT problem currently on the solver and returns the
-// computation result.
-func (m *Solver) Solve() Result {
-	result, _ := m.SolveWithHandler(handler.NopHandler)
-	return result
-}
-
-// SolveWithHandler solves the MAX-SAT problem currently on the solver.  The
-// computation can be canceled with the given handler.  The computation result
-// is returned and handler state.
-func (m *Solver) SolveWithHandler(hdl handler.Handler) (Result, handler.State) {
-	if m.result != nil {
-		return *m.result, succ
-	}
-	if m.solver.getCurrentWeight() == 1 {
-		m.solver.setProblemType(unweighted)
-	} else {
-		m.solver.setProblemType(weighted)
-	}
-	res, state := m.solver.search(hdl)
-	if !state.Success {
-		return Result{}, state
-	}
-	if res == resUnsat {
-		m.result = &Result{Satisfiable: false, Optimum: -1}
-	} else {
-		m.result = &Result{Satisfiable: true, Optimum: m.solver.result()}
-	}
-	return *m.result, succ
-}
-
-// Model returns the model for the last MAX-SAT computation.  It returns an
-// error if the problem is not yet solved, or it was unsatisfiable.
-func (m *Solver) Model() (*model.Model, error) {
-	if m.result == nil {
-		return nil, errorx.IllegalState("MAX-SAT solver is not yet solved")
-	}
-	if !m.result.Satisfiable {
-		return nil, errorx.IllegalState("MAX-SAT problem was not satisfiable")
-	} else {
-		return m.createModel(m.solver.getModel()), nil
-	}
-}
-
-// SupportsWeighted reports whether the solver supports weighted problems.
-func (m *Solver) SupportsWeighted() bool {
-	return m.algorithm != AlgLinearUS && m.algorithm != AlgMSU3
-}
-
-// SupportsUnweighted reports whether the solver supports unweighted problems.
-func (m *Solver) SupportsUnweighted() bool {
-	return m.algorithm != AlgWMSU3
-}
-
-func (m *Solver) createModel(vec []bool) *model.Model {
-	var mdl []f.Literal
-	for i := 0; i < len(vec); i++ {
-		variable, ok := m.solver.varForIndex(i)
-		if ok && !slices.Contains(m.selectorVariables, variable) {
-			if vec[i] {
-				mdl = append(mdl, variable.AsLiteral())
-			} else {
-				mdl = append(mdl, variable.Negate(m.fac))
-			}
-		}
-	}
-	return model.New(mdl...)
 }

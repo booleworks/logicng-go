@@ -31,7 +31,7 @@ func newWMSU3(fac f.Factory, config ...*Config) *wmsu3 {
 	}
 }
 
-func (m *wmsu3) search(hdl handler.Handler) (result, handler.State) {
+func (m *wmsu3) search(hdl handler.Handler) (Result, handler.State) {
 	if m.problemType == unweighted {
 		panic(errorx.BadInput("wmsu3 does not support unweighted MaxSAT instances"))
 	}
@@ -40,7 +40,7 @@ func (m *wmsu3) search(hdl handler.Handler) (result, handler.State) {
 	if !isBMO {
 		m.currentWeight = 1
 	}
-	return m.innerSearch(hdl, func() (result, handler.State) {
+	return m.innerSearch(hdl, func() (Result, handler.State) {
 		switch m.incrementalStrategy {
 		case IncNone:
 			return m.none()
@@ -56,7 +56,7 @@ func (m *wmsu3) search(hdl handler.Handler) (result, handler.State) {
 	})
 }
 
-func (m *wmsu3) none() (result, handler.State) {
+func (m *wmsu3) none() (Result, handler.State) {
 	coreMapping := make(map[int32]int)
 	m.nbInitialVariables = m.nVars()
 	m.initRelaxation()
@@ -71,7 +71,7 @@ func (m *wmsu3) none() (result, handler.State) {
 	for {
 		res, state := searchSatSolverWithAssumptions(solver, m.hdl, assumptions)
 		if !state.Success {
-			return resUndef, state
+			return Result{}, state
 		} else if res == f.TristateTrue {
 			m.nbSatisfiable++
 			newCost := m.computeCostModel(solver.Model(), math.MaxInt)
@@ -80,9 +80,9 @@ func (m *wmsu3) none() (result, handler.State) {
 				m.ubCost = newCost
 			}
 			if m.ubCost == 0 || m.lbCost == m.ubCost || (m.currentWeight == 1 && m.nbSatisfiable > 1) {
-				return resOptimum, succ
+				return m.optimum(), succ
 			} else if state := m.foundUpperBound(m.ubCost); !state.Success {
-				return resUndef, state
+				return Result{}, state
 			}
 			for i := 0; i < m.nSoft(); i++ {
 				if m.softClauses[i].weight >= m.currentWeight && !activeSoft[i] {
@@ -92,11 +92,11 @@ func (m *wmsu3) none() (result, handler.State) {
 		} else {
 			m.nbCores++
 			if m.nbSatisfiable == 0 {
-				return resUnsat, succ
+				return unsat(), succ
 			} else if m.lbCost == m.ubCost {
-				return resOptimum, succ
+				return m.optimum(), succ
 			} else if state := m.foundLowerBound(m.lbCost); !state.Success {
-				return resUndef, state
+				return Result{}, state
 			}
 			m.sumSizeCores += len(solver.Conflict())
 			for i := 0; i < len(solver.Conflict()); i++ {
@@ -124,7 +124,7 @@ func (m *wmsu3) none() (result, handler.State) {
 	}
 }
 
-func (m *wmsu3) iterative() (result, handler.State) {
+func (m *wmsu3) iterative() (Result, handler.State) {
 	coreMapping := make(map[int32]int)
 	m.nbInitialVariables = m.nVars()
 	m.initRelaxation()
@@ -140,7 +140,7 @@ func (m *wmsu3) iterative() (result, handler.State) {
 	for {
 		res, state := searchSatSolverWithAssumptions(solver, m.hdl, assumptions)
 		if !state.Success {
-			return resUndef, state
+			return Result{}, state
 		} else if res == f.TristateTrue {
 			m.nbSatisfiable++
 			newCost := m.computeCostModel(solver.Model(), math.MaxInt)
@@ -149,9 +149,9 @@ func (m *wmsu3) iterative() (result, handler.State) {
 				m.ubCost = newCost
 			}
 			if m.ubCost == 0 || m.lbCost == m.ubCost || (m.currentWeight == 1 && m.nbSatisfiable > 1) {
-				return resOptimum, succ
+				return m.optimum(), succ
 			} else if state := m.foundUpperBound(m.ubCost); !state.Success {
-				return resUndef, state
+				return Result{}, state
 			}
 			for i := 0; i < m.nSoft(); i++ {
 				if m.softClauses[i].weight >= m.currentWeight && !activeSoft[i] {
@@ -161,11 +161,11 @@ func (m *wmsu3) iterative() (result, handler.State) {
 		} else {
 			m.nbCores++
 			if m.nbSatisfiable == 0 {
-				return resUnsat, succ
+				return unsat(), succ
 			} else if m.lbCost == m.ubCost {
-				return resOptimum, succ
+				return m.optimum(), succ
 			} else if state := m.foundLowerBound(m.lbCost); !state.Success {
-				return resUndef, state
+				return Result{}, state
 			}
 			m.sumSizeCores += len(solver.Conflict())
 			var objFunction []int32
@@ -204,7 +204,7 @@ func (m *wmsu3) iterative() (result, handler.State) {
 	}
 }
 
-func (m *wmsu3) iterativeBmo() (result, handler.State) {
+func (m *wmsu3) iterativeBmo() (Result, handler.State) {
 	coreMapping := make(map[int32]int)
 	m.nbInitialVariables = m.nVars()
 	m.initRelaxation()
@@ -228,7 +228,7 @@ func (m *wmsu3) iterativeBmo() (result, handler.State) {
 	for {
 		res, state := searchSatSolverWithAssumptions(solver, m.hdl, assumptions)
 		if !state.Success {
-			return resUndef, state
+			return Result{}, state
 		} else if res == f.TristateTrue {
 			m.nbSatisfiable++
 			newCost := m.computeCostModel(solver.Model(), math.MaxInt)
@@ -238,9 +238,9 @@ func (m *wmsu3) iterativeBmo() (result, handler.State) {
 			}
 			if m.nbSatisfiable == 1 {
 				if m.ubCost == 0 {
-					return resOptimum, succ
+					return m.optimum(), succ
 				} else if state := m.foundUpperBound(m.ubCost); !state.Success {
-					return resUndef, state
+					return Result{}, state
 				}
 				minWeight = m.orderWeights[len(m.orderWeights)-1]
 				m.currentWeight = m.orderWeights[0]
@@ -251,10 +251,10 @@ func (m *wmsu3) iterativeBmo() (result, handler.State) {
 				}
 			} else {
 				if m.currentWeight == 1 || m.currentWeight == minWeight {
-					return resOptimum, succ
+					return m.optimum(), succ
 				} else {
 					if state := m.foundUpperBound(m.ubCost); !state.Success {
-						return resUndef, state
+						return Result{}, state
 					}
 					assumptions = []int32{}
 					previousWeight := m.currentWeight
@@ -294,11 +294,11 @@ func (m *wmsu3) iterativeBmo() (result, handler.State) {
 			m.lbCost += m.currentWeight
 			m.nbCores++
 			if m.nbSatisfiable == 0 {
-				return resUnsat, succ
+				return unsat(), succ
 			} else if m.lbCost == m.ubCost {
-				return resOptimum, succ
+				return m.optimum(), succ
 			} else if state := m.foundLowerBound(m.lbCost); !state.Success {
-				return resUndef, state
+				return Result{}, state
 			}
 			m.sumSizeCores += len(solver.Conflict())
 			var joinObjFunction []int32

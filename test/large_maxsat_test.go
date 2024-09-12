@@ -37,11 +37,12 @@ func TestWeightedMaxSat(t *testing.T) {
 	items, _ := os.ReadDir(folder)
 	for i, solver := range solvers {
 		start := time.Now()
+		initState := solver.SaveState()
 		for _, item := range items {
 			if !item.IsDir() {
 				item.Name()
 				if strings.HasSuffix(item.Name(), "wcnf") {
-					solver.Reset()
+					solver.LoadState(initState)
 					maxsat.ReadDimacsToSolver(fac, solver, folder+item.Name())
 					res := solver.Solve()
 					assert.Equal(t, result[item.Name()], res.Optimum)

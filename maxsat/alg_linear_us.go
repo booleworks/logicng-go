@@ -28,12 +28,12 @@ func newLinearUS(fac f.Factory, config ...*Config) *linearUS {
 	}
 }
 
-func (m *linearUS) search(hdl handler.Handler) (result, handler.State) {
+func (m *linearUS) search(hdl handler.Handler) (Result, handler.State) {
 	m.encoder = newEncoder()
 	if m.problemType == weighted {
 		panic(errorx.BadInput("linearUS does not support weighted MaxSAT instances"))
 	}
-	return m.innerSearch(hdl, func() (result, handler.State) {
+	return m.innerSearch(hdl, func() (Result, handler.State) {
 		switch m.incrementalStrategy {
 		case IncNone:
 			return m.none()
@@ -45,7 +45,7 @@ func (m *linearUS) search(hdl handler.Handler) (result, handler.State) {
 	})
 }
 
-func (m *linearUS) none() (result, handler.State) {
+func (m *linearUS) none() (Result, handler.State) {
 	m.nbInitialVariables = m.nVars()
 	var objFunction []int32
 	m.initRelaxation(&objFunction)
@@ -54,7 +54,7 @@ func (m *linearUS) none() (result, handler.State) {
 	for {
 		res, state := searchSatSolver(solver, m.hdl)
 		if !state.Success {
-			return resUndef, state
+			return Result{}, state
 		} else if res == f.TristateTrue {
 			m.nbSatisfiable++
 			newCost := m.computeCostModel(solver.Model(), math.MaxInt)
@@ -62,24 +62,24 @@ func (m *linearUS) none() (result, handler.State) {
 			m.ubCost = newCost
 			if m.nbSatisfiable == 1 {
 				if state := m.foundUpperBound(m.ubCost); !state.Success {
-					return resUndef, state
+					return Result{}, state
 				}
 				m.encoder.encodeCardinality(solver, objFunction, 0)
 			} else {
-				return resOptimum, succ
+				return m.optimum(), succ
 			}
 		} else {
 			m.lbCost++
 			if m.nbSatisfiable == 0 {
-				return resUnsat, succ
+				return unsat(), succ
 			} else if m.lbCost == m.ubCost {
 				if m.nbSatisfiable > 0 {
-					return resOptimum, succ
+					return m.optimum(), succ
 				} else {
-					return resUnsat, succ
+					return unsat(), succ
 				}
 			} else if state := m.foundLowerBound(m.lbCost); !state.Success {
-				return resUndef, state
+				return Result{}, state
 			}
 			solver = m.rebuildSolver()
 			m.encoder.encodeCardinality(solver, objFunction, m.lbCost)
@@ -87,7 +87,7 @@ func (m *linearUS) none() (result, handler.State) {
 	}
 }
 
-func (m *linearUS) iterative() (result, handler.State) {
+func (m *linearUS) iterative() (Result, handler.State) {
 	var objFunction []int32
 	m.nbInitialVariables = m.nVars()
 	m.initRelaxation(&objFunction)
@@ -97,7 +97,7 @@ func (m *linearUS) iterative() (result, handler.State) {
 	for {
 		res, state := searchSatSolverWithAssumptions(solver, m.hdl, assumptions)
 		if !state.Success {
-			return resUndef, state
+			return Result{}, state
 		} else if res == f.TristateTrue {
 			m.nbSatisfiable++
 			newCost := m.computeCostModel(solver.Model(), math.MaxInt)
@@ -105,29 +105,29 @@ func (m *linearUS) iterative() (result, handler.State) {
 			m.ubCost = newCost
 			if m.nbSatisfiable == 1 {
 				if state := m.foundUpperBound(m.ubCost); !state.Success {
-					return resUndef, state
+					return Result{}, state
 				}
 				for i := 0; i < len(objFunction); i++ {
 					assumptions = append(assumptions, sat.Not(objFunction[i]))
 				}
 			} else {
-				return resOptimum, succ
+				return m.optimum(), succ
 			}
 		} else {
 			m.nbCores++
 			m.lbCost++
 			if m.nbSatisfiable == 0 {
-				return resUnsat, succ
+				return unsat(), succ
 			}
 			if m.lbCost == m.ubCost {
 				if m.nbSatisfiable > 0 {
-					return resOptimum, succ
+					return m.optimum(), succ
 				} else {
-					return resUnsat, succ
+					return unsat(), succ
 				}
 			}
 			if state := m.foundLowerBound(m.lbCost); !state.Success {
-				return resUndef, state
+				return Result{}, state
 			}
 			if !m.encoder.hasCardEncoding() {
 				m.encoder.buildCardinality(solver, objFunction, m.lbCost)

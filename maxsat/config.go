@@ -70,7 +70,7 @@ func (Config) DefaultConfig() configuration.Config {
 // MAX-SAT configuration.
 func DefaultConfig() *Config {
 	return &Config{
-		CNFMethod:           sat.CNFPG,
+		CNFMethod:           sat.CNFFactory,
 		IncrementalStrategy: IncNone,
 		WeightStrategy:      WeightNone,
 		Symmetry:            true,

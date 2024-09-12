@@ -35,8 +35,8 @@ func newLinearSU(fac f.Factory, config ...*Config) *linearSU {
 	}
 }
 
-func (m *linearSU) search(hdl handler.Handler) (result, handler.State) {
-	return m.innerSearch(hdl, func() (result, handler.State) {
+func (m *linearSU) search(hdl handler.Handler) (Result, handler.State) {
+	return m.innerSearch(hdl, func() (Result, handler.State) {
 		m.encoder = newEncoder()
 		m.nbInitialVariables = m.nVars()
 		if m.currentWeight == 1 {
@@ -58,7 +58,7 @@ func (m *linearSU) search(hdl handler.Handler) (result, handler.State) {
 	})
 }
 
-func (m *linearSU) bmoSearch() (result, handler.State) {
+func (m *linearSU) bmoSearch() (Result, handler.State) {
 	m.initRelaxation()
 	currentWeight := m.orderWeights[0]
 	minWeight := m.orderWeights[len(m.orderWeights)-1]
@@ -71,7 +71,7 @@ func (m *linearSU) bmoSearch() (result, handler.State) {
 	for {
 		res, state := searchSatSolver(m.solver, m.hdl)
 		if !state.Success {
-			return resUndef, state
+			return Result{}, state
 		}
 		if res == f.TristateTrue {
 			m.nbSatisfiable++
@@ -81,12 +81,12 @@ func (m *linearSU) bmoSearch() (result, handler.State) {
 				m.ubCost = newCost + m.lbCost
 				if newCost > 0 {
 					if state := m.foundUpperBound(m.ubCost); !state.Success {
-						return resUndef, state
+						return Result{}, state
 					}
 				}
 			}
 			if newCost == 0 && currentWeight == minWeight {
-				return resOptimum, succ
+				return m.optimum(), succ
 			} else {
 				if newCost == 0 {
 					obj := make([]int32, len(m.objFunction))
@@ -110,9 +110,9 @@ func (m *linearSU) bmoSearch() (result, handler.State) {
 			m.nbCores++
 			if currentWeight == minWeight {
 				if len(m.model) == 0 {
-					return resUnsat, succ
+					return unsat(), succ
 				} else {
-					return resOptimum, succ
+					return m.optimum(), succ
 				}
 			} else {
 				obj := make([]int32, len(m.objFunction))
@@ -124,7 +124,7 @@ func (m *linearSU) bmoSearch() (result, handler.State) {
 				currentWeight = m.orderWeights[posWeight]
 				localCost = 0
 				if state := m.foundLowerBound(m.lbCost); !state.Success {
-					return resUndef, state
+					return Result{}, state
 				}
 				m.solver = m.rebuildBMO(functions, weights, currentWeight)
 			}
@@ -132,20 +132,20 @@ func (m *linearSU) bmoSearch() (result, handler.State) {
 	}
 }
 
-func (m *linearSU) normalSearch() (result, handler.State) {
+func (m *linearSU) normalSearch() (Result, handler.State) {
 	m.initRelaxation()
 	m.solver = m.rebuildSolver(1)
 	for {
 		res, state := searchSatSolver(m.solver, m.hdl)
 		if !state.Success {
-			return resUndef, state
+			return Result{}, state
 		} else if res == f.TristateTrue {
 			m.nbSatisfiable++
 			newCost := m.computeCostModel(m.solver.Model(), math.MaxInt)
 			m.saveModel(m.solver.Model())
 			if newCost == 0 {
 				m.ubCost = newCost
-				return resOptimum, succ
+				return m.optimum(), succ
 			} else {
 				if m.problemType == weighted {
 					if !m.encoder.hasPBEncoding() {
@@ -162,15 +162,15 @@ func (m *linearSU) normalSearch() (result, handler.State) {
 				}
 				m.ubCost = newCost
 				if state := m.foundUpperBound(m.ubCost); !state.Success {
-					return resUndef, state
+					return Result{}, state
 				}
 			}
 		} else {
 			m.nbCores++
 			if len(m.model) == 0 {
-				return resUnsat, succ
+				return unsat(), succ
 			} else {
-				return resOptimum, succ
+				return m.optimum(), succ
 			}
 		}
 	}

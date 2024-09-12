@@ -41,7 +41,7 @@ func newWBO(fac f.Factory, config *Config) *wbo {
 	}
 }
 
-func (m *wbo) search(hdl handler.Handler) (result, handler.State) {
+func (m *wbo) search(hdl handler.Handler) (Result, handler.State) {
 	m.nbInitialVariables = m.nVars()
 	m.coreMapping = make(map[int32]int)
 	m.assumptions = []int32{}
@@ -54,7 +54,7 @@ func (m *wbo) search(hdl handler.Handler) (result, handler.State) {
 		m.problemType = unweighted
 		m.weightStrategy = WeightNone
 	}
-	return m.innerSearch(hdl, func() (result, handler.State) {
+	return m.innerSearch(hdl, func() (Result, handler.State) {
 		if m.symmetryStrategy {
 			m.initSymmetry()
 		}
@@ -74,12 +74,12 @@ func (m *wbo) initSymmetry() {
 	}
 }
 
-func (m *wbo) normalSearch() (result, handler.State) {
+func (m *wbo) normalSearch() (Result, handler.State) {
 	switch res, state := m.unsatSearch(); res {
 	case f.TristateUndef:
-		return resUndef, state
+		return Result{}, state
 	case f.TristateFalse:
-		return resUnsat, succ
+		return Result{}, succ
 	}
 
 	m.initAssumptions()
@@ -87,15 +87,15 @@ func (m *wbo) normalSearch() (result, handler.State) {
 	for {
 		res, state := searchSatSolverWithAssumptions(m.solver, m.hdl, m.assumptions)
 		if !state.Success {
-			return resUndef, state
+			return Result{}, state
 		} else if res == f.TristateFalse {
 			m.nbCores++
 			coreCost := m.computeCostCore(m.solver.Conflict())
 			m.lbCost += coreCost
 			if m.lbCost == m.ubCost {
-				return resOptimum, succ
+				return m.optimum(), succ
 			} else if state := m.foundLowerBound(m.lbCost); !state.Success {
-				return resUndef, state
+				return Result{}, state
 			}
 			m.relaxCore(m.solver.Conflict(), coreCost, &m.assumptions)
 			m.solver = m.rebuildSolver()
@@ -103,7 +103,7 @@ func (m *wbo) normalSearch() (result, handler.State) {
 			m.nbSatisfiable++
 			m.ubCost = m.computeCostModel(m.solver.Model(), math.MaxInt)
 			m.saveModel(m.solver.Model())
-			return resOptimum, succ
+			return m.optimum(), succ
 		}
 	}
 }
@@ -326,12 +326,12 @@ func (m *wbo) encodeEO(lits []int32) {
 	}
 }
 
-func (m *wbo) weightSearch() (result, handler.State) {
+func (m *wbo) weightSearch() (Result, handler.State) {
 	switch res, state := m.unsatSearch(); res {
 	case f.TristateUndef:
-		return resUndef, state
+		return Result{}, state
 	case f.TristateFalse:
-		return resUnsat, succ
+		return unsat(), succ
 	}
 
 	m.initAssumptions()
@@ -341,13 +341,13 @@ func (m *wbo) weightSearch() (result, handler.State) {
 	for {
 		res, state := searchSatSolverWithAssumptions(m.solver, m.hdl, m.assumptions)
 		if !state.Success {
-			return resUndef, state
+			return Result{}, state
 		} else if res == f.TristateFalse {
 			m.nbCores++
 			coreCost := m.computeCostCore(m.solver.Conflict())
 			m.lbCost += coreCost
 			if state := m.foundLowerBound(m.lbCost); !state.Success {
-				return resUndef, state
+				return Result{}, state
 			}
 			m.relaxCore(m.solver.Conflict(), coreCost, &m.assumptions)
 			m.solver = m.rebuildWeightSolver()
@@ -358,7 +358,7 @@ func (m *wbo) weightSearch() (result, handler.State) {
 					m.ubCost = m.lbCost
 					m.saveModel(m.solver.Model())
 				}
-				return resOptimum, succ
+				return m.optimum(), succ
 			} else {
 				m.updateCurrentWeight(m.weightStrategy)
 				cost := m.computeCostModel(m.solver.Model(), math.MaxInt)
@@ -367,9 +367,9 @@ func (m *wbo) weightSearch() (result, handler.State) {
 					m.saveModel(m.solver.Model())
 				}
 				if m.lbCost == m.ubCost {
-					return resOptimum, succ
+					return m.optimum(), succ
 				} else if state := m.foundUpperBound(m.ubCost); !state.Success {
-					return resUndef, state
+					return Result{}, state
 				}
 				m.solver = m.rebuildWeightSolver()
 			}

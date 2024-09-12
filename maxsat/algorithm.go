@@ -3,11 +3,13 @@ package maxsat
 import (
 	"math"
 	"slices"
+	"strings"
 
 	"github.com/booleworks/logicng-go/errorx"
 	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/handler"
+	"github.com/booleworks/logicng-go/model"
 	"github.com/booleworks/logicng-go/sat"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/emirpasic/gods/sets/treeset"
@@ -16,7 +18,7 @@ import (
 var succ = handler.Success()
 
 type algorithm interface {
-	search(hdl handler.Handler) (result, handler.State)
+	search(hdl handler.Handler) (Result, handler.State)
 	result() int
 	newLiteral(bool) int32
 	newVar() int32
@@ -94,16 +96,16 @@ func searchSatSolverWithAssumptions(
 
 func (m *maxSatAlgorithm) innerSearch(
 	hdl handler.Handler,
-	search func() (result, handler.State),
-) (result, handler.State) {
+	search func() (Result, handler.State),
+) (Result, handler.State) {
 	m.hdl = hdl
 	if e := event.MaxSATCallStarted; !hdl.ShouldResume(e) {
-		return resUndef, handler.Cancelation(e)
+		return Result{}, handler.Cancelation(e)
 	}
 	stateBeforeSolving := m.saveState()
 	result, state := search()
 	if e := event.MaxSatCallFinished; !hdl.ShouldResume(e) {
-		return resUndef, handler.Cancelation(e)
+		return Result{}, handler.Cancelation(e)
 	}
 	_ = m.loadState(stateBeforeSolving)
 	m.hdl = nil
@@ -370,6 +372,26 @@ func (m *maxSatAlgorithm) loadState(state *SolverState) error {
 func (m *maxSatAlgorithm) varForIndex(index int) (f.Variable, bool) {
 	v, ok := m.index2var[int32(index)]
 	return v, ok
+}
+
+func (m *maxSatAlgorithm) createModel() *model.Model {
+	var mdl []f.Literal
+	for i := 0; i < len(m.model); i++ {
+		variable, ok := m.varForIndex(i)
+		varName, _ := m.fac.VarName(variable)
+		if ok && !strings.HasPrefix(varName, selPrefix) {
+			if m.model[i] {
+				mdl = append(mdl, variable.AsLiteral())
+			} else {
+				mdl = append(mdl, variable.Negate(m.fac))
+			}
+		}
+	}
+	return model.New(mdl...)
+}
+
+func (m *maxSatAlgorithm) optimum() Result {
+	return Result{true, m.ubCost, m.createModel()}
 }
 
 func shrinkTo[T any](slice *[]T, newSize int) {

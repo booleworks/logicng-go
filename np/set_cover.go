@@ -49,7 +49,7 @@ func MinimumSetCover[T any](sets [][]T) [][]T {
 	if !solverResult.Satisfiable {
 		panic(errorx.IllegalState("optimization problem was not satisfiable"))
 	}
-	model, _ := solver.Model()
+	model := solverResult.Model
 	pos := f.NewVarSet(model.PosVars()...)
 	var minimumCover []f.Variable
 	for key := range setMap {

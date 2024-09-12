@@ -21,8 +21,8 @@ func newOLL(fac f.Factory) *oll {
 	}
 }
 
-func (m *oll) search(hdl handler.Handler) (result, handler.State) {
-	return m.innerSearch(hdl, func() (result, handler.State) {
+func (m *oll) search(hdl handler.Handler) (Result, handler.State) {
+	return m.innerSearch(hdl, func() (Result, handler.State) {
 		m.encoder = newEncoder()
 		if m.problemType == weighted {
 			return m.weighted()
@@ -32,7 +32,7 @@ func (m *oll) search(hdl handler.Handler) (result, handler.State) {
 	})
 }
 
-func (m *oll) unweighted() (result, handler.State) {
+func (m *oll) unweighted() (Result, handler.State) {
 	coreMapping := make(map[int32]int)
 	boundMapping := make(map[int32]intTriple)
 	m.nbInitialVariables = m.nVars()
@@ -52,7 +52,7 @@ func (m *oll) unweighted() (result, handler.State) {
 	for {
 		res, state := searchSatSolverWithAssumptions(solver, m.hdl, assumptions)
 		if !state.Success {
-			return resUndef, state
+			return Result{}, state
 		} else if res == f.TristateTrue {
 			m.nbSatisfiable++
 			model := solver.Model()
@@ -62,22 +62,22 @@ func (m *oll) unweighted() (result, handler.State) {
 			m.ubCost = newCost
 			if m.nbSatisfiable == 1 {
 				if newCost == 0 {
-					return resOptimum, succ
+					return m.optimum(), succ
 				}
 				for i := 0; i < m.nSoft(); i++ {
 					assumptions = append(assumptions, sat.Not(m.softClauses[i].assumptionVar))
 				}
 			} else {
-				return resOptimum, succ
+				return m.optimum(), succ
 			}
 		} else {
 			m.lbCost++
 			m.nbCores++
 			if m.nbSatisfiable == 0 {
-				return resUnsat, succ
+				return Result{}, succ
 			}
 			if m.lbCost == m.ubCost {
-				return resOptimum, succ
+				return m.optimum(), succ
 			}
 
 			m.sumSizeCores += len(solver.Conflict())
@@ -141,7 +141,7 @@ func (m *oll) unweighted() (result, handler.State) {
 	}
 }
 
-func (m *oll) weighted() (result, handler.State) {
+func (m *oll) weighted() (Result, handler.State) {
 	coreMapping := make(map[int32]int)
 	boundMapping := make(map[int32]intTriple)
 	m.nbInitialVariables = m.nVars()
@@ -164,7 +164,7 @@ func (m *oll) weighted() (result, handler.State) {
 	for {
 		res, state := searchSatSolverWithAssumptions(solver, m.hdl, assumptions)
 		if !state.Success {
-			return resUndef, state
+			return Result{}, state
 		} else if res == f.TristateTrue {
 			m.nbSatisfiable++
 			model := solver.Model()
@@ -209,7 +209,7 @@ func (m *oll) weighted() (result, handler.State) {
 						}
 					})
 				} else {
-					return resOptimum, succ
+					return m.optimum(), succ
 				}
 			}
 		} else if res == f.TristateFalse {
@@ -231,10 +231,10 @@ func (m *oll) weighted() (result, handler.State) {
 			m.lbCost += minCore
 			m.nbCores++
 			if m.nbSatisfiable == 0 {
-				return resUnsat, succ
+				return unsat(), succ
 			}
 			if m.lbCost == m.ubCost {
-				return resOptimum, succ
+				return m.optimum(), succ
 			}
 			m.sumSizeCores += len(solver.Conflict())
 			var softRelax []int32

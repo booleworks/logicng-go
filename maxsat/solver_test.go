@@ -1,7 +1,6 @@
 package maxsat
 
 import (
-	"github.com/booleworks/logicng-go/sat"
 	"testing"
 
 	"github.com/booleworks/logicng-go/parser"
@@ -61,7 +60,6 @@ func TestDoc(t *testing.T) {
 	fac := f.NewFactory()
 	p := parser.New(fac)
 	cfg := DefaultConfig()
-	cfg.CNFMethod = sat.CNFFactory
 	solver := LinearSU(fac, cfg)
 	solver.AddHardFormula(p.ParseUnsafe("A & B & (C | D)"))
 	solver.AddSoftFormula(p.ParseUnsafe("A => ~B"), 2)
