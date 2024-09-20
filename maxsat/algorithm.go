@@ -366,6 +366,7 @@ func (m *maxSatAlgorithm) loadState(state *SolverState) error {
 		clause.weight = state.softWeights[i]
 		clause.assumptionVar = sat.LitUndef
 	}
+	m.model = []bool{}
 	return nil
 }
 

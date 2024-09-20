@@ -109,7 +109,7 @@ func (m *linearSU) bmoSearch() (Result, handler.State) {
 		} else {
 			m.nbCores++
 			if currentWeight == minWeight {
-				if len(m.model) == 0 {
+				if m.nbSatisfiable == 0 {
 					return unsat(), succ
 				} else {
 					return m.optimum(), succ
@@ -167,7 +167,7 @@ func (m *linearSU) normalSearch() (Result, handler.State) {
 			}
 		} else {
 			m.nbCores++
-			if len(m.model) == 0 {
+			if m.nbSatisfiable == 0 {
 				return unsat(), succ
 			} else {
 				return m.optimum(), succ
