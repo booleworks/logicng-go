@@ -95,13 +95,13 @@ func (c *modelCountCollector) Rollback(hdl handler.Handler) handler.State {
 	return succ
 }
 
-func (c *modelCountCollector) RollbackAndReturnModels(solver *sat.Solver, hdl handler.Handler) []*model.Model {
+func (c *modelCountCollector) RollbackAndReturnModels(solver *sat.Solver, hdl handler.Handler) ([]*model.Model, handler.State) {
 	modelsToReturn := make([]*model.Model, len(c.uncommittedModels))
 	for i, mdl := range c.uncommittedModels {
 		modelsToReturn[i] = solver.CoreSolver().CreateModel(solver.Factory(), mdl, c.uncommittedIndices[i])
 	}
-	c.Rollback(hdl)
-	return modelsToReturn
+	state := c.Rollback(hdl)
+	return modelsToReturn, state
 }
 
 func (c *modelCountCollector) Result() *big.Int {

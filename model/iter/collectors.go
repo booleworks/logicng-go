@@ -31,7 +31,7 @@ type Collector[R any] interface {
 
 	// RollbackAndReturnModels discards all models since the last commit and
 	// returns them.  Also calls the Rollback method of the handler.
-	RollbackAndReturnModels(solver *sat.Solver, hdl handler.Handler) []*model.Model
+	RollbackAndReturnModels(solver *sat.Solver, hdl handler.Handler) ([]*model.Model, handler.State)
 
 	// Result returns the committed state of the collector .
 	Result() R

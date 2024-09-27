@@ -123,13 +123,13 @@ func (c *modelEnumCollector) Rollback(hdl handler.Handler) handler.State {
 	return succ
 }
 
-func (c *modelEnumCollector) RollbackAndReturnModels(_ *sat.Solver, hdl handler.Handler) []*model.Model {
+func (c *modelEnumCollector) RollbackAndReturnModels(_ *sat.Solver, hdl handler.Handler) ([]*model.Model, handler.State) {
 	modelsToReturn := make([]*model.Model, len(c.uncommittedModels))
 	for i, lits := range c.uncommittedModels {
 		modelsToReturn[i] = model.New(lits...)
 	}
-	c.Rollback(hdl)
-	return modelsToReturn
+	state := c.Rollback(hdl)
+	return modelsToReturn, state
 }
 
 func (c *modelEnumCollector) Result() []*model.Model {

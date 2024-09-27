@@ -125,11 +125,11 @@ func (c *modelEnumBddCollector) Rollback(hdl handler.Handler) handler.State {
 	return succ
 }
 
-func (c *modelEnumBddCollector) RollbackAndReturnModels(_ *sat.Solver, hdl handler.Handler) []*model.Model {
+func (c *modelEnumBddCollector) RollbackAndReturnModels(_ *sat.Solver, hdl handler.Handler) ([]*model.Model, handler.State) {
 	modelsToReturn := make([]*model.Model, len(c.uncommittedModels))
 	copy(modelsToReturn, c.uncommittedModels)
-	c.Rollback(hdl)
-	return modelsToReturn
+	state := c.Rollback(hdl)
+	return modelsToReturn, state
 }
 
 func (c *modelEnumBddCollector) Result() *bdd.BDD {

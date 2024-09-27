@@ -117,7 +117,11 @@ func (m *ModelIterator[R]) iterRecursive(
 			remainingVars.Remove(literal.Variable())
 		}
 
-		newSplitAssignments := collector.RollbackAndReturnModels(solver, m.hdl)
+		newSplitAssignments, st := collector.RollbackAndReturnModels(solver, m.hdl)
+		if !st.Success {
+			solver.LoadState(state)
+			return st
+		}
 		recursiveSplitVars := m.strategy.SplitVarsForRecursionDepth(remainingVars.AsImmutable(), solver, recursionDepth+1)
 		for _, newSplitAssignment := range newSplitAssignments {
 			recursiveSplitAssignment := make([]f.Literal, newSplitAssignment.Size())
