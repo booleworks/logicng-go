@@ -117,3 +117,8 @@ solver.Add(form)
 result := Solver.Sat() // is true
 ```
 
+## Funding
+
+LogicNG for Go development is partially funded by the [SofDCar project](https://sofdcar.de/):
+
+<a href="https://www.logicng.org"><img src="https://github.com/booleworks/logicng-rs/blob/main/doc/logos/bmwk.png?raw=true" alt="logo" width="200"></a>
