@@ -207,7 +207,7 @@ func (m *maxSatAlgorithm) isBmo(cache bool) bool {
 			nbPartitionWeights.Put(weight, val.(int)+1)
 		}
 	}
-	partitionWeights.Each(func(_ int, value interface{}) {
+	partitionWeights.Each(func(_ int, value any) {
 		m.orderWeights = append(m.orderWeights, value.(int))
 	})
 	slices.Sort(m.orderWeights)

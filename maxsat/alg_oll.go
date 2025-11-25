@@ -134,7 +134,7 @@ func (m *oll) unweighted() (Result, handler.State) {
 					assumptions = append(assumptions, sat.Not(m.softClauses[i].assumptionVar))
 				}
 			}
-			cardinalityAssumptions.Each(func(_ int, value interface{}) {
+			cardinalityAssumptions.Each(func(_ int, value any) {
 				assumptions = append(assumptions, sat.Not(value.(int32)))
 			})
 		}
@@ -188,7 +188,7 @@ func (m *oll) weighted() (Result, handler.State) {
 						notConsidered++
 					}
 				}
-				cardinalityAssumptions.Each(func(_ int, value interface{}) {
+				cardinalityAssumptions.Each(func(_ int, value any) {
 					softId := boundMapping[value.(int32)]
 					if softId.weight < minWeight {
 						notConsidered++
@@ -202,7 +202,7 @@ func (m *oll) weighted() (Result, handler.State) {
 							assumptions = append(assumptions, sat.Not(m.softClauses[i].assumptionVar))
 						}
 					}
-					cardinalityAssumptions.Each(func(_ int, value interface{}) {
+					cardinalityAssumptions.Each(func(_ int, value any) {
 						softId := boundMapping[value.(int32)]
 						if softId.weight >= minWeight {
 							assumptions = append(assumptions, sat.Not(value.(int32)))
@@ -347,7 +347,7 @@ func (m *oll) weighted() (Result, handler.State) {
 					assumptions = append(assumptions, sat.Not(m.softClauses[i].assumptionVar))
 				}
 			}
-			cardinalityAssumptions.Each(func(_ int, value interface{}) {
+			cardinalityAssumptions.Each(func(_ int, value any) {
 				softId := boundMapping[value.(int32)]
 				if softId.weight >= minWeight {
 					assumptions = append(assumptions, sat.Not(value.(int32)))
@@ -404,7 +404,7 @@ func (m *oll) findNextWeightDiversity(
 				nbWeights.Add(m.softClauses[i].weight)
 			}
 		}
-		cardinalityAssumptions.Each(func(_ int, value interface{}) {
+		cardinalityAssumptions.Each(func(_ int, value any) {
 			softId := boundMapping[value.(int32)]
 			if softId.weight >= nextWeight {
 				nbClauses++
@@ -432,7 +432,7 @@ func (m *oll) findNextWeight(
 			nextWeight = m.softClauses[i].weight
 		}
 	}
-	cardinalityAssumptions.Each(func(_ int, value interface{}) {
+	cardinalityAssumptions.Each(func(_ int, value any) {
 		softId := boundMapping[value.(int32)]
 		if softId.weight > nextWeight && softId.weight < weight {
 			nextWeight = softId.weight

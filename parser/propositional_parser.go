@@ -55,7 +55,7 @@ func (p *PropositionalParser) parse(data string) (f.Formula, error) {
 	listener := &formulaListener{fac: p.fac}
 	antlr.ParseTreeWalkerDefault.Walk(listener, lngParser.Formula())
 	if errorListener.err {
-		return p.fac.Falsum(), errorx.BadInput(errorListener.message)
+		return p.fac.Falsum(), errorx.BadInput("%s", errorListener.message)
 	}
 	return listener.formula(), nil
 }
@@ -68,7 +68,7 @@ type errorListener struct {
 
 func (l *errorListener) SyntaxError(
 	_ antlr.Recognizer,
-	_ interface{},
+	_ any,
 	line, column int,
 	msg string,
 	_ antlr.RecognitionException,

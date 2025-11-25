@@ -283,7 +283,7 @@ func (f Formula) IsAtomic() bool {
 
 // Comparator compares two formulas f1 and f2 with their integer
 // value.
-func Comparator(a, b interface{}) int {
+func Comparator(a, b any) int {
 	aFormula := a.(Literal)
 	bFormula := b.(Literal)
 	switch {

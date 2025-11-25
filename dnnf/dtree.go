@@ -266,7 +266,7 @@ func sortedIntersect(left, right []int32) []int32 {
 		}
 	}
 	result := make([]int32, intersection.Size())
-	intersection.Each(func(i int, value interface{}) {
+	intersection.Each(func(i int, value any) {
 		result[i] = value.(int32)
 	})
 	return result

@@ -179,7 +179,7 @@ func force(
 
 	ordering := make([]f.Variable, currentOrdering.Size())
 	count := 0
-	currentOrdering.Each(func(k interface{}, _ interface{}) {
+	currentOrdering.Each(func(k any, _ any) {
 		ordering[count] = k.(*graph.HypergraphNode).Content
 		count++
 	})
@@ -213,7 +213,7 @@ func orderingFromTentativeNewLocations(newLocations *linkedhashmap.Map) *linkedh
 func sortedlocPairList(mapping *linkedhashmap.Map) *[]locPair {
 	list := make([]locPair, mapping.Size())
 	count := 0
-	mapping.Each(func(k interface{}, v interface{}) {
+	mapping.Each(func(k any, v any) {
 		list[count] = locPair{k.(*graph.HypergraphNode), v.(float64)}
 		count++
 	})
@@ -229,7 +229,7 @@ func shouldProceed(lastOrdering, currentOrdering *linkedhashmap.Map) bool {
 	if lastOrdering.Size() != currentOrdering.Size() {
 		return true
 	}
-	return lastOrdering.Any(func(k interface{}, v interface{}) bool {
+	return lastOrdering.Any(func(k any, v any) bool {
 		val, _ := currentOrdering.Get(k)
 		return val != v
 	})

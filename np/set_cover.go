@@ -37,7 +37,7 @@ func MinimumSetCover[T any](sets [][]T) [][]T {
 	for _, _occs := range elementOccurrences.Values() {
 		occs := _occs.(*linkedhashset.Set)
 		ops := make([]f.Variable, 0, occs.Size())
-		occs.Each(func(_ int, val interface{}) {
+		occs.Each(func(_ int, val any) {
 			ops = append(ops, val.(f.Variable))
 		})
 		_ = solver.AddHardFormula(fac.Or(f.VariablesAsFormulas(ops)...))

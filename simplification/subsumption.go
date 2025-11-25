@@ -81,10 +81,10 @@ func DNFSubsumptionWithHandler(
 
 func combine(sets *linkedhashset.Set, innerFunc, outerFunc func(...f.Formula) f.Formula) f.Formula {
 	clauses := make([]f.Formula, sets.Size())
-	sets.Each(func(i int, _lits interface{}) {
+	sets.Each(func(i int, _lits any) {
 		lits := _lits.(*treeset.Set)
 		literals := make([]f.Literal, lits.Size())
-		lits.Each(func(i int, val interface{}) { literals[i] = val.(f.Literal) })
+		lits.Each(func(i int, val any) { literals[i] = val.(f.Literal) })
 		clauses[i] = innerFunc(f.LiteralsAsFormulas(literals)...)
 	})
 	return outerFunc(clauses...)
@@ -106,8 +106,8 @@ func generateSubsumedUBTree(fac f.Factory, formula f.Formula, hdl handler.Handle
 	}
 	ubTree := newUbtree()
 	e := event.Nothing
-	mapping.Each(func(_ interface{}, value interface{}) {
-		value.(*arraylist.List).Each(func(_ int, _set interface{}) {
+	mapping.Each(func(_ any, value any) {
+		value.(*arraylist.List).Each(func(_ int, _set any) {
 			set := _set.(*f.LitSet)
 			if ubTree.firstSubset(set) == nil {
 				ubTree.addSet(set)
@@ -153,7 +153,7 @@ func (u *ubtree) addSet(formulas *f.LitSet) {
 	nodes := u.rootNodes
 	var node *ubnode
 	set := convertSet(formulas)
-	set.Each(func(_ int, element interface{}) {
+	set.Each(func(_ int, element any) {
 		res, ok := nodes.Get(element)
 		if !ok {
 			node = newUbnode(element.(f.Literal))
@@ -188,7 +188,7 @@ func (u *ubtree) allSets() *linkedhashset.Set {
 func (u *ubtree) firstSubsetRec(set *treeset.Set, forest *treemap.Map) *treeset.Set {
 	nodes := u.getAllNodesContainingElements(set, forest)
 	var foundSubset *treeset.Set
-	nodes.Each(func(_ int, _node interface{}) {
+	nodes.Each(func(_ int, _node any) {
 		node := _node.(*ubnode)
 		if foundSubset != nil {
 			return
@@ -198,7 +198,7 @@ func (u *ubtree) firstSubsetRec(set *treeset.Set, forest *treemap.Map) *treeset.
 			return
 		}
 		remainingSet := treeset.NewWith(f.Comparator)
-		set.Each(func(index int, node interface{}) {
+		set.Each(func(index int, node any) {
 			if index > 0 {
 				remainingSet.Add(node)
 			}
@@ -210,7 +210,7 @@ func (u *ubtree) firstSubsetRec(set *treeset.Set, forest *treemap.Map) *treeset.
 
 func (u *ubtree) getAllNodesContainingElements(set *treeset.Set, forest *treemap.Map) *linkedhashset.Set {
 	nodes := linkedhashset.New()
-	set.Each(func(_ int, element interface{}) {
+	set.Each(func(_ int, element any) {
 		node, ok := forest.Get(element)
 		if ok {
 			nodes.Add(node)

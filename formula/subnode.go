@@ -20,7 +20,7 @@ func SubNodes(fac Factory, formula Formula) []Formula {
 	}
 	result.Add(formula)
 	slice := make([]Formula, result.Size())
-	result.Each(func(i int, formula interface{}) { slice[i] = formula.(Formula) })
+	result.Each(func(i int, formula any) { slice[i] = formula.(Formula) })
 	SetFunctionCache(fac, FuncSubnodes, formula, slice)
 	return slice
 }

@@ -69,7 +69,7 @@ func newCompiler(fac f.Factory, formula f.Formula) *compiler {
 	return &compiler
 }
 
-func bitsetComp(a, b interface{}) int {
+func bitsetComp(a, b any) int {
 	bitset1 := a.(*bitset)
 	bitset2 := b.(*bitset)
 	if len(bitset1.bits) < len(bitset2.bits) {
