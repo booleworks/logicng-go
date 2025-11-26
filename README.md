@@ -5,8 +5,6 @@
 
 # A Library for Creating, Manipulating, and Solving Boolean Formulas
 
-__THIS IS AN ALPHA VERSION! THE API MAY STILL CHANGE IN SIGNIFICANT WAYS! DO NOT USE IN PRODUCTION!__
-
 ## Introduction
 
 This is [LogicNG](https://logicng.org/) for Go. The [original
