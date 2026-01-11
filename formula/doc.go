@@ -9,10 +9,10 @@
 // parse them to the factory.  All major algorithms which generate or
 // manipulate formulas will need a formula factory as parameter.  Usually
 // within an application you only have one formula factory and keep working
-// with it. Very seldom there should be the need to create more than one
+// with it. There should be very seldom the need to create more than one
 // factory.
 //
 // Formula factories are not thread-safe and you can not share formulas between
-// formula factories since a formula in fact is only a unique ID (unit32) on
+// formula factories since a formula in fact is only a unique ID (uint32) on
 // the factory.
 package formula

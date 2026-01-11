@@ -14,6 +14,6 @@
 //	fac := formula.NewFactory()
 //	formula := fac.And(fac.Variable("a"), fac.Variable("b")) // formula a & b
 //	ass := assignment.New(fac, fac.Variable("a"))            // assigns a to true
-//	eval := Evaluate(fac, formula, ass)                      // evaluates to false (b is false)
+//	eval := Evaluate(fac, formula, ass)                      // evaluates to false (b is false, since it is not in the assignment)
 //	restrict := Restrict(fac, formula, ass)                  // restricts to b
 package assignment

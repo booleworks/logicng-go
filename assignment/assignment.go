@@ -1,6 +1,7 @@
 package assignment
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/booleworks/logicng-go/errorx"
@@ -79,25 +80,31 @@ func (a *Assignment) Size() int {
 	return len(a.pos) + len(a.neg)
 }
 
-// Sprint prints the assignment in human-readable form.
+// Sprint prints the assignment in human-readable form with deterministic
+// ordering (sorted by variable name).
 func (a *Assignment) Sprint(fac f.Factory) string {
-	var sb strings.Builder
-	sb.WriteString("[")
-	length := len(a.pos) + len(a.neg)
-	count := 0
+	// Collect all literals
+	literals := make([]f.Literal, 0, len(a.pos)+len(a.neg))
 	for l := range a.pos {
-		count++
-		lit := f.EncodeFormula(f.SortLiteral, l)
-		sb.WriteString(lit.Sprint(fac))
-		if count < length {
-			sb.WriteString(", ")
-		}
+		literals = append(literals, f.Literal(f.EncodeFormula(f.SortLiteral, l)))
 	}
 	for l := range a.neg {
-		count++
-		lit := f.EncodeFormula(f.SortLiteral, l)
+		literals = append(literals, f.Literal(f.EncodeFormula(f.SortLiteral, l)))
+	}
+
+	// Sort by variable name for deterministic output
+	slices.SortFunc(literals, func(a, b f.Literal) int {
+		nameA, _ := fac.VarName(a.Variable())
+		nameB, _ := fac.VarName(b.Variable())
+		return strings.Compare(nameA, nameB)
+	})
+
+	// Build the output string
+	var sb strings.Builder
+	sb.WriteString("[")
+	for i, lit := range literals {
 		sb.WriteString(lit.Sprint(fac))
-		if count < length {
+		if i < len(literals)-1 {
 			sb.WriteString(", ")
 		}
 	}
