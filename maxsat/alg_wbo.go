@@ -241,7 +241,7 @@ func (m *wbo) computeCostCore(conflict []int32) int {
 		return 1
 	}
 	coreCost := math.MaxInt
-	for i := 0; i < len(conflict); i++ {
+	for i := range conflict {
 		indexSoft := m.coreMapping[conflict[i]]
 		if m.softClauses[indexSoft].weight < coreCost {
 			coreCost = m.softClauses[indexSoft].weight
@@ -252,7 +252,7 @@ func (m *wbo) computeCostCore(conflict []int32) int {
 
 func (m *wbo) relaxCore(conflict []int32, weightCore int, assumps *[]int32) {
 	var lits []int32
-	for i := 0; i < len(conflict); i++ {
+	for i := range conflict {
 		indexSoft := m.coreMapping[conflict[i]]
 		if m.softClauses[indexSoft].weight == weightCore {
 			p := m.newLiteral(false)
@@ -309,7 +309,7 @@ func (m *wbo) encodeEO(lits []int32) {
 		for i := 0; i < len(lits)-1; i++ {
 			auxVariables[i] = m.newLiteral(false)
 		}
-		for i := 0; i < len(lits); i++ {
+		for i := range lits {
 			if i == 0 {
 				m.addHardClause([]int32{lits[i], sat.Not(auxVariables[i])})
 				m.addHardClause([]int32{sat.Not(lits[i]), auxVariables[i]})

@@ -26,7 +26,7 @@ func Normalize(fac f.Factory, constraint f.Formula) f.Formula {
 		normRhs = rhs
 		f1 := normalizeLE(fac, normPs, normCs, normRhs)
 		normCs = make([]int, len(literals))
-		for i := 0; i < len(literals); i++ {
+		for i := range literals {
 			normCs[i] = -coefficients[i]
 		}
 		normRhs = -rhs
@@ -41,7 +41,7 @@ func Normalize(fac f.Factory, constraint f.Formula) f.Formula {
 		}
 		return normalizeLE(fac, normPs, normCs, normRhs)
 	case f.GT, f.GE:
-		for i := 0; i < len(literals); i++ {
+		for i := range literals {
 			normCs[i] = -coefficients[i]
 		}
 		if csort == f.GE {

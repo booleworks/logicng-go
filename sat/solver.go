@@ -1,7 +1,7 @@
 package sat
 
 import (
-	"sort"
+	"slices"
 
 	"github.com/booleworks/logicng-go/configuration"
 	"github.com/booleworks/logicng-go/encoding"
@@ -149,7 +149,7 @@ func (s *Solver) addClause(formula f.Formula, proposition f.Proposition) {
 
 func (s *Solver) generateClauseVector(literals []f.Literal) []int32 {
 	clause := make([]int32, len(literals))
-	sort.Slice(literals, func(i, j int) bool { return literals[i] < literals[j] })
+	slices.Sort(literals)
 	for i, lit := range literals {
 		_, phase, _ := s.fac.LitNamePhase(lit)
 		index := s.getOrAddIndex(lit)

@@ -22,7 +22,7 @@ func (q *boundedQueue) growTo(size int) {
 		return
 	}
 	numberNew := size - len(q.elems)
-	for i := 0; i < numberNew; i++ {
+	for range numberNew {
 		q.elems = append(q.elems, 0)
 	}
 	q.first = 0

@@ -159,18 +159,18 @@ func (c *compiler) initializeCaches(dtree dtree) {
 	variables := f.Variables(c.fac, c.originalCNF).Size()
 
 	c.localCacheKeys = make([][]*bitset, depth)
-	for i := 0; i < depth; i++ {
+	for i := range depth {
 		c.localCacheKeys[i] = make([]*bitset, sep)
-		for j := 0; j < sep; j++ {
+		for j := range sep {
 			c.localCacheKeys[i][j] = newBitset(dtree.size() + int32(variables))
 		}
 	}
 	c.localOccurrences = make([][][]int32, depth)
-	for i := 0; i < depth; i++ {
+	for i := range depth {
 		c.localOccurrences[i] = make([][]int32, sep)
-		for j := 0; j < sep; j++ {
+		for j := range sep {
 			c.localOccurrences[i][j] = make([]int32, variables)
-			for k := 0; k < variables; k++ {
+			for k := range variables {
 				c.localOccurrences[i][j][k] = -1
 			}
 		}
@@ -243,7 +243,7 @@ func (c *compiler) cnf2ddnnfInner(tree dtree, currentShannons int, hdl handler.H
 
 func (c *compiler) chooseShannonVariable(tree dtree, separator *bitset, currentShannons int) int32 {
 	occurrences := c.localOccurrences[tree.depth()][currentShannons]
-	for i := 0; i < len(occurrences); i++ {
+	for i := range occurrences {
 		if separator.get(i) {
 			occurrences[i] = 0
 		} else {

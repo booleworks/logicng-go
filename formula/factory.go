@@ -192,7 +192,7 @@ func (fac *CachingFactory) Variable(name string) Formula {
 // Vars returns a list of Boolean variable with the given names.
 func (fac *CachingFactory) Vars(name ...string) []Variable {
 	variables := make([]Variable, len(name))
-	for i := 0; i < len(name); i++ {
+	for i := range name {
 		variables[i] = fac.Var(name[i])
 	}
 	return variables
@@ -713,7 +713,7 @@ func (fac *CachingFactory) constructCC(comparator CSort, rhs int, variables []Va
 		rhs:          rhs,
 		comparator:   comparator,
 	}
-	for i := 0; i < len(variables); i++ {
+	for i := range variables {
 		pbc.coefficients[i] = 1
 	}
 	hash := hashPbc(&pbc)
@@ -1033,15 +1033,15 @@ func (fac *CachingFactory) SetPrintSymbols(symbols *PrintSymbols) {
 // Statistics returns a statistic of the factory as a multi-line string.
 func (fac *CachingFactory) Statistics() string {
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Current ID:                %d\n", fac.id))
-	sb.WriteString(fmt.Sprintf("# Literals:                %d\n", len(fac.literals)))
-	sb.WriteString(fmt.Sprintf("# Negations:               %d\n", len(fac.nots)))
-	sb.WriteString(fmt.Sprintf("# Implications:            %d\n", len(fac.implications)))
-	sb.WriteString(fmt.Sprintf("# Equivalences:            %d\n", len(fac.equivalences)))
-	sb.WriteString(fmt.Sprintf("# Conjunctions:            %d\n", len(fac.ands)))
-	sb.WriteString(fmt.Sprintf("# Disjunctions:            %d\n", len(fac.ors)))
-	sb.WriteString(fmt.Sprintf("# Cardinality Constraints: %d\n", len(fac.ccs)))
-	sb.WriteString(fmt.Sprintf("# PB Constraints:          %d\n", len(fac.pbcs)))
+	fmt.Fprintf(&sb, "Current ID:                %d\n", fac.id)
+	fmt.Fprintf(&sb, "# Literals:                %d\n", len(fac.literals))
+	fmt.Fprintf(&sb, "# Negations:               %d\n", len(fac.nots))
+	fmt.Fprintf(&sb, "# Implications:            %d\n", len(fac.implications))
+	fmt.Fprintf(&sb, "# Equivalences:            %d\n", len(fac.equivalences))
+	fmt.Fprintf(&sb, "# Conjunctions:            %d\n", len(fac.ands))
+	fmt.Fprintf(&sb, "# Disjunctions:            %d\n", len(fac.ors))
+	fmt.Fprintf(&sb, "# Cardinality Constraints: %d\n", len(fac.ccs))
+	fmt.Fprintf(&sb, "# PB Constraints:          %d\n", len(fac.pbcs))
 	return sb.String()
 }
 

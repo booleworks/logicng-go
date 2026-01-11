@@ -179,19 +179,19 @@ func formatPBC(fac Factory, comp CSort, rhs int, lits []Literal, coeffs []int, s
 	numOps := len(lits)
 	for i := 0; i < numOps-1; i++ {
 		if coeffs[i] != 1 {
-			sb.WriteString(fmt.Sprintf("%d%s%s%s", coeffs[i], mul, lits[i].Sprint(fac), add))
+			fmt.Fprintf(&sb, "%d%s%s%s", coeffs[i], mul, lits[i].Sprint(fac), add)
 		} else {
-			sb.WriteString(fmt.Sprintf("%s%s", lits[i].Sprint(fac), add))
+			fmt.Fprintf(&sb, "%s%s", lits[i].Sprint(fac), add)
 		}
 	}
 	if numOps > 0 {
 		if coeffs[numOps-1] != 1 {
-			sb.WriteString(fmt.Sprintf("%d%s%s", coeffs[numOps-1], mul, lits[numOps-1].Sprint(fac)))
+			fmt.Fprintf(&sb, "%d%s%s", coeffs[numOps-1], mul, lits[numOps-1].Sprint(fac))
 		} else {
-			sb.WriteString(lits[numOps-1].Sprint(fac))
+			fmt.Fprint(&sb, lits[numOps-1].Sprint(fac))
 		}
 	}
-	sb.WriteString(fmt.Sprintf("%s%d", formatPBComparator(comp, s), rhs))
+	fmt.Fprintf(&sb, "%s%d", formatPBComparator(comp, s), rhs)
 	return sb.String()
 }
 

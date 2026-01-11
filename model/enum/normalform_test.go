@@ -53,7 +53,7 @@ func TestCanonicalCNFRandom(t *testing.T) {
 	config.WeightPBC = 0.5
 	config.Seed = 42
 	randomizer := randomizer.New(fac, config)
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		testCNF(t, fac, randomizer.Formula(3))
 	}
 }
@@ -106,7 +106,7 @@ func TestCanonicalDNFRandom(t *testing.T) {
 	config.WeightPBC = 0.5
 	config.Seed = 42
 	randomizer := randomizer.New(fac, config)
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		testDNF(t, fac, randomizer.Formula(3))
 	}
 }

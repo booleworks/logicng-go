@@ -527,7 +527,7 @@ func TestEvaluatesToConstantRandom(t *testing.T) {
 		fac.Var("v3"): true,
 	}
 
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		config := randomizer.DefaultConfig()
 		config.NumVars = 10
 		config.WeightPBC = 1

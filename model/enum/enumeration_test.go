@@ -279,7 +279,7 @@ func TestMERandom(t *testing.T) {
 	assert := assert.New(t)
 	fac := f.NewFactory()
 	for _, cfg := range cfgs {
-		for i := 0; i < 100; i++ {
+		for i := range 100 {
 			config := randomizer.DefaultConfig()
 			config.Seed = int64(i)
 			config.NumVars = 20
@@ -305,7 +305,7 @@ func TestMERandomAdditionalVars(t *testing.T) {
 	assert := assert.New(t)
 	fac := f.NewFactory()
 	for _, cfg := range cfgs {
-		for i := 0; i < 500; i++ {
+		for i := range 500 {
 			config := randomizer.DefaultConfig()
 			config.Seed = int64(i)
 			config.NumVars = 20

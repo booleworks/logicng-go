@@ -18,7 +18,7 @@ func TestRandomizerDeterminism(t *testing.T) {
 	assert.NotEqual(expected, New(fac).Formula(3))
 
 	expectedList := randomFormulas(fac)
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		assert.Equal(expectedList, randomFormulas(fac))
 	}
 }
@@ -29,7 +29,7 @@ func TestRandomizerConstant(t *testing.T) {
 	random := NewWithSeed(fac, 42)
 	numTrue := 0
 
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		constant := random.Constant()
 		assert.True(constant.Sort() <= f.SortTrue)
 		if constant == fac.Verum() {
@@ -50,7 +50,7 @@ func TestRandomizerVariable(t *testing.T) {
 	numA := 0
 	numB := 0
 	numC := 0
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		variable := random.Variable()
 		name, _ := fac.VarName(variable)
 		assert.Contains([]string{"A", "B", "C"}, name)
@@ -68,7 +68,7 @@ func TestRandomizerVariable(t *testing.T) {
 	assert.True(numC >= 20 && numC <= 40)
 
 	vars2 := make([]f.Variable, 20)
-	for i := 0; i < len(vars2); i++ {
+	for i := range vars2 {
 		vars2[i] = fac.Var(fmt.Sprintf("TEST_VAR_%d", i))
 	}
 	config = DefaultConfig()
@@ -79,7 +79,7 @@ func TestRandomizerVariable(t *testing.T) {
 	config.WeightEXO = 1
 	config.Seed = 42
 	random = New(fac, config)
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		formula := random.Formula(4)
 		for _, v := range f.Variables(fac, formula).Content() {
 			assert.Contains(vars2, v)
@@ -97,7 +97,7 @@ func TestRandomizerLiteral(t *testing.T) {
 	random := New(fac, config)
 
 	numPos := 0
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		literal := random.Literal()
 		if literal.IsPos() {
 			numPos++
@@ -121,7 +121,7 @@ func TestRandomizerAtom(t *testing.T) {
 	random := New(fac, config)
 
 	numConst, numPos, numNeg, numPbc, numCc, numAmo, numExo := 0, 0, 0, 0, 0, 0, 0
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		formula := random.Atom()
 		assert.True(formula.IsAtomic())
 		if formula.Sort() <= f.SortTrue {
@@ -159,7 +159,7 @@ func TestRandomizerAtom(t *testing.T) {
 	config.WeightPosLit = 3
 	config.WeightNegLit = 6
 	random = New(fac, config)
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		assert.Equal(f.SortLiteral, random.Atom().Sort())
 	}
 }
@@ -169,11 +169,11 @@ func TestRandomizerAnd(t *testing.T) {
 	fac := f.NewFactory()
 	random := NewWithSeed(fac, 42)
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		assert.True(random.And(0).IsAtomic())
 	}
 	for depth := 1; depth <= 7; depth++ {
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			formula := random.And(depth)
 			assert.Equal(f.SortAnd, formula.Sort())
 			assert.True(f.FormulaDepth(fac, formula) <= depth)
@@ -186,11 +186,11 @@ func TestRandomizerOr(t *testing.T) {
 	fac := f.NewFactory()
 	random := NewWithSeed(fac, 42)
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		assert.True(random.Or(0).IsAtomic())
 	}
 	for depth := 1; depth <= 7; depth++ {
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			formula := random.Or(depth)
 			assert.Equal(f.SortOr, formula.Sort())
 			assert.True(f.FormulaDepth(fac, formula) <= depth)
@@ -203,12 +203,12 @@ func TestRandomizerNot(t *testing.T) {
 	fac := f.NewFactory()
 	random := NewWithSeed(fac, 42)
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		assert.True(random.Not(0).IsAtomic())
 		assert.True(random.Not(1).IsAtomic())
 	}
 	for depth := 2; depth <= 7; depth++ {
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			formula := random.Not(depth)
 			assert.Equal(f.SortNot, formula.Sort())
 			assert.True(f.FormulaDepth(fac, formula) <= depth)
@@ -221,11 +221,11 @@ func TestRandomizerImpl(t *testing.T) {
 	fac := f.NewFactory()
 	random := NewWithSeed(fac, 42)
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		assert.True(random.Impl(0).IsAtomic())
 	}
 	for depth := 1; depth <= 7; depth++ {
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			formula := random.Impl(depth)
 			assert.Equal(f.SortImpl, formula.Sort())
 			assert.True(f.FormulaDepth(fac, formula) <= depth)
@@ -238,11 +238,11 @@ func TestRandomizerEquiv(t *testing.T) {
 	fac := f.NewFactory()
 	random := NewWithSeed(fac, 42)
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		assert.True(random.Equiv(0).IsAtomic())
 	}
 	for depth := 1; depth <= 7; depth++ {
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			formula := random.Equiv(depth)
 			assert.Equal(f.SortEquiv, formula.Sort())
 			assert.True(f.FormulaDepth(fac, formula) <= depth)

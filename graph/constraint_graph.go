@@ -18,7 +18,7 @@ func addSubformula(fac f.Factory, formula f.Formula, graph *FormulaGraph) {
 	if len(variables) == 1 {
 		graph.AddNode(variables[0].AsFormula())
 	}
-	for i := 0; i < len(variables); i++ {
+	for i := range variables {
 		for j := i + 1; j < len(variables); j++ {
 			graph.Connect(variables[i].AsFormula(), variables[j].AsFormula())
 		}

@@ -309,7 +309,7 @@ func TestDnfSubsumptionLarge(t *testing.T) {
 	assert := assert.New(t)
 	fac := f.NewFactory()
 	formulas, _ := io.ReadFormulas(fac, "./../test/data/formulas/small_formulas.txt")
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		dnf := normalform.FactorizedDNF(fac, formulas[i])
 		subsumed := dnfs(t, fac, dnf)
 		assert.True(sat.IsEquivalent(fac, dnf, formulas[i]))

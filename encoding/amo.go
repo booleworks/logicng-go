@@ -9,7 +9,7 @@ import (
 
 func amoPure(result Result, vars []f.Variable) {
 	fac := result.Factory()
-	for i := 0; i < len(vars); i++ {
+	for i := range vars {
 		for j := i + 1; j < len(vars); j++ {
 			result.AddClause(vars[i].Negate(fac), vars[j].Negate(fac))
 		}
@@ -22,7 +22,7 @@ func amoLadder(result Result, vars []f.Variable) {
 	for i := 0; i < len(vars)-1; i++ {
 		seqAuxiliary[i] = result.NewAuxVar(f.AuxCC)
 	}
-	for i := 0; i < len(vars); i++ {
+	for i := range vars {
 		if i == 0 {
 			result.AddClause(vars[0].Negate(fac), seqAuxiliary[0].AsLiteral())
 		} else if i == len(vars)-1 {
@@ -44,11 +44,11 @@ func amoProduct(result Result, recursiveBound int, vars []f.Variable) {
 	p := int(math.Ceil(math.Sqrt(float64(n))))
 	q := int(math.Ceil(float64(n) / float64(p)))
 	us := make([]f.Variable, p)
-	for i := 0; i < len(us); i++ {
+	for i := range us {
 		us[i] = result.NewAuxVar(f.AuxCC)
 	}
 	vs := make([]f.Variable, q)
-	for i := 0; i < len(vs); i++ {
+	for i := range vs {
 		vs[i] = result.NewAuxVar(f.AuxCC)
 	}
 	if len(us) <= recursiveBound {
@@ -61,8 +61,8 @@ func amoProduct(result Result, recursiveBound int, vars []f.Variable) {
 	} else {
 		amoProduct(result, recursiveBound, vs)
 	}
-	for i := 0; i < p; i++ {
-		for j := 0; j < q; j++ {
+	for i := range p {
+		for j := range q {
 			k := i*q + j
 			if k >= 0 && k < n {
 				result.AddClause(vars[k].Negate(fac), us[i].AsLiteral())
@@ -73,7 +73,7 @@ func amoProduct(result Result, recursiveBound int, vars []f.Variable) {
 }
 
 func buildPure(result Result, vars []f.Variable) {
-	for i := 0; i < len(vars); i++ {
+	for i := range vars {
 		for j := i + 1; j < len(vars); j++ {
 			result.AddClause(vars[i].Negate(result.Factory()), vars[j].Negate(result.Factory()))
 		}
@@ -81,7 +81,7 @@ func buildPure(result Result, vars []f.Variable) {
 }
 
 func buildPureLit(result Result, lits []f.Literal) {
-	for i := 0; i < len(lits); i++ {
+	for i := range lits {
 		for j := i + 1; j < len(lits); j++ {
 			result.AddClause(lits[i].Negate(result.Factory()), lits[j].Negate(result.Factory()))
 		}
@@ -156,7 +156,7 @@ func amoBinary(result Result, vars []f.Variable) {
 	twoPowNBits := int(math.Pow(2, float64(numberOfBits)))
 	k := (twoPowNBits - len(vars)) * 2
 	bits := make([]f.Variable, numberOfBits)
-	for i := 0; i < numberOfBits; i++ {
+	for i := range numberOfBits {
 		bits[i] = result.NewAuxVar(f.AuxCC)
 	}
 	var grayCode, nextGray int
@@ -167,7 +167,7 @@ func amoBinary(result Result, vars []f.Variable) {
 		grayCode = i ^ (i >> 1)
 		i++
 		nextGray = i ^ (i >> 1)
-		for j := 0; j < numberOfBits; j++ {
+		for j := range numberOfBits {
 			if (grayCode & (1 << j)) == (nextGray & (1 << j)) {
 				if (grayCode & (1 << j)) != 0 {
 					result.AddClause(vars[index].Negate(fac), bits[j].AsLiteral())
@@ -181,7 +181,7 @@ func amoBinary(result Result, vars []f.Variable) {
 	for i < twoPowNBits {
 		index++
 		grayCode = i ^ (i >> 1)
-		for j := 0; j < numberOfBits; j++ {
+		for j := range numberOfBits {
 			if (grayCode & (1 << j)) != 0 {
 				result.AddClause(vars[index].Negate(fac), bits[j].AsLiteral())
 			} else {
@@ -226,7 +226,7 @@ func bimanderIntern(result Result, groupSize int, vars []f.Variable) {
 func initializeGroups(result Result, groupSize int, vars []f.Variable) [][]f.Literal {
 	groups := make([][]f.Literal, 0, 4)
 	n := len(vars)
-	for i := 0; i < groupSize; i++ {
+	for range groupSize {
 		groups = append(groups, make([]f.Literal, 0, 4))
 	}
 

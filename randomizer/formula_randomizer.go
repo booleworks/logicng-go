@@ -223,7 +223,7 @@ func (r *FormulaRandomizer) And(maxDepth int) f.Formula {
 		return r.Atom()
 	}
 	operands := make([]f.Formula, 2+r.random.Intn(r.config.MaximumOpsAnd-2))
-	for i := 0; i < len(operands); i++ {
+	for i := range operands {
 		operands[i] = r.Formula(maxDepth - 1)
 	}
 	formula := r.fac.And(operands...)
@@ -239,7 +239,7 @@ func (r *FormulaRandomizer) Or(maxDepth int) f.Formula {
 		return r.Atom()
 	}
 	operands := make([]f.Formula, 2+r.random.Intn(r.config.MaximumOpsOr-2))
-	for i := 0; i < len(operands); i++ {
+	for i := range operands {
 		operands[i] = r.Formula(maxDepth - 1)
 	}
 	formula := r.fac.Or(operands...)
@@ -295,7 +295,7 @@ func (r *FormulaRandomizer) PBC() f.Formula {
 	coefficients := make([]int, numOps)
 	minSum := 0 // (positive) sum of all negative coefficients
 	maxSum := 0 // sum of all positive coefficients
-	for i := 0; i < numOps; i++ {
+	for i := range numOps {
 		literals[i] = r.Literal()
 		coefficients[i] = r.random.Intn(r.config.MaximumCoeffPBC) + 1
 		if r.random.Float64() < r.coeffNegativeProbability {
@@ -351,7 +351,7 @@ func (r *FormulaRandomizer) Formula(maxDepth int) f.Formula {
 // maximal depth.
 func (r *FormulaRandomizer) ConstraintSet(numConstraints, maxDepth int) []f.Formula {
 	formulas := make([]f.Formula, numConstraints)
-	for i := 0; i < len(formulas); i++ {
+	for i := range formulas {
 		formulas[i] = r.Formula(maxDepth)
 	}
 	return formulas
@@ -360,7 +360,7 @@ func (r *FormulaRandomizer) ConstraintSet(numConstraints, maxDepth int) []f.Form
 func (r *FormulaRandomizer) ccVariables() []f.Variable {
 	variables := make(map[f.Variable]present)
 	bound := r.random.Intn(r.config.MaximumOpsCC-1) + 2
-	for i := 0; i < bound; i++ {
+	for range bound {
 		variables[r.Variable()] = present{}
 	}
 	vars := make([]f.Variable, 0, len(variables))
@@ -377,7 +377,7 @@ func generateVars(fac f.Factory, config *Config) []f.Variable {
 		variables := make([]f.Variable, config.NumVars)
 		decimalPlaces := int(math.Ceil(math.Log10(float64(config.NumVars))))
 		formatter := fmt.Sprintf("v%s%dd", "%0", decimalPlaces)
-		for i := 0; i < len(variables); i++ {
+		for i := range variables {
 			variables[i] = fac.Var(fmt.Sprintf(formatter, i))
 		}
 		return variables

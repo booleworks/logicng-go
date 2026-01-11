@@ -109,7 +109,7 @@ func (cc *CCIncrementalData) computeLbConstraint(rhs int) {
 	cc.currentRhs = rhs
 	switch cc.alkEncoder {
 	case ALKTotalizer:
-		for i := 0; i < rhs; i++ {
+		for i := range rhs {
 			cc.Result.AddClause(cc.vector1[i])
 		}
 	case ALKModularTotalizer:

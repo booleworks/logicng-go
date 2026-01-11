@@ -55,7 +55,7 @@ func findSmallestPositive(
 	allPositive, _ := fac.NaryOperator(sort, positiveOpResults...)
 	smallerPositiveOps := make([]f.Formula, 0, len(positiveOpResults))
 	smallerNegativeOps := make([]f.Formula, 0, len(positiveOpResults))
-	for i := 0; i < len(positiveOpResults); i++ {
+	for i := range positiveOpResults {
 		positiveOp := positiveOpResults[i]
 		negativeOp := negativeOpResults[i]
 		if formattedLength(fac, positiveOp, false) < formattedLength(fac, negativeOp, false) {

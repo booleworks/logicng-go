@@ -81,7 +81,7 @@ func bddNormalform(bdd *BDD, cnf bool) f.Formula {
 	terms := make([]f.Formula, 0)
 	for _, path := range pathsToConstant {
 		literals := make([]f.Literal, 0, len(path))
-		for i := 0; i < len(path); i++ {
+		for i := range path {
 			variable, _ := kernel.getVariableForIndex(int32(i))
 			switch path[i] {
 			case 0:

@@ -208,7 +208,7 @@ func (m *linearSU) rebuildBMO(functions [][]int32, rhs []int, currentWeight int)
 			m.coeffs = append(m.coeffs, m.softClauses[i].weight)
 		}
 	}
-	for i := 0; i < len(functions); i++ {
+	for i := range functions {
 		m.encoder.encodeCardinality(s, functions[i], rhs[i])
 	}
 	return s

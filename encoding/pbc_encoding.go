@@ -71,7 +71,7 @@ func encodePBC(result Result, lits []f.Literal, coeffs []int, rhs int, config *C
 		}
 		return nil
 	}
-	for i := 0; i < len(lits); i++ {
+	for i := range lits {
 		if coeffs[i] <= rhs {
 			simplifiedLits = append(simplifiedLits, lits[i])
 			simplifiedCoeffs = append(simplifiedCoeffs, coeffs[i])

@@ -58,7 +58,7 @@ func TestFactorOutSimplifierCornerCases(t *testing.T) {
 
 func TestFactorOutRandomized(t *testing.T) {
 	fac := f.NewFactory()
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		config := randomizer.DefaultConfig()
 		config.NumVars = 5
 		config.WeightPBC = 2

@@ -35,7 +35,7 @@ func newCache(size int32) *cache {
 func (c *cache) resize(ns int32) {
 	size := primeGte(int(ns))
 	c.table = make([]*cacheEntry, size)
-	for n := 0; n < size; n++ {
+	for n := range size {
 		c.table[n] = newCacheEntry()
 	}
 }
@@ -89,7 +89,7 @@ func hasFactor(src, n int) bool {
 }
 
 func isMillerRabinPrime(src int) bool {
-	for n := 0; n < checktimes; n++ {
+	for range checktimes {
 		witness := random(src - 1)
 		if isWitness(witness, src) {
 			return false

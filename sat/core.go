@@ -804,7 +804,7 @@ func (m *CoreSolver) propagate() *clause {
 		ws := &m.watches[p]
 		var iInd, jInd int
 		wbin := m.watchesBin[p]
-		for k := 0; k < len(wbin); k++ {
+		for k := range wbin {
 			imp := wbin[k].blocker
 			if m.value(imp) == f.TristateFalse {
 				return wbin[k].clause
@@ -1340,7 +1340,7 @@ func (m *CoreSolver) Conflict() []int32 {
 // CreateModel is used to create a model data-structure from the given model.
 func (m *CoreSolver) CreateModel(fac f.Factory, mVec []bool, relevantIndices []int32) *model.Model {
 	mdl := model.New()
-	for i := 0; i < len(relevantIndices); i++ {
+	for i := range relevantIndices {
 		index := relevantIndices[i]
 		if index != -1 {
 			name := m.idx2name[index]

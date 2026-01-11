@@ -87,7 +87,7 @@ func TestOptimizerFunctionRandomSmall(t *testing.T) {
 	config.Seed = 42
 	randomizer := randomizer.New(fac, config)
 
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		formula := randomizer.Formula(2)
 		variables := f.Variables(fac, formula).Content()
 		literals := f.VariablesAsLiterals(f.Variables(fac, formula).Content())

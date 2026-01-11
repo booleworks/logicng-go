@@ -17,7 +17,7 @@ func cnAmk(result Result, vars []f.Variable, rhs int) {
 			input = append(input, v.Negate(fac))
 		}
 		sort(geq, &input, &output, result, outputToInput)
-		for i := 0; i < geq; i++ {
+		for i := range geq {
 			result.AddClause(output[i])
 		}
 	} else {
@@ -53,7 +53,7 @@ func cnAlk(result Result, vars []f.Variable, rhs int) {
 		geq := len(vars) - newRhs
 		input = append(input, f.VariablesAsLiterals(vars)...)
 		sort(geq, &input, &output, result, outputToInput)
-		for i := 0; i < geq; i++ {
+		for i := range geq {
 			result.AddClause(output[i])
 		}
 	} else {
@@ -120,10 +120,7 @@ func sort(m int, input, output *[]f.Literal, result Result, direction dir) {
 		return
 	}
 	n := len(*input)
-	m2 := m
-	if m2 > n {
-		m2 = n
-	}
+	m2 := min(m, n)
 	if n == 0 {
 		clear(*output)
 		return
@@ -191,7 +188,7 @@ func recursiveSorter(m int, input, output *[]f.Literal, result Result, direction
 	tmpLitsB := make([]f.Literal, 0, n-l)
 	tmpLitsO1 := make([]f.Literal, 0)
 	tmpLitsO2 := make([]f.Literal, 0)
-	for i := 0; i < l; i++ {
+	for i := range l {
 		tmpLitsA[i] = (*input)[i]
 	}
 	for i := l; i < n; i++ {
@@ -206,17 +203,17 @@ func counterSorter(k int, x, output *[]f.Literal, result Result, direction dir) 
 	fac := result.Factory()
 	n := len(*x)
 	auxVars := make([][]f.Literal, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		auxVars[i] = make([]f.Literal, k)
 	}
 
-	for j := 0; j < k; j++ {
+	for j := range k {
 		for i := j; i < n; i++ {
 			auxVars[i][j] = result.NewAuxVar(f.AuxCC).AsLiteral()
 		}
 	}
 	if direction == inputToOutput || direction == both {
-		for i := 0; i < n; i++ {
+		for i := range n {
 			result.AddClause((*x)[i].Negate(fac), auxVars[i][0])
 			if i > 0 {
 				result.AddClause(auxVars[i-1][0].Negate(fac), auxVars[i][0])
@@ -232,7 +229,7 @@ func counterSorter(k int, x, output *[]f.Literal, result Result, direction dir) 
 		}
 	}
 	clear(*output)
-	for i := 0; i < k; i++ {
+	for i := range k {
 		*output = append(*output, auxVars[n-1][i])
 	}
 }
@@ -242,13 +239,13 @@ func directSorter(m int, input, output *[]f.Literal, result Result) {
 	bitmask := 1
 	clause := make([]f.Literal, 0)
 	clear(*output)
-	for i := 0; i < m; i++ {
+	for range m {
 		*output = append(*output, result.NewAuxVar(f.AuxCC).AsLiteral())
 	}
 	for bitmask < int(math.Pow(2, float64(n))) {
 		count := 0
 		clear(clause)
-		for i := 0; i < n; i++ {
+		for i := range n {
 			if ((1 << i) & bitmask) != 0 {
 				count++
 				if count > m {
@@ -273,10 +270,7 @@ func merge(m int, inputA, inputB, output *[]f.Literal, result Result, direction 
 	a := len(*inputA)
 	b := len(*inputB)
 	n := a + b
-	m2 := m
-	if m2 > n {
-		m2 = n
-	}
+	m2 := min(m, n)
 	if a == 0 || b == 0 {
 		if a == 0 {
 			*output = *inputB
@@ -377,7 +371,7 @@ func directMerger(m int, inputA, inputB, output *[]f.Literal, result Result) {
 	fac := result.Factory()
 	a := len(*inputA)
 	b := len(*inputB)
-	for i := 0; i < m; i++ {
+	for range m {
 		*output = append(*output, result.NewAuxVar(f.AuxCC).AsLiteral())
 	}
 	j := min(m, a)
@@ -388,8 +382,8 @@ func directMerger(m int, inputA, inputB, output *[]f.Literal, result Result) {
 	for i := 0; i < j; i++ {
 		result.AddClause((*inputB)[i].Negate(fac), (*output)[i])
 	}
-	for i := 0; i < a; i++ {
-		for k := 0; k < b; k++ {
+	for i := range a {
+		for k := range b {
 			if i+k+1 < m {
 				result.AddClause((*inputA)[i].Negate(fac), (*inputB)[k].Negate(fac), (*output)[i+k+1])
 			}

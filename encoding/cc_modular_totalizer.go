@@ -96,7 +96,7 @@ func mtToCNF(result Result, mod int, ubvars, lwvars *[]f.Literal, rhs int, state
 		state.inlits = state.inlits[:len(state.inlits)-1]
 	} else {
 		right := (rhs - split) / mod
-		for i := 0; i < right; i++ {
+		for range right {
 			rupper = append(rupper, result.NewAuxVar(f.AuxCC).AsLiteral())
 		}
 		limit := mod - 1

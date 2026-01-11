@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testContainsPBC(t *testing.T) {
+func TestContainsPBC(t *testing.T) {
 	assert := assert.New(t)
 	fac := formula.NewFactory()
 	p := parser.New(fac)

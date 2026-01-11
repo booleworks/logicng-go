@@ -13,9 +13,9 @@ func GenerateNQueens(fac f.Factory, n int) f.Formula {
 	ec := &e.Config{AMOEncoder: e.AMOPure}
 	kk := 1
 	varNames := make([][]f.Variable, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		varNames[i] = make([]f.Variable, n)
-		for j := 0; j < n; j++ {
+		for j := range n {
 			varNames[i][j] = fac.Var(fmt.Sprintf("v%d", kk))
 			kk++
 		}
@@ -23,15 +23,15 @@ func GenerateNQueens(fac f.Factory, n int) f.Formula {
 
 	operands := make([]f.Formula, 0)
 
-	for i := 0; i < n; i++ {
+	for i := range n {
 		vars := varNames[i]
 		cc, _ := e.EncodeCC(fac, fac.EXO(vars...), ec)
 		encoding := fac.And(cc...)
 		operands = append(operands, encoding)
 	}
-	for i := 0; i < n; i++ {
+	for i := range n {
 		vars := make([]f.Variable, n)
-		for j := 0; j < n; j++ {
+		for j := range n {
 			vars[j] = varNames[j][i]
 		}
 		cc, _ := e.EncodeCC(fac, fac.EXO(vars...), ec)

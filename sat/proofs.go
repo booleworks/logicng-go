@@ -74,7 +74,7 @@ func newDrupSolver(originalProblem, proof *[][]int32) *drupSolver {
 func (s *drupSolver) parse() bool {
 	s.nVars = 0
 	for _, slice := range s.originalProblem {
-		for i := 0; i < len(slice); i++ {
+		for i := range slice {
 			abs := int(math.Abs(float64(slice[i])))
 			if abs > s.nVars {
 				s.nVars = abs
@@ -577,7 +577,7 @@ func drupGetHash(marks *[]int, mark int, input []int) int32 {
 	sum := 0
 	xor := 0
 	prod := 1
-	for i := 0; i < len(input); i++ {
+	for i := range input {
 		prod *= input[i]
 		sum += input[i]
 		xor ^= input[i]

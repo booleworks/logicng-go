@@ -59,7 +59,7 @@ func TestNegationSimplifierCornerCases(t *testing.T) {
 
 func TestNegationSimplifierRandomized(t *testing.T) {
 	fac := f.NewFactory()
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		config := randomizer.DefaultConfig()
 		config.NumVars = 5
 		config.WeightPBC = 1

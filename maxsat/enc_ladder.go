@@ -11,7 +11,7 @@ func encodeLadder(s *sat.CoreSolver, lits []int32) {
 			seqAuxiliary[i] = sat.MkLit(s.NVars(), false)
 			newSatVariable(s)
 		}
-		for i := 0; i < len(lits); i++ {
+		for i := range lits {
 			if i == 0 {
 				addBinaryClause(s, lits[i], sat.Not(seqAuxiliary[i]))
 				addBinaryClause(s, sat.Not(lits[i]), seqAuxiliary[i])

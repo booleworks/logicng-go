@@ -51,7 +51,7 @@ func (m *swc) encode(s *sat.CoreSolver, lits *[]int32, coeffs *[]int, rhs int) {
 	copy(simpCoeffs, *coeffs)
 	*lits = []int32{}
 	*coeffs = []int{}
-	for i := 0; i < len(simpLits); i++ {
+	for i := range simpLits {
 		if simpCoeffs[i] <= rhs {
 			*lits = append(*lits, simpLits[i])
 			*coeffs = append(*coeffs, simpCoeffs[i])
@@ -124,7 +124,7 @@ func (m *swc) encodeWithAssumptions(
 	m.unitLits = []int32{}
 	m.unitCoeffs = []int{}
 
-	for i := 0; i < len(simpUnitLits); i++ {
+	for i := range simpUnitLits {
 		if simpUnitCoeffs[i] <= rhs {
 			*lits = append(*lits, simpUnitLits[i])
 			*coeffs = append(*coeffs, simpUnitCoeffs[i])
@@ -133,7 +133,7 @@ func (m *swc) encodeWithAssumptions(
 			m.unitCoeffs = append(m.unitCoeffs, simpUnitCoeffs[i])
 		}
 	}
-	for i := 0; i < len(simpLits); i++ {
+	for i := range simpLits {
 		if simpCoeffs[i] <= rhs {
 			*lits = append(*lits, simpLits[i])
 			*coeffs = append(*coeffs, simpCoeffs[i])
@@ -269,7 +269,7 @@ func (m *swc) join(s *sat.CoreSolver, lits []int32, coeffs []int) {
 	m.unitLits = []int32{}
 	m.unitCoeffs = []int{}
 	lhsJoin := len(m.litsInc)
-	for i := 0; i < len(simpUnitLits); i++ {
+	for i := range simpUnitLits {
 		if simpUnitCoeffs[i] <= rhs {
 			m.litsInc = append(m.litsInc, simpUnitLits[i])
 			m.coeffsInc = append(m.coeffsInc, simpUnitCoeffs[i])
@@ -278,7 +278,7 @@ func (m *swc) join(s *sat.CoreSolver, lits []int32, coeffs []int) {
 			m.unitCoeffs = append(m.unitCoeffs, simpUnitCoeffs[i])
 		}
 	}
-	for i := 0; i < len(lits); i++ {
+	for i := range lits {
 		if coeffs[i] <= rhs {
 			m.litsInc = append(m.litsInc, lits[i])
 			m.coeffsInc = append(m.coeffsInc, coeffs[i])

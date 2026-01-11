@@ -74,21 +74,21 @@ func (c *clause) size() int {
 func (c *clause) String() string {
 	var sb strings.Builder
 	sb.WriteString("{")
-	sb.WriteString(fmt.Sprintf("activity=%f,", c.activity))
-	sb.WriteString(fmt.Sprintf("learntOnState=%d,", c.learntOnState))
-	sb.WriteString(fmt.Sprintf("seen=%t,", c.seen))
-	sb.WriteString(fmt.Sprintf("lbd=%d,", c.lbd))
-	sb.WriteString(fmt.Sprintf("canBeDel=%t,", c.canBeDel))
-	sb.WriteString(fmt.Sprintf("oneWatched=%t,", c.oneWatched))
-	sb.WriteString(fmt.Sprintf("isAtMost=%t,", c.isAtMost))
-	sb.WriteString(fmt.Sprintf("atMostWatchers=%d,", c.atMostWatchers))
+	fmt.Fprintf(&sb, "activity=%f,", c.activity)
+	fmt.Fprintf(&sb, "learntOnState=%d,", c.learntOnState)
+	fmt.Fprintf(&sb, "seen=%t,", c.seen)
+	fmt.Fprintf(&sb, "lbd=%d,", c.lbd)
+	fmt.Fprintf(&sb, "canBeDel=%t,", c.canBeDel)
+	fmt.Fprintf(&sb, "oneWatched=%t,", c.oneWatched)
+	fmt.Fprintf(&sb, "isAtMost=%t,", c.isAtMost)
+	fmt.Fprintf(&sb, "atMostWatchers=%d,", c.atMostWatchers)
 	sb.WriteString("lits=[")
 	for i := 0; i < c.size(); i++ {
 		lit := c.data[i]
 		if (lit & 1) == 1 {
 			sb.WriteString("-")
 		}
-		sb.WriteString(fmt.Sprintf("%d", lit>>1))
+		fmt.Fprintf(&sb, "%d", lit>>1)
 		if i != c.size()-1 {
 			sb.WriteString(", ")
 		}

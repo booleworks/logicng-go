@@ -13,7 +13,6 @@ import (
 
 const (
 	cnfExtension = ".cnf"
-	mapExtension = ".map"
 )
 
 // WriteDimacs writes the given formula in CNF to a file with the given

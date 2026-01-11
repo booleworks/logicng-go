@@ -779,7 +779,7 @@ func TestBDDModelCountAmo(t *testing.T) {
 
 func generateVariables(fac f.Factory, n int) []f.Variable {
 	result := make([]f.Variable, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		result[i] = fac.Var(fmt.Sprintf("v%d", i))
 	}
 	return result

@@ -29,7 +29,7 @@ func totalizerAMK(result Result, vars []f.Variable, rhs int) *CCIncrementalData 
 func totalizerALK(result Result, vars []f.Variable, rhs int) *CCIncrementalData {
 	tv := initializeConstraint(result, vars)
 	toCNF(result, tv, rhs, boundLower)
-	for i := 0; i < rhs; i++ {
+	for i := range rhs {
 		result.AddClause((*tv.outvars)[i].AsLiteral())
 	}
 	outvars := f.VariablesAsLiterals(*tv.outvars)
@@ -46,7 +46,7 @@ func totalizerALK(result Result, vars []f.Variable, rhs int) *CCIncrementalData 
 func totalizerEXK(result Result, vars []f.Variable, rhs int) {
 	tv := initializeConstraint(result, vars)
 	toCNF(result, tv, rhs, boundBoth)
-	for i := 0; i < rhs; i++ {
+	for i := range rhs {
 		result.AddClause((*tv.outvars)[i].AsLiteral())
 	}
 	for i := rhs; i < len(*tv.outvars); i++ {
@@ -58,7 +58,7 @@ func initializeConstraint(result Result, vars []f.Variable) *totalizerVars {
 	invars := make([]f.Variable, len(vars))
 	copy(invars, vars)
 	outvars := make([]f.Variable, len(vars))
-	for i := 0; i < len(vars); i++ {
+	for i := range vars {
 		outvars[i] = result.NewAuxVar(f.AuxCC)
 	}
 	return &totalizerVars{&invars, &outvars}

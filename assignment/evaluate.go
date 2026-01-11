@@ -56,7 +56,7 @@ func Evaluate(fac f.Factory, formula f.Formula, assignment *Assignment) bool {
 
 func evaluateLhs(fac f.Factory, literals []f.Literal, coefficients []int, assignment *Assignment) int {
 	lhs := 0
-	for i := 0; i < len(literals); i++ {
+	for i := range literals {
 		if Evaluate(fac, literals[i].AsFormula(), assignment) {
 			lhs += coefficients[i]
 		}

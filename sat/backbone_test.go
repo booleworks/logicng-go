@@ -1,6 +1,7 @@
 package sat
 
 import (
+	"slices"
 	"testing"
 
 	f "github.com/booleworks/logicng-go/formula"
@@ -173,10 +174,5 @@ func verifyBackbone(fac f.Factory, bb *Backbone, formula f.Formula, variables []
 }
 
 func sliceContains(slice []f.Variable, v f.Variable) bool {
-	for _, e := range slice {
-		if e == v {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(slice, v)
 }

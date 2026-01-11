@@ -91,7 +91,7 @@ func binaryMerge(
 		if (t & bit) != 0 {
 			buckets[i] = append(buckets[i], trueLit)
 		}
-		for j := 0; j < n; j++ {
+		for j := range n {
 			if (coefficients[j] & bit) != 0 {
 				if gacLit != nullLit && coefficients[j] >= lessThen {
 					result.AddClause(gacLit, literals[j].Negate(fac))
@@ -109,7 +109,7 @@ func binaryMerge(
 		bucketMerge[i] = make([]f.Literal, 0, 4)
 	}
 	carries := make([]f.Literal, 0, 4)
-	for i := 0; i < len(buckets); i++ {
+	for i := range buckets {
 		k := int(math.Ceil(float64(newLessThen) / math.Pow(2, float64(i))))
 		if config.BinaryMergeUseWatchDog {
 			totalizer(result, &buckets[i], &bucketCard[i])

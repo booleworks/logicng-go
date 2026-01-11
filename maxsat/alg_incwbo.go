@@ -93,7 +93,7 @@ func (m *incWBO) normalSearchInc() (Result, handler.State) {
 
 func (m *incWBO) relaxCoreInc(conflict []int32, weightCore int) {
 	var lits []int32
-	for i := 0; i < len(conflict); i++ {
+	for i := range conflict {
 		indexSoft := m.coreMapping[conflict[i]]
 		if m.softClauses[indexSoft].weight == weightCore {
 			clause := make([]int32, len(m.softClauses[indexSoft].clause))

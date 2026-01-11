@@ -416,7 +416,7 @@ func (b *BDD) NodeCount() int {
 func (b *BDD) VariableProfile() map[f.Variable]int {
 	varProfile := b.Kernel.varProfile(b.Index)
 	profile := make(map[f.Variable]int, len(varProfile))
-	for i := 0; i < len(varProfile); i++ {
+	for i := range varProfile {
 		variable, _ := b.Kernel.getVariableForIndex(int32(i))
 		profile[variable] = varProfile[i]
 	}
@@ -426,7 +426,7 @@ func (b *BDD) VariableProfile() map[f.Variable]int {
 // VariableOrder returns the variable order of the BDD.
 func (b *BDD) VariableOrder() []f.Variable {
 	order := make([]f.Variable, len(b.Kernel.level2var)-1)
-	for i := 0; i < len(order); i++ {
+	for i := range order {
 		variable, _ := b.Kernel.getVariableForIndex(b.Kernel.level2var[i])
 		order[i] = variable
 	}

@@ -58,7 +58,7 @@ func (t *totalizer) join(s *sat.CoreSolver, lits []int32, rhs int) {
 	t.currentCardinalityRhs = rhs
 	t.adder(s, leftCardinalityOutlits, rightCardinalityOutlits, t.cardinalityOutlits)
 	t.currentCardinalityRhs = oldCardinality
-	for i := 0; i < len(lits); i++ {
+	for i := range lits {
 		t.ilits = append(t.ilits, lits[i])
 	}
 }
@@ -82,7 +82,7 @@ func (t *totalizer) build(s *sat.CoreSolver, lits []int32, rhs int) {
 	t.cardinalityOutlits = []int32{}
 	t.hasEncoding = false
 	if rhs == 0 {
-		for i := 0; i < len(lits); i++ {
+		for i := range lits {
 			addUnitClause(s, sat.Not(lits[i]))
 		}
 		return
@@ -93,7 +93,7 @@ func (t *totalizer) build(s *sat.CoreSolver, lits []int32, rhs int) {
 	if rhs == len(lits) && !t.joinMode {
 		return
 	}
-	for i := 0; i < len(lits); i++ {
+	for range lits {
 		p := sat.MkLit(s.NVars(), false)
 		newSatVariable(s)
 		t.cardinalityOutlits = append(t.cardinalityOutlits, p)
@@ -114,7 +114,7 @@ func (t *totalizer) toCnf(s *sat.CoreSolver, lits []int32) {
 	var left []int32
 	var right []int32
 	split := len(lits) / 2
-	for i := 0; i < len(lits); i++ {
+	for i := range lits {
 		if i < split {
 			if split == 1 {
 				left = append(left, t.cardinalityInlits[len(t.cardinalityInlits)-1])

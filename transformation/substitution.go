@@ -95,7 +95,7 @@ func substitutePbc(fac f.Factory, pbc f.Formula, substitution *Substitution) (f.
 	newLits := make([]f.Literal, 0, len(operands))
 	newCoeffs := make([]int, 0, len(operands))
 	lhsFixed := 0
-	for i := 0; i < len(operands); i++ {
+	for i := range operands {
 		variable := operands[i].Variable()
 		subst, ok := substitution.subst[variable]
 		if !ok {

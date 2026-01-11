@@ -203,7 +203,7 @@ func generateBlockingClause(modelFromSolver []bool, relevantVars []int32) []int3
 	var blockingClause []int32
 	if relevantVars != nil {
 		blockingClause = make([]int32, 0, len(relevantVars))
-		for i := 0; i < len(relevantVars); i++ {
+		for i := range relevantVars {
 			varIndex := relevantVars[i]
 			if varIndex != -1 {
 				varAssignment := modelFromSolver[varIndex]

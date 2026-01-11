@@ -68,7 +68,7 @@ func TestPrimeImplicantLargeFormulas(t *testing.T) {
 
 func TestPrimeImplicantRandom(t *testing.T) {
 	fac := f.NewFactory()
-	for i := 0; i < 500; i++ {
+	for i := range 500 {
 		config := randomizer.DefaultConfig()
 		config.NumVars = 20
 		config.WeightPBC = 2

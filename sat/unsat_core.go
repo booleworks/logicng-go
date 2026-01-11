@@ -49,7 +49,7 @@ func (s *Solver) computeUnsatCore() *e.UnsatCore {
 func getFormulaForVector(solver *Solver, slice []int32) f.Formula {
 	literals := make([]f.Formula, len(slice))
 	slices.Sort(slice)
-	for i := 0; i < len(slice); i++ {
+	for i := range slice {
 		lit := slice[i]
 		varName := solver.core.idx2name[int32(math.Abs(float64(lit))-1)]
 		literals = append(literals, solver.fac.Literal(varName, lit > 0))
@@ -68,7 +68,7 @@ func containsEmptyClause(clauses *[][]int32) bool {
 
 func handleTrivialCase(solver *Solver) *e.UnsatCore {
 	clauses := solver.core.pgOriginalClauses
-	for i := 0; i < len(clauses); i++ {
+	for i := range clauses {
 		for j := i + 1; j < len(clauses); j++ {
 			if len(clauses[i].clause) == 1 && len(clauses[j].clause) == 1 &&
 				clauses[i].clause[0]+clauses[j].clause[0] == 0 {

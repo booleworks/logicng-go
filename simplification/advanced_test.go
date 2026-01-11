@@ -28,7 +28,7 @@ func TestAdvancedSimplifierCornerCases(t *testing.T) {
 
 func TestAdvancedSimplifierRandomized(t *testing.T) {
 	fac := f.NewFactory()
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		config := randomizer.DefaultConfig()
 		config.NumVars = 8
 		config.WeightPBC = 2
@@ -56,7 +56,7 @@ func TestAdvancedSimplifierTimeoutHandlerLarge(t *testing.T) {
 }
 
 func TestAdvancedDeterministic(t *testing.T) {
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		fac := f.NewFactory()
 		p := parser.New(fac)
 		input := p.ParseUnsafe("A&B&F&D&E&~H&~C&~G&~I&~J|A&H&D&C&G&~B&~F&~E&~I&~J|A&D&C&~B&~F&~H&~E&~G&~I&~J|" +
@@ -85,7 +85,7 @@ func TestAdvancedSimplifierConfigs(t *testing.T) {
 
 	fac := f.NewFactory()
 	for _, config := range configs {
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			formula := randomizer.NewWithSeed(fac, int64(i)).Formula(3)
 			simplified := Advanced(fac, formula, config)
 			assert.True(t, sat.IsEquivalent(fac, formula, simplified))

@@ -13,10 +13,10 @@ func encodePBCAdder(result Result, lits []f.Literal, coeffs []int, rhs int) {
 	literals := make([]f.Literal, nb)
 	buckets := make([][]f.Literal, 0, nb)
 	nullLit := result.Factory().Lit(nullLit, true)
-	for iBit := 0; iBit < nb; iBit++ {
+	for iBit := range nb {
 		buckets = append(buckets, []f.Literal{})
 		literals[iBit] = nullLit
-		for iVar := 0; iVar < len(lits); iVar++ {
+		for iVar := range lits {
 			if ((1 << iBit) & coeffs[iVar]) != 0 {
 				buckets[len(buckets)-1] = append(buckets[len(buckets)-1], lits[iVar])
 			}
@@ -29,7 +29,7 @@ func encodePBCAdder(result Result, lits []f.Literal, coeffs []int, rhs int) {
 
 func ldInt(x int) int {
 	ldretutn := 0
-	for i := 0; i < 31; i++ {
+	for i := range 31 {
 		if (x & (1 << i)) > 0 {
 			ldretutn = i + 1
 		}
@@ -142,7 +142,7 @@ func lessThanOrEqual(result Result, xs []f.Literal, ys []bool, nullLit f.Literal
 	fac := result.Factory()
 	var clause []f.Literal
 	var skip bool
-	for i := 0; i < len(xs); i++ {
+	for i := range xs {
 		if ys[i] || xs[i] == nullLit {
 			continue
 		}

@@ -2,7 +2,7 @@ package sat
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 
 	"github.com/booleworks/logicng-go/encoding"
 	"github.com/booleworks/logicng-go/errorx"
@@ -306,7 +306,7 @@ func (p *pgOnSolver) getPGVar(formula f.Formula, polarity bool) (bool, int32) {
 
 func (p *pgOnSolver) generateClauseSlice(literals []f.Literal) []int32 {
 	clause := make([]int32, len(literals))
-	sort.Slice(literals, func(i, j int) bool { return literals[i] < literals[j] })
+	slices.Sort(literals)
 	for i, lit := range literals {
 		name, phase, _ := p.fac.LitNamePhase(lit)
 		clause[i] = p.solverLiteral(name, phase)
