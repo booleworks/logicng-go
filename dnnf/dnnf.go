@@ -56,7 +56,7 @@ func (d *DNNF) count(dnnf f.Formula) *big.Int {
 			opCount := d.count(op)
 			factor := big.NewInt(2)
 			factor = factor.Exp(factor, big.NewInt(int64(allVariables-f.Variables(d.Fac, op).Size())), nil)
-			mul := opCount.Mul(opCount, factor)
+			mul := new(big.Int).Mul(opCount, factor)
 			c.Add(c, mul)
 		}
 	case f.SortFalse:

@@ -94,7 +94,7 @@ func newGraph(fac f.Factory, cnf f.Formula) *graph {
 		graph.adjMatrix[i] = make([]bool, graph.numberOfVertices)
 	}
 	edgeList := make([]map[int32]bool, graph.numberOfVertices)
-	for i := 0; i < len(edgeList); i++ {
+	for i := range edgeList {
 		edgeList[i] = make(map[int32]bool)
 	}
 
@@ -105,7 +105,7 @@ func newGraph(fac f.Factory, cnf f.Formula) *graph {
 		for i, v := range variables.Content() {
 			varNums[i] = varToIndex[v]
 		}
-		for i := 0; i < len(varNums); i++ {
+		for i := range varNums {
 			for j := i + 1; j < len(varNums); j++ {
 				edgeList[varNums[i]][varNums[j]] = true
 				edgeList[varNums[j]][varNums[i]] = true
@@ -115,13 +115,13 @@ func newGraph(fac f.Factory, cnf f.Formula) *graph {
 		}
 	}
 	graph.edgeList = make([][]int32, graph.numberOfVertices)
-	for i := 0; i < len(edgeList); i++ {
+	for i := range edgeList {
 		edges := edgeList[i]
 		graph.edgeList[i] = make([]int32, len(edges))
 		j := 0
 		for edge := range edges {
 			graph.edgeList[i][j] = edge
-			j += 1
+			j++
 		}
 	}
 	return &graph
@@ -133,7 +133,6 @@ func (g *graph) getMinFillOrdering(hdl handler.Handler) ([]f.Variable, handler.S
 
 	ordering := make([]f.Variable, g.numberOfVertices)
 	processed := make([]bool, g.numberOfVertices)
-	treewidth := 0
 
 	for iteration := 0; iteration < g.numberOfVertices; iteration++ {
 		if e := event.DnnfDtreeMinFillNewIteration; !hdl.ShouldResume(e) {
@@ -147,7 +146,7 @@ func (g *graph) getMinFillOrdering(hdl handler.Handler) ([]f.Variable, handler.S
 			}
 			edgesAdded := 0
 			neighborList := fillEdgeList[currentVertex]
-			for i := 0; i < len(neighborList); i++ {
+			for i := range neighborList {
 				firstNeighbor := neighborList[i]
 				if processed[firstNeighbor] {
 					continue
@@ -175,7 +174,7 @@ func (g *graph) getMinFillOrdering(hdl handler.Handler) ([]f.Variable, handler.S
 		bestVertex := possiblyBestVertices[0]
 
 		neighborList := fillEdgeList[bestVertex]
-		for i := 0; i < len(neighborList); i++ {
+		for i := range neighborList {
 			firstNeighbor := neighborList[i]
 			if processed[firstNeighbor] {
 				continue
@@ -192,16 +191,6 @@ func (g *graph) getMinFillOrdering(hdl handler.Handler) ([]f.Variable, handler.S
 					fillEdgeList[secondNeighbor] = append(fillEdgeList[secondNeighbor], firstNeighbor)
 				}
 			}
-		}
-
-		currentNumberOfEdges := 0
-		for k := 0; k < g.numberOfVertices; k++ {
-			if fillAdjMatrix[bestVertex][k] && !processed[k] {
-				currentNumberOfEdges++
-			}
-		}
-		if treewidth < currentNumberOfEdges {
-			treewidth = currentNumberOfEdges
 		}
 
 		processed[bestVertex] = true

@@ -2,7 +2,7 @@
 // manipulation deterministic, decomposable negation normal forms, or short
 // [DNNF] in LogicNG.
 //
-// The d-DNNF of a formula has proven to be more succinct than it's BDD.
+// The d-DNNF of a formula has proven to be more succinct than its BDD.
 // Further, it helps to alleviate the ubiquitous memory explosion problem of
 // BDDs with large formulas.
 //
