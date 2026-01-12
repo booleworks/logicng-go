@@ -28,13 +28,13 @@ func encodePBCAdder(result Result, lits []f.Literal, coeffs []int, rhs int) {
 }
 
 func ldInt(x int) int {
-	ldretutn := 0
+	ldreturn := 0
 	for i := range 31 {
 		if (x & (1 << i)) > 0 {
-			ldretutn = i + 1
+			ldreturn = i + 1
 		}
 	}
-	return ldretutn
+	return ldreturn
 }
 
 func adderTree(result Result, buckets *[][]f.Literal, literals *[]f.Literal, nullLit f.Literal) {

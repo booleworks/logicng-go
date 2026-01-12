@@ -43,7 +43,6 @@ func (r *FormulaEncoding) NewAuxVar(sort f.AuxVarSort) f.Variable {
 	return r.fac.NewAuxVar(sort)
 }
 
-// formula factory.
 // Factory returns the backing formula factory from the encoding result.
 func (r *FormulaEncoding) Factory() f.Factory {
 	return r.fac

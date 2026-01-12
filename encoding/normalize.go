@@ -135,8 +135,6 @@ func normalizeLE(fac f.Factory, ps []f.Literal, cs []int, rhs int) f.Formula {
 			zeros++
 		}
 	}
-	removeElements(&ps, len(ps)-len(csps)-zeros)
-	removeElements(&cs, len(cs)-len(csps)-zeros)
 
 	var changed bool
 	for ok := true; ok; ok = changed {

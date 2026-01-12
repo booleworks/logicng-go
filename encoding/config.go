@@ -18,7 +18,7 @@ type (
 //go:generate stringer -type=PBCEncoder
 //go:generate stringer -type=BimanderGroupSize
 
-// CcAmoEncoder represents the different algorithms for encoding an at-most-one
+// AMOEncoder represents the different algorithms for encoding an at-most-one
 // constraint (AMO) to a CNF.
 const (
 	AMOPure AMOEncoder = iota
@@ -31,7 +31,7 @@ const (
 	AMOBest
 )
 
-// CcAmkEncoder represents the different algorithms for encoding an at-most-k
+// AMKEncoder represents the different algorithms for encoding an at-most-k
 // constraint (AMK) to a CNF.
 const (
 	AMKTotalizer AMKEncoder = iota
@@ -40,7 +40,7 @@ const (
 	AMKBest
 )
 
-// CcAlkEncoder represents the different algorithms for encoding an at-least-k
+// ALKEncoder represents the different algorithms for encoding an at-least-k
 // constraint (ALK) to a CNF.
 const (
 	ALKTotalizer ALKEncoder = iota
@@ -49,7 +49,7 @@ const (
 	ALKBest
 )
 
-// CcExkEncoder represents the different algorithms for encoding an exactly-k
+// EXKEncoder represents the different algorithms for encoding an exactly-k
 // constraint (EXK) to a CNF.
 const (
 	EXKTotalizer EXKEncoder = iota
@@ -65,7 +65,7 @@ const (
 	BimanderFixed
 )
 
-// PbcEncoder represents the different algorithms for encoding a pseudo-Boolean
+// PBCEncoder represents the different algorithms for encoding a pseudo-Boolean
 // constraint to a CNF.
 const (
 	PBCSWC PBCEncoder = iota
