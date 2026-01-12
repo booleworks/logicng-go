@@ -3,7 +3,7 @@ package explanation
 import f "github.com/booleworks/logicng-go/formula"
 
 // UnsatCore represents an unsatisfiable core of a formula.  If the core is
-// guaranteed to be a MUS, the flag IsGuaranteedMus is set to true.  If it is
+// guaranteed to be a MUS, the flag IsGuaranteedMUS is set to true.  If it is
 // set to false, the core could be a MUS, but for efficiency reasons this is
 // not computed.
 type UnsatCore struct {

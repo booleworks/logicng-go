@@ -14,5 +14,5 @@
 //
 // or
 //
-//	mus.DeletionInsertionBased(fac, propositions)
+//	mus.ComputeDeletionBased(fac, propositions)
 package mus
