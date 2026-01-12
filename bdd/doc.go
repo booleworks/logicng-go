@@ -24,7 +24,7 @@
 //
 //	fac := formula.NewFactory()
 //	formula := fac.Or(fac.Variable("a"), fac.Variable("b")) // formula a / b
-//	bdd := bdd.Build(fac, formula)
+//	bdd := bdd.Compile(fac, formula)
 //
 // You can also configure the node table size and the cache size of the kernel
 // by hand.  The BDD kernel internally holds a table with all nodes in the BDD.
@@ -37,7 +37,7 @@
 //	fac := formula.NewFactory()
 //	formula := fac.Or(fac.Variable("a"), fac.Variable("b")) // formula a / b
 //	kernel := bdd.NewKernel(fac, 2, 10, 100)
-//	bdd := bdd.BuildWithKernel(fac, formula, kernel)
+//	bdd := bdd.CompileWithKernel(fac, formula, kernel)
 //
 // Finally, you can also compute a variable ordering first and create the BDD
 // with the given ordering.
@@ -47,5 +47,7 @@
 //	formula := p.Parse("(A => ~B) & ((A & C) | (D & ~C)) & (A | Y | X) & (Y <=> (X | (W + A + F < 1)))")
 //	ordering := bdd.DfsOrder(fac, formula)
 //	kernel := bdd.NewKernelWithOrdering(fac, ordering, 10, 100)
-//	bdd := bdd.BuildWithKernel(fac, formula, kernel)
+//	bdd := bdd.CompileWithKernel(fac, formula, kernel)
+//
+// The BDD kernel implementation is not thread-safe.
 package bdd
