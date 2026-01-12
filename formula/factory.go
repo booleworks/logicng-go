@@ -325,7 +325,7 @@ func (fac *CachingFactory) Equivalence(left, right Formula) Formula {
 }
 
 // NaryOperator returns a new n-ary operator with the given sort and the list
-// of operands.  Returns an error if the given sort is not a binary operator
+// of operands.  Returns an error if the given sort is not an n-ary operator
 // (conjunction or disjunction).
 func (fac *CachingFactory) NaryOperator(sort FSort, operands ...Formula) (Formula, error) {
 	switch sort {

@@ -5,7 +5,7 @@ import "github.com/booleworks/logicng-go/handler"
 // A Transformation is a function which maps a formula to another formula
 type Transformation func(Factory, Formula) Formula
 
-// An CancelableTransformation is a function which maps a formula to another
+// A CancelableTransformation is a function which maps a formula to another
 // formula.  It takes a handler which can be used to cancel the computation.
 // If the computation is canceled by the handler, the ok flag in the response is
 // false.

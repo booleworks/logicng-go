@@ -8,8 +8,8 @@ import (
 )
 
 // PrintSymbols gathers all symbols for Boolean and pseudo-Boolean formulas for
-// printing formulas.  You can use the DefaultSymbols method to use exactly
-// these symbols which can be parsed again be the default parser, or you can
+// printing formulas.  You can use the DefaultSymbols function to use exactly
+// these symbols which can be parsed again by the default parser, or you can
 // define your own symbols.
 type PrintSymbols struct {
 	Verum          string // default: $true
@@ -55,7 +55,7 @@ func DefaultSymbols() *PrintSymbols {
 }
 
 // Sprint prints a formula in human-readable form.  In order to this, the
-// generating formula factor must be passed as a parameter.
+// generating formula factory must be passed as a parameter.
 //
 // This method panics if the formula cannot be found on the factory.
 func (f Formula) Sprint(fac Factory) string {
@@ -63,7 +63,7 @@ func (f Formula) Sprint(fac Factory) string {
 }
 
 // Sprint prints a variable in human-readable form.  In order to this, the
-// generating formula factor must be passed as a parameter.
+// generating formula factory must be passed as a parameter.
 //
 // This method panics if the variable cannot be found on the factory.
 func (v Variable) Sprint(fac Factory) string {
@@ -71,7 +71,7 @@ func (v Variable) Sprint(fac Factory) string {
 }
 
 // Sprint prints a literal in human-readable form.  In order to this, the
-// generating formula factor must be passed as a parameter.
+// generating formula factory must be passed as a parameter.
 //
 // This method panics if the literal cannot be found on the factory.
 func (l Literal) Sprint(fac Factory) string {

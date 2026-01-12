@@ -46,7 +46,7 @@ func NewVarSet(variable ...Variable) *VarSet {
 	return fs
 }
 
-// NewLitSet generates a new literal set with the given literal as content.
+// NewLitSet generates a new literal set with the given literals as content.
 func NewLitSet(literal ...Literal) *LitSet {
 	fs := &LitSet{make(map[Literal]present, len(literal)), nil}
 	for _, f := range literal {
@@ -156,8 +156,7 @@ func (f *mutableFset[T]) Remove(element T) {
 	f.content = nil
 }
 
-// RemoveAll removes all the content from the other given set from the other
-// set from the set.
+// RemoveAll removes all the content from the other set from the current set.
 func (f *mutableFset[T]) RemoveAll(elements *fset[T]) {
 	for formula := range elements.elements {
 		delete(f.elements, formula)
@@ -165,7 +164,7 @@ func (f *mutableFset[T]) RemoveAll(elements *fset[T]) {
 	f.content = nil
 }
 
-// RemoveAllElements removes the content of the other set from the set.
+// RemoveAllElements removes the content of the other set from the current set.
 func (f *mutableFset[T]) RemoveAllElements(elements *[]T) {
 	for _, formula := range *elements {
 		delete(f.elements, formula)

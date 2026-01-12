@@ -27,7 +27,7 @@ type Variable uint32
 // and AsLiteral methods.
 type Literal uint32
 
-// EncodeVariable takes a unique ID an returns its encoding as a variable.
+// EncodeVariable takes a unique ID and returns its encoding as a variable.
 func EncodeVariable(id uint32) Variable {
 	return Variable((uint32(SortLiteral) << 28) | (id & idMask))
 }
@@ -53,7 +53,7 @@ func (v Variable) Negate(fac Factory) Literal {
 	return fac.Lit(name, false)
 }
 
-// EncodeLiteral takes a unique ID an returns its encoding as a literal.
+// EncodeLiteral takes a unique ID and returns its encoding as a literal.
 func EncodeLiteral(id uint32) Literal {
 	return Literal((uint32(SortLiteral) << 28) | (id & idMask))
 }
@@ -229,7 +229,7 @@ func DualSort(fsort FSort) (FSort, error) {
 	}
 }
 
-// EncodeFormula takes a formula sort and a unique ID an returns its encoding.
+// EncodeFormula takes a formula sort and a unique ID and returns its encoding.
 func EncodeFormula(fsort FSort, id uint32) Formula {
 	return Formula((uint32(fsort) << 28) | (id & idMask))
 }
@@ -281,7 +281,7 @@ func (f Formula) IsAtomic() bool {
 	return fsort <= SortLiteral || fsort == SortCC || fsort == SortPBC
 }
 
-// Comparator compares two formulas f1 and f2 with their integer
+// Comparator compares two literals a and b with their integer
 // value.
 func Comparator(a, b any) int {
 	aFormula := a.(Literal)

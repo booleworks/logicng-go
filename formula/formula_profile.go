@@ -8,7 +8,7 @@ func LiteralProfile(fac Factory, formula Formula) map[Literal]int {
 	return cache
 }
 
-// VariableProfile  returns the number of occurrences of each variable in the
+// VariableProfile returns the number of occurrences of each variable in the
 // given formula.
 func VariableProfile(fac Factory, formula Formula) map[Variable]int {
 	cache := make(map[Variable]int)
@@ -22,7 +22,7 @@ func litProfileRec(fac Factory, formula Formula, cache map[Literal]int) {
 	} else if formula.Sort() == SortPBC || formula.Sort() == SortCC {
 		_, _, lits, _, _ := fac.PBCOps(formula)
 		for _, l := range lits {
-			litProfileRec(fac, l.AsFormula(), cache)
+			cache[l]++
 		}
 	} else {
 		for _, op := range fac.Operands(formula) {
@@ -38,8 +38,7 @@ func varProfileRec(fac Factory, formula Formula, cache map[Variable]int) {
 	} else if formula.Sort() == SortPBC || formula.Sort() == SortCC {
 		_, _, lits, _, _ := fac.PBCOps(formula)
 		for _, l := range lits {
-			variable := l.Variable()
-			varProfileRec(fac, variable.AsFormula(), cache)
+			cache[l.Variable()]++
 		}
 	} else {
 		for _, op := range fac.Operands(formula) {
