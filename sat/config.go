@@ -73,7 +73,7 @@ func (c *Config) Proofs(proofs bool) *Config {
 	return c
 }
 
-// UseAtMost sets the flat whether at-most clauses should be used and returns
+// UseAtMost sets the flag whether at-most clauses should be used and returns
 // the config.
 func (c *Config) UseAtMost(useAtMost bool) *Config {
 	c.UseAtMostClauses = useAtMost

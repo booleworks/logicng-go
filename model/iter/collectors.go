@@ -33,6 +33,6 @@ type Collector[R any] interface {
 	// returns them.  Also calls the Rollback method of the handler.
 	RollbackAndReturnModels(solver *sat.Solver, hdl handler.Handler) ([]*model.Model, handler.State)
 
-	// Result returns the committed state of the collector .
+	// Result returns the committed state of the collector.
 	Result() R
 }

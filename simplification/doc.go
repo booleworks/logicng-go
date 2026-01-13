@@ -26,7 +26,7 @@
 // - an advanced simplification combining various methods including minimal prime implicant covers
 // - a Quine-McCluskey implementation based on the advanced simplifier
 //
-// To simplify a formula withe the advanced simplifier, you can simply call
+// To simplify a formula with the the advanced simplifier, you can simply call
 //
 //	simplified := simplification.Advanced(fac, formula)
 package simplification

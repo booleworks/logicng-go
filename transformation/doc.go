@@ -1,5 +1,5 @@
 // Package transformation gathers various transformations on formulas in
-// LogicNG.  A formula transformations always takes a formula factory and
+// LogicNG.  A formula transformation always takes a formula factory and
 // formula as input and yields some transformed formula.
 //
 // Currently, the following transformations are implemented

@@ -14,7 +14,7 @@
 //	fac := formula.NewFactory()
 //	p := parser.New(fac)
 //	f1 := p.ParseUnsafe("(A | B) & (A | C ) & (C | D) & (B | ~D)")
-//	implicant, err := primimplicant.Minimum(fac, f1) // implicant B, C
+//	implicant, err := primeimplicant.Minimum(fac, f1) // implicant B, C
 //
 // A prime implicant cover of a formula is a number of prime implicants
 // which cover all min-terms of the formula.  To compute such a cover of
@@ -24,6 +24,6 @@
 //	fac := formula.NewFactory()
 //	p := parser.New(fac)
 //	f1 := p.ParseUnsafe("(A | B) & (A | C ) & (C | D) & (B | ~D)")
-//	primes := primimplicant.CoverMin(fac, f1, primimplicant.CoverImplicants)
+//	primes := primeimplicant.CoverMin(fac, f1, primimplicant.CoverImplicants)
 //	implicants := primes.Implicants // [B, C], [A, C, ~D], [A, B, D]
 package primeimplicant

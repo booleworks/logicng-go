@@ -59,7 +59,7 @@ func DefaultCNFConfig() *CNFConfig {
 }
 
 // IsCNF reports whether the given formula is in conjunctive normal form.  A
-// CNF is a conjunction of discjuntion of literals.
+// CNF is a conjunction of disjunctions of literals.
 func IsCNF(fac f.Factory, formula f.Formula) bool {
 	cached, ok := f.LookupPredicateCache(fac, f.PredCNF, formula)
 	if ok {
@@ -451,7 +451,7 @@ func handleNary(
 	}
 }
 
-// CNFAuxState is holds the variable and formula mapping for a Tseitin or
+// CNFAuxState holds the variable and formula mapping for a Tseitin or
 // Plaisted & Greenbaum CNF transformation.  If you want to reuse generated CNF
 // auxiliary variables you can re-use such a state between different CNF
 // computations.

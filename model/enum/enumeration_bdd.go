@@ -13,7 +13,7 @@ import (
 )
 
 // ToBddOnFormula enumerates all models of a formula over the given variables
-// and tathers the result in a BDD.
+// and gathers the result in a BDD.
 func ToBddOnFormula(
 	fac f.Factory,
 	formula f.Formula,

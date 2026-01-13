@@ -39,7 +39,7 @@ func New[R any](vars, additionalVars *f.VarSet, config *Config) *ModelIterator[R
 }
 
 // Iterate is the main entry point for the model iteration.  It iterates over
-// all model on the given solver.  The newCollector function is used to
+// all models on the given solver.  The newCollector function is used to
 // generate a new iteration collector for the given known variables on the
 // solver, don't care variables, and additional variables.
 func (m *ModelIterator[R]) Iterate(
