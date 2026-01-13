@@ -23,7 +23,7 @@ func WriteMermaidToString(representation *Representation) string {
 }
 
 // WriteMermaidToFileName writes the given graphical representation as a
-// Mermaid.js file to a the given filename.  Returns an error when there was a
+// Mermaid.js file to the given filename.  Returns an error when there was a
 // problem writing the file.
 func WriteMermaidToFileName(filename string, representation *Representation) error {
 	file, err := os.Create(filename)
@@ -35,7 +35,7 @@ func WriteMermaidToFileName(filename string, representation *Representation) err
 }
 
 // WriteMermaidToFile writes the given graphical representation as a
-// Mermaid.js file to a the given file.  Returns an error when there was a
+// Mermaid.js file to the given file.  Returns an error when there was a
 // problem writing the file.
 func WriteMermaidToFile(file *os.File, representation *Representation) error {
 	defer file.Close()
@@ -43,7 +43,7 @@ func WriteMermaidToFile(file *os.File, representation *Representation) error {
 }
 
 // WriteMermaidToWriter writes the given graphical representation as a
-// Mermaid.js file to a the writer.  Returns an error when there was a
+// Mermaid.js file to the writer.  Returns an error when there was a
 // problem writing to the writer.
 func WriteMermaidToWriter(writer io.Writer, representation *Representation) error {
 	err := writeMermaidPreamble(writer)

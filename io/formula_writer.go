@@ -32,7 +32,7 @@ func WriteFormulaToFile(fac f.Factory, file *os.File, formula f.Formula, splitAn
 // WriteFormulaToWriter writes the given formula to the given writer. The flag
 // splitAnd indicates whether - if the formula is a conjunction - the single
 // operands should be written to different lines without a conjoining operator.
-// Returns an error if there was a problem writing the writer.
+// Returns an error if there was a problem writing to the writer.
 func WriteFormulaToWriter(fac f.Factory, writer io.Writer, formula f.Formula, splitAnd ...bool) error {
 	split := false
 	if splitAnd != nil {

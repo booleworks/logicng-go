@@ -13,5 +13,5 @@ type EventMaxSatNewUpperBound struct {
 }
 
 func (EventMaxSatNewUpperBound) EventType() string {
-	return "Max-SAT New UpperBound"
+	return "Max-SAT New Upper Bound"
 }

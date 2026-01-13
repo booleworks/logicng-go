@@ -21,7 +21,7 @@ func ReadFormula(fac f.Factory, filename string) (f.Formula, error) {
 }
 
 // ReadFormulas reads a list of formulas from the given file.  Each line in the
-// file is one formula in the result.  Returns the list of formulas ad an
+// file is one formula in the result.  Returns the list of formulas and an
 // optional error if there was a problem reading the file.
 func ReadFormulas(fac f.Factory, filename string) ([]f.Formula, error) {
 	file, err := os.Open(filename)
@@ -44,7 +44,7 @@ func ReadFormulaFile(fac f.Factory, file *os.File) (f.Formula, error) {
 }
 
 // ReadFormulasFile reads a list of formulas from the given file.  Each line in
-// the file is one formula in the result.  Returns the list of formulas ad an
+// the file is one formula in the result.  Returns the list of formulas and an
 // optional error if there was a problem reading the file.
 func ReadFormulasFile(fac f.Factory, file *os.File) ([]f.Formula, error) {
 	parser := parser.New(fac)

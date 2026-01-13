@@ -19,7 +19,7 @@ const (
 // filename in the
 // http://www.satcompetition.org/2009/format-benchmarks2009.html. Returns a
 // mapping from each variable of the original problem to its index in the CNF
-// file an optional error if there was a problem writing the file or the
+// file and an optional error if there was a problem writing the file or the
 // formula was not in CNF.
 func WriteDimacs(fac f.Factory, filename string, formula f.Formula) (map[f.Variable]int, error) {
 	var name string
@@ -39,7 +39,7 @@ func WriteDimacs(fac f.Factory, filename string, formula f.Formula) (map[f.Varia
 // WriteDimacsToFile writes the given formula in CNF to the given file in the
 // http://www.satcompetition.org/2009/format-benchmarks2009.html. Returns a
 // mapping from each variable of the original problem to its index in the CNF
-// file an optional error if there was a problem writing the file or the
+// file and an optional error if there was a problem writing the file or the
 // formula was not in CNF.
 func WriteDimacsToFile(fac f.Factory, file *os.File, formula f.Formula) (map[f.Variable]int, error) {
 	return WriteDimacsToWriter(fac, file, formula)
@@ -48,7 +48,7 @@ func WriteDimacsToFile(fac f.Factory, file *os.File, formula f.Formula) (map[f.V
 // WriteDimacsToWriter writes the given formula to the given writer in the
 // http://www.satcompetition.org/2009/format-benchmarks2009.html. Returns a
 // mapping from each variable of the original problem to its index in the CNF
-// file an optional error if there was a problem writing to the writer.
+// file and an optional error if there was a problem writing to the writer.
 func WriteDimacsToWriter(fac f.Factory, writer io.Writer, formula f.Formula) (map[f.Variable]int, error) {
 	if !normalform.IsCNF(fac, formula) {
 		return nil, errorx.BadInput("formula is not in CNF")

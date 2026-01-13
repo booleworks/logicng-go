@@ -167,20 +167,15 @@ func OLL(fac f.Factory, config ...*Config) *Solver {
 }
 
 // AddHardFormula adds the given formulas as hard formulas to the solver which
-// must always be satisfied.  Since MAX-SAT solvers in LogicNG do not support
-// an incremental interface, this function returns an error if the solver was
-// already solved once.
-func (m *Solver) AddHardFormula(formula ...f.Formula) error {
+// must always be satisfied.
+func (m *Solver) AddHardFormula(formula ...f.Formula) {
 	for _, formula := range formula {
 		m.addFormulaAsCNF(formula, -1)
 	}
-	return nil
 }
 
 // AddSoftFormula adds the given formulas as soft formulas with the given
-// weight to the solver.  The weight must be >0 otherwise an error is returned.
-// Since MAX-SAT solvers in LogicNG do not support an incremental interface,
-// this function returns an error if the solver was already solved once.
+// weight to the solver.  The weight must be > 0 otherwise an error is returned.
 func (m *Solver) AddSoftFormula(formula f.Formula, weight int) error {
 	if weight < 1 {
 		return errorx.BadInput("the weight of a formula must be > 0")

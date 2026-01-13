@@ -28,7 +28,7 @@ type Edge struct {
 	label       string
 }
 
-// NewEdge generates a new edge between the two given source and destintion
+// NewEdge generates a new edge between the two given source and destination
 // node with the given style and an optional label for the edge.
 func NewEdge(source, destination *Node, style *EdgeStyle, label ...string) *Edge {
 	lbl := ""

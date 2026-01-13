@@ -18,7 +18,7 @@ func NewFormulaGraph() *FormulaGraph {
 	return &FormulaGraph{make(map[f.Formula]int), make([]f.Formula, 0, 8), make([][]int, 0, 8)}
 }
 
-// Nodes returns all nodes - und thus formulas - of the graph.
+// Nodes returns all nodes - and thus formulas - of the graph.
 func (g *FormulaGraph) Nodes() []f.Formula {
 	return g.nodes
 }

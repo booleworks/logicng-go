@@ -40,7 +40,7 @@ func MinimumSetCover[T any](sets [][]T) [][]T {
 		occs.Each(func(_ int, val any) {
 			ops = append(ops, val.(f.Variable))
 		})
-		_ = solver.AddHardFormula(fac.Or(f.VariablesAsFormulas(ops)...))
+		solver.AddHardFormula(fac.Or(f.VariablesAsFormulas(ops)...))
 	}
 	for setVar := range setMap {
 		_ = solver.AddSoftFormula(setVar.Negate(fac).AsFormula(), 1)

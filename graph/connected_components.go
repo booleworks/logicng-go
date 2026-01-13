@@ -7,7 +7,7 @@ import (
 	f "github.com/booleworks/logicng-go/formula"
 )
 
-// ComputeConnectedComponents returns the strongly connected components of a
+// ComputeConnectedComponents returns the connected components of a
 // constraint graph.  Each component is represented as a slice of variables.
 func ComputeConnectedComponents(graph *FormulaGraph) [][]f.Variable {
 	var connectedComponents [][]f.Variable
