@@ -45,13 +45,13 @@ func Restrict(fac f.Factory, formula f.Formula, assignment *Assignment) f.Formul
 func restrict(
 	fac f.Factory, comparator f.CSort, rhs int, literals []f.Literal, coefficients []int, assignment *Assignment,
 ) f.Formula {
-	newLits := make([]f.Literal, 0)
-	newCoeffs := make([]int, 0)
+	newLits := make([]f.Literal, 0, len(literals))
+	newCoeffs := make([]int, 0, len(coefficients))
 	lhsFixed := 0
 	minValue := 0
 	maxValue := 0
 	var restriction f.Formula
-	for i := 0; i < len(literals); i++ {
+	for i := range literals {
 		if literals[i].IsPos() {
 			restriction = assignment.restrictVariable(fac, f.Variable(literals[i]))
 		} else {

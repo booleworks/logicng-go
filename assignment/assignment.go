@@ -54,11 +54,9 @@ func (a *Assignment) AddLit(fac f.Factory, literal f.Literal) error {
 
 // PosVars returns all variables of the assignment mapped to true.
 func (a *Assignment) PosVars() []f.Variable {
-	slice := make([]f.Variable, len(a.pos))
-	count := 0
+	slice := make([]f.Variable, 0, len(a.pos))
 	for l := range a.pos {
-		slice[count] = f.EncodeVariable(l)
-		count++
+		slice = append(slice, f.EncodeVariable(l))
 	}
 	return slice
 }
@@ -66,11 +64,9 @@ func (a *Assignment) PosVars() []f.Variable {
 // NegVars returns all variables of the assignment mapped to false.
 // Note, this function return the variables, not the negative literals.
 func (a *Assignment) NegVars() []f.Variable {
-	slice := make([]f.Variable, len(a.neg))
-	count := 0
+	slice := make([]f.Variable, 0, len(a.neg))
 	for l := range a.neg {
-		slice[count] = f.EncodeVariable(l)
-		count++
+		slice = append(slice, f.EncodeVariable(l))
 	}
 	return slice
 }
@@ -134,9 +130,8 @@ func (a *Assignment) restrictVariable(fac f.Factory, variable f.Variable) f.Form
 	_, ok = a.neg[variable.ID()^1]
 	if ok {
 		return fac.Falsum()
-	} else {
-		return variable.AsFormula()
 	}
+	return variable.AsFormula()
 }
 
 func (a *Assignment) restrictNegativeLiteral(fac f.Factory, literal f.Literal) f.Formula {
@@ -147,9 +142,8 @@ func (a *Assignment) restrictNegativeLiteral(fac f.Factory, literal f.Literal) f
 	_, ok = a.neg[literal.ID()]
 	if ok {
 		return fac.Verum()
-	} else {
-		return literal.AsFormula()
 	}
+	return literal.AsFormula()
 }
 
 type present struct{}
