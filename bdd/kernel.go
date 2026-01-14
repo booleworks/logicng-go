@@ -252,9 +252,8 @@ func (k *Kernel) IndexForVariable(variable f.Variable) (int32, error) {
 	index, ok := k.var2idx[variable]
 	if !ok {
 		return -1, errorx.BadInput("variable %s unknown on the kernel", variable.Sprint(k.fac))
-	} else {
-		return index, nil
 	}
+	return index, nil
 }
 
 func (k *Kernel) setNumberOfVars(num int32) {
@@ -310,9 +309,8 @@ func (k *Kernel) getLevel(variable f.Variable) int32 {
 	idx, ok := k.var2idx[variable]
 	if ok && idx >= 0 && int(idx) < len(k.var2level) {
 		return k.var2level[idx]
-	} else {
-		return -1
 	}
+	return -1
 }
 
 func (k *Kernel) doWithPotentialReordering(operation func() (int32, bool)) int32 {
@@ -601,10 +599,7 @@ func (k *Kernel) mark(i int32) {
 
 func (k *Kernel) nodeResize(doRehash bool) {
 	oldsize := k.nodesize
-	k.nodesize = k.nodesize << 1
-	if k.nodesize > oldsize+k.maxnodeincrease {
-		k.nodesize = oldsize + k.maxnodeincrease
-	}
+	k.nodesize = min(k.nodesize<<1, oldsize+k.maxnodeincrease)
 	k.nodesize = int32(primeLte(int(k.nodesize)))
 	newnodes := make([]node, k.nodesize)
 	copy(newnodes, k.nodes)

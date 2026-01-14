@@ -28,9 +28,8 @@ type ConstantNode struct {
 func (c ConstantNode) Label() string {
 	if c.Value {
 		return "$true"
-	} else {
-		return "$false"
 	}
+	return "$false"
 }
 
 // Reports whether the node is an inner node.

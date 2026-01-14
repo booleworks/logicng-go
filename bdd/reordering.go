@@ -475,7 +475,7 @@ func (r *reordering) reorderSiftBestpos(blk *bddTree, middlePos int32) {
 	dirIsUp := blk.pos <= middlePos
 
 	// Move block back and forth
-	for n := 0; n < 2; n++ {
+	for range 2 {
 		first := true
 
 		if dirIsUp {
@@ -559,7 +559,7 @@ func (r *reordering) blockdown(left *bddTree) {
 
 	// Move left past right
 	for r.k.var2level[lseq[0]] < r.k.var2level[rseq[rightsize]] {
-		for n = 0; n < leftsize; n++ {
+		for n = range leftsize {
 			if r.k.var2level[lseq[n]]+1 != r.k.var2level[lseq[n+1]] &&
 				r.k.var2level[lseq[n]] < r.k.var2level[rseq[rightsize]] {
 				r.reorderVardown(lseq[n])
@@ -643,7 +643,7 @@ func (r *reordering) reorderDownSimple(var0 int32) int32 {
 	vl0 := r.levels[var0].start
 	size0 := r.levels[var0].size
 	r.levels[var0].nodenum = 0
-	for n := int32(0); n < size0; n++ {
+	for n := range size0 {
 		q := r.k.hash(n + vl0)
 		r.k.setHash(n+vl0, 0)
 		for q != 0 {
@@ -769,7 +769,7 @@ func (r *reordering) reorderLocalGbc(var0 int32) {
 	var1 := r.k.level2var[r.k.var2level[var0]+1]
 	vl1 := r.levels[var1].start
 	size1 := r.levels[var1].size
-	for n := int32(0); n < size1; n++ {
+	for n := range size1 {
 		hash := n + vl1
 		q := r.k.hash(hash)
 		r.k.setHash(hash, 0)
@@ -983,7 +983,7 @@ type interactionMatrix struct {
 
 func newInteractionMatrix(size int32) *interactionMatrix {
 	rows := make([][]int32, size)
-	for n := int32(0); n < size; n++ {
+	for n := range size {
 		rows[n] = make([]int32, size/8+1)
 	}
 	return &interactionMatrix{rows}
