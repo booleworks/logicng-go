@@ -117,12 +117,11 @@ func newGraph(fac f.Factory, cnf f.Formula) *graph {
 	graph.edgeList = make([][]int32, graph.numberOfVertices)
 	for i := range edgeList {
 		edges := edgeList[i]
-		graph.edgeList[i] = make([]int32, len(edges))
-		j := 0
+		edgeSlice := make([]int32, 0, len(edges))
 		for edge := range edges {
-			graph.edgeList[i][j] = edge
-			j++
+			edgeSlice = append(edgeSlice, edge)
 		}
+		graph.edgeList[i] = edgeSlice
 	}
 	return &graph
 }

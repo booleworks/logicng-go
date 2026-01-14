@@ -3,8 +3,6 @@ package dnnf
 import (
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/sat"
-	"github.com/emirpasic/gods/sets/treeset"
-	"github.com/emirpasic/gods/utils"
 )
 
 type dtree interface {
@@ -119,11 +117,11 @@ func (l *dtreeLeaf) isSubsumed() bool {
 }
 
 func newDtreeNode(fac f.Factory, left, right dtree) *dtreeNode {
-	node := dtreeNode{}
-	node.left = left
-	node.right = right
-	node.sz = left.size() + right.size()
-
+	node := dtreeNode{
+		left:  left,
+		right: right,
+		sz:    left.size() + right.size(),
+	}
 	ll := left.leaves()
 	node.excludeUnitLeaves(&ll)
 	node.leftLeaves = ll
@@ -154,7 +152,7 @@ func (n *dtreeNode) initialize(solver sat.DnnfSatSolver) {
 	n.statVarSet = n.left.staticVarSet()
 	n.statVarSet.or(n.right.staticVarSet())
 	n.statVariables = toArray(n.statVarSet)
-	n.statSeparator = sortedIntersect(n.left.staticVarSetArray(), n.right.staticVarSetArray())
+	n.statSeparator = intersect(n.left.staticVarSetArray(), n.right.staticVarSetArray())
 	for _, i := range n.statSeparator {
 		n.statSeparatorBitSet.set(i)
 	}
@@ -162,7 +160,11 @@ func (n *dtreeNode) initialize(solver sat.DnnfSatSolver) {
 	n.localLeftVarSet = newBitset(n.statVariables[len(n.statVariables)-1])
 	n.localRightVarSet = newBitset(n.statVariables[len(n.statVariables)-1])
 
-	var lClauseContents []int32
+	lSize := 0
+	for _, leaf := range n.leftLeaves {
+		lSize += len(leaf.literals) + 1
+	}
+	lClauseContents := make([]int32, 0, lSize)
 	for _, leaf := range n.leftLeaves {
 		lClauseContents = append(lClauseContents, leaf.literals...)
 		lClauseContents = append(lClauseContents, -leaf.id-1)
@@ -254,21 +256,17 @@ func toArray(bits *bitset) []int32 {
 	return result
 }
 
-func sortedIntersect(left, right []int32) []int32 {
-	l := treeset.NewWith(utils.Int32Comparator)
-	intersection := treeset.NewWith(utils.Int32Comparator)
-	for _, i := range left {
-		l.Add(i)
+func intersect(left, right []int32) []int32 {
+	seen := make(map[int32]bool, len(left))
+	for _, v := range left {
+		seen[v] = true
 	}
-	for _, i := range right {
-		if l.Contains(i) {
-			intersection.Add(i)
+	result := make([]int32, 0, min(len(left), len(right)))
+	for _, v := range right {
+		if seen[v] {
+			result = append(result, v)
 		}
 	}
-	result := make([]int32, intersection.Size())
-	intersection.Each(func(i int, value any) {
-		result[i] = value.(int32)
-	})
 	return result
 }
 
@@ -292,85 +290,4 @@ func (n *dtreeNode) varSet(clausesContents []int32, localVarSet *bitset) {
 		}
 		i = j + 1
 	}
-}
-
-// Bitset stuff
-
-type bitset struct {
-	bits []bool
-}
-
-func newBitset(size ...int32) *bitset {
-	capacity := int32(0)
-	if len(size) > 0 {
-		capacity = size[0]
-	}
-	return &bitset{make([]bool, capacity)}
-}
-
-func (b *bitset) set(index int32) {
-	if int(index) < len(b.bits) {
-		b.bits[index] = true
-	} else {
-		b.ensureSize(int(index) + 1)
-		b.bits[index] = true
-	}
-}
-
-func (b *bitset) get(index int) bool {
-	return index < len(b.bits) && b.bits[index]
-}
-
-func (b *bitset) or(other *bitset) {
-	b.ensureSize(len(other.bits))
-	for i := 0; i < len(b.bits); i++ {
-		b.bits[i] = b.bits[i] || i < len(other.bits) && other.bits[i]
-	}
-}
-
-func (b *bitset) and(other *bitset) {
-	b.ensureSize(len(other.bits))
-	for i := 0; i < len(b.bits); i++ {
-		b.bits[i] = b.bits[i] && i < len(other.bits) && other.bits[i]
-	}
-}
-
-func (b *bitset) ensureSize(size int) {
-	if len(b.bits) >= size {
-		return
-	}
-	newBits := make([]bool, size)
-	copy(newBits, b.bits)
-	b.bits = newBits
-}
-
-func (b *bitset) cardinality() int {
-	count := 0
-	for _, b := range b.bits {
-		if b {
-			count++
-		}
-	}
-	return count
-}
-
-func (b *bitset) nextSetBit(fromIndex int32) int32 {
-	for i := fromIndex; i < int32(len(b.bits)); i++ {
-		if b.bits[i] {
-			return i
-		}
-	}
-	return -1
-}
-
-func (b *bitset) clear() {
-	for i := 0; i < len(b.bits); i++ {
-		b.bits[i] = false
-	}
-}
-
-func (b *bitset) clone() *bitset {
-	cln := make([]bool, len(b.bits))
-	copy(cln, b.bits)
-	return &bitset{cln}
 }

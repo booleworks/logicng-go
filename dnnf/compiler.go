@@ -1,6 +1,8 @@
 package dnnf
 
 import (
+	"math/bits"
+
 	"github.com/booleworks/logicng-go/event"
 	f "github.com/booleworks/logicng-go/formula"
 	"github.com/booleworks/logicng-go/handler"
@@ -30,9 +32,8 @@ func CompileWithHandler(fac f.Factory, formula f.Formula, hdl handler.Handler) (
 	dnnfFormula, state := compiler.compile(hdl)
 	if !state.Success {
 		return nil, state
-	} else {
-		return &DNNF{fac, dnnfFormula, originalVariables.AsImmutable()}, succ
 	}
+	return &DNNF{fac, dnnfFormula, originalVariables.AsImmutable()}, succ
 }
 
 type compiler struct {
@@ -72,21 +73,34 @@ func newCompiler(fac f.Factory, formula f.Formula) *compiler {
 func bitsetComp(a, b any) int {
 	bitset1 := a.(*bitset)
 	bitset2 := b.(*bitset)
-	if len(bitset1.bits) < len(bitset2.bits) {
+	if len(bitset1.words) < len(bitset2.words) {
 		return -1
 	}
-	if len(bitset2.bits) < len(bitset1.bits) {
+	if len(bitset1.words) > len(bitset2.words) {
 		return 1
 	}
-	// lengths are equal
-	for i := 0; i < len(bitset1.bits); i++ {
-		if !bitset1.bits[i] && bitset2.bits[i] {
-			return -1
+
+	// lengths are equal - compare word by word
+	for i := 0; i < len(bitset1.words); i++ {
+		word1 := bitset1.words[i]
+		word2 := bitset2.words[i]
+
+		if word1 == word2 {
+			continue
 		}
-		if !bitset2.bits[i] && bitset1.bits[i] {
-			return 1
+
+		// Words differ - find the first differing bit
+		diff := word1 ^ word2
+		pos := bits.TrailingZeros64(diff)
+
+		// Check which bitset has the bit set at position pos
+		if (word1 & (1 << pos)) != 0 {
+			return 1 // bitset1 has the bit set
+		} else {
+			return -1 // bitset2 has the bit set
 		}
 	}
+
 	return 0
 }
 
@@ -148,9 +162,8 @@ func (c *compiler) compileWithTree(dtree dtree, hdl handler.Handler) (f.Formula,
 	result, state := c.cnf2ddnnf(dtree, hdl)
 	if !state.Success {
 		return 0, state
-	} else {
-		return c.fac.And(c.unitClauses, result), state
 	}
+	return c.fac.And(c.unitClauses, result), state
 }
 
 func (c *compiler) initializeCaches(dtree dtree) {
@@ -170,7 +183,7 @@ func (c *compiler) initializeCaches(dtree dtree) {
 		c.localOccurrences[i] = make([][]int32, sep)
 		for j := range sep {
 			c.localOccurrences[i][j] = make([]int32, variables)
-			for k := range variables {
+			for k := range c.localOccurrences[i][j] {
 				c.localOccurrences[i][j][k] = -1
 			}
 		}
@@ -203,17 +216,15 @@ func (c *compiler) cnf2ddnnfInner(tree dtree, currentShannons int, hdl handler.H
 			res, state := c.cnf2ddnnfInner(tree, currentShannons+1, hdl)
 			if !state.Success {
 				return 0, state
-			} else {
-				positiveDnnf = res
 			}
+			positiveDnnf = res
 		}
 		c.solver.UndoDecide(variable)
 		if positiveDnnf.Sort() == f.SortFalse {
 			if c.solver.AtAssertionLevel() && c.solver.AssertCdLiteral() {
 				return c.cnf2ddnnf(tree, hdl)
-			} else {
-				return c.fac.Falsum(), succ
 			}
+			return c.fac.Falsum(), succ
 		}
 
 		negativeDnnf := c.fac.Falsum()
@@ -221,17 +232,15 @@ func (c *compiler) cnf2ddnnfInner(tree dtree, currentShannons int, hdl handler.H
 			res, state := c.cnf2ddnnfInner(tree, currentShannons+1, hdl)
 			if !state.Success {
 				return 0, state
-			} else {
-				negativeDnnf = res
 			}
+			negativeDnnf = res
 		}
 		c.solver.UndoDecide(variable)
 		if negativeDnnf == c.fac.Falsum() {
 			if c.solver.AtAssertionLevel() && c.solver.AssertCdLiteral() {
 				return c.cnf2ddnnf(tree, hdl)
-			} else {
-				return c.fac.Falsum(), succ
 			}
+			return c.fac.Falsum(), succ
 		}
 
 		lit := c.solver.LitForIdx(variable)
@@ -295,16 +304,15 @@ func (c *compiler) cnfAux(tree dtree, currentShannons int, hdl handler.Handler) 
 		key := c.computeCacheKey(tree.(*dtreeNode), currentShannons)
 		if val, ok := c.cache.Get(key); ok {
 			return val.(f.Formula), succ
-		} else {
-			dnnf, state := c.cnf2ddnnf(tree, hdl)
-			if !state.Success {
-				return 0, state
-			}
-			if dnnf.Sort() != f.SortFalse {
-				c.cache.Put(key.clone(), dnnf)
-			}
-			return dnnf, succ
 		}
+		dnnf, state := c.cnf2ddnnf(tree, hdl)
+		if !state.Success {
+			return 0, state
+		}
+		if dnnf.Sort() != f.SortFalse {
+			c.cache.Put(key.clone(), dnnf)
+		}
+		return dnnf, succ
 	}
 }
 
@@ -334,5 +342,5 @@ func (c *compiler) leaf2ddnnf(leaf *dtreeLeaf) f.Formula {
 }
 
 func (c *compiler) newlyImpliedLiterals(knownVariables *bitset) f.Formula {
-	return c.solver.NewlyImplied(knownVariables.bits)
+	return c.solver.NewlyImplied(knownVariables.toBoolSlice())
 }
