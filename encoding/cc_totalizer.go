@@ -65,9 +65,9 @@ func initializeConstraint(result Result, vars []f.Variable) *totalizerVars {
 }
 
 func toCNF(result Result, tv *totalizerVars, rhs int, bound bound) {
-	left := make([]f.Variable, 0)
-	right := make([]f.Variable, 0)
 	split := len(*tv.outvars) / 2
+	left := make([]f.Variable, 0, split)
+	right := make([]f.Variable, 0, len(*tv.outvars)-split)
 	for i := 0; i < len(*tv.outvars); i++ {
 		if i < split {
 			if split == 1 {

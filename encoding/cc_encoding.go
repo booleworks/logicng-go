@@ -119,14 +119,12 @@ func EncodeIncremental(
 func determineConfig(fac f.Factory, initConfig []*Config) *Config {
 	if len(initConfig) > 0 {
 		return initConfig[0]
-	} else {
-		configFromFactory, ok := fac.ConfigurationFor(configuration.Encoder)
-		if !ok {
-			return DefaultConfig()
-		} else {
-			return configFromFactory.(*Config)
-		}
 	}
+	configFromFactory, ok := fac.ConfigurationFor(configuration.Encoder)
+	if !ok {
+		return DefaultConfig()
+	}
+	return configFromFactory.(*Config)
 }
 
 func amo(result Result, config *Config, vars []f.Variable) {

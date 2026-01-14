@@ -73,17 +73,19 @@ func amoProduct(result Result, recursiveBound int, vars []f.Variable) {
 }
 
 func buildPure(result Result, vars []f.Variable) {
+	fac := result.Factory()
 	for i := range vars {
 		for j := i + 1; j < len(vars); j++ {
-			result.AddClause(vars[i].Negate(result.Factory()), vars[j].Negate(result.Factory()))
+			result.AddClause(vars[i].Negate(fac), vars[j].Negate(fac))
 		}
 	}
 }
 
 func buildPureLit(result Result, lits []f.Literal) {
+	fac := result.Factory()
 	for i := range lits {
 		for j := i + 1; j < len(lits); j++ {
-			result.AddClause(lits[i].Negate(result.Factory()), lits[j].Negate(result.Factory()))
+			result.AddClause(lits[i].Negate(fac), lits[j].Negate(fac))
 		}
 	}
 }
@@ -100,8 +102,8 @@ func amoNested(result Result, groupSize int, vars []f.Literal) {
 			}
 		}
 	} else {
-		l1 := make([]f.Literal, 0, len(vars)/2)
-		l2 := make([]f.Literal, 0, len(vars)/2)
+		l1 := make([]f.Literal, 0, len(vars)/2+1)
+		l2 := make([]f.Literal, 0, len(vars)/2+1)
 		i := 0
 		for ; i < len(vars)/2; i++ {
 			l1 = append(l1, vars[i])
@@ -224,7 +226,7 @@ func bimanderIntern(result Result, groupSize int, vars []f.Variable) {
 }
 
 func initializeGroups(result Result, groupSize int, vars []f.Variable) [][]f.Literal {
-	groups := make([][]f.Literal, 0, 4)
+	groups := make([][]f.Literal, 0, groupSize)
 	n := len(vars)
 	for range groupSize {
 		groups = append(groups, make([]f.Literal, 0, 4))
