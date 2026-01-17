@@ -665,9 +665,8 @@ func (m *CoreSolver) pickBranchLit() int32 {
 	for next == -1 || m.vars[next].assignment != f.TristateUndef || !m.vars[next].decision {
 		if m.orderHeap.isEmpty() {
 			return -1
-		} else {
-			next = m.orderHeap.removeMin()
 		}
+		next = m.orderHeap.removeMin()
 	}
 	return MkLit(next, m.vars[next].polarity)
 }

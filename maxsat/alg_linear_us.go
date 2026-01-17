@@ -75,9 +75,8 @@ func (m *linearUS) none() (Result, handler.State) {
 			} else if m.lbCost == m.ubCost {
 				if m.nbSatisfiable > 0 {
 					return m.optimum(), succ
-				} else {
-					return unsat(), succ
 				}
+				return unsat(), succ
 			} else if state := m.foundLowerBound(m.lbCost); !state.Success {
 				return Result{}, state
 			}
@@ -122,9 +121,8 @@ func (m *linearUS) iterative() (Result, handler.State) {
 			if m.lbCost == m.ubCost {
 				if m.nbSatisfiable > 0 {
 					return m.optimum(), succ
-				} else {
-					return unsat(), succ
 				}
+				return unsat(), succ
 			}
 			if state := m.foundLowerBound(m.lbCost); !state.Success {
 				return Result{}, state

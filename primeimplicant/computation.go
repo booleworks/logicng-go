@@ -98,9 +98,8 @@ func compute(
 	}
 	if completeImplicants {
 		return &PrimeResult{implicants, implicates, coverSort}, succ
-	} else {
-		return &PrimeResult{negateAll(fac, implicates), negateAll(fac, implicants), coverSort}, succ
 	}
+	return &PrimeResult{negateAll(fac, implicates), negateAll(fac, implicants), coverSort}, succ
 }
 
 func computeGeneric(

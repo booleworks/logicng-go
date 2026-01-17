@@ -106,7 +106,6 @@ func bddNormalform(bdd *BDD, cnf bool) f.Formula {
 	}
 	if cnf {
 		return kernel.fac.And(terms...)
-	} else {
-		return kernel.fac.Or(terms...)
 	}
+	return kernel.fac.Or(terms...)
 }

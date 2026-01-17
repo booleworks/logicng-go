@@ -589,7 +589,6 @@ func drupGetHash(marks *[]int, mark int, input []int) int32 {
 func drupIndex(lit int) int {
 	if lit > 0 {
 		return lit * 2
-	} else {
-		return (-lit * 2) ^ 1
 	}
+	return (-lit * 2) ^ 1
 }

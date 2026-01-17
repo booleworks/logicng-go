@@ -291,11 +291,10 @@ func (k *Kernel) getOrAddVarIndex(variable f.Variable) int32 {
 	if !ok {
 		if len(k.var2idx) >= int(k.varnum) {
 			panic(errorx.IllegalState("no free variables left"))
-		} else {
-			index = int32(len(k.var2idx))
-			k.var2idx[variable] = index
-			k.idx2var[index] = variable
 		}
+		index = int32(len(k.var2idx))
+		k.var2idx[variable] = index
+		k.idx2var[index] = variable
 	}
 	return index
 }
@@ -318,17 +317,16 @@ func (k *Kernel) doWithPotentialReordering(operation func() (int32, bool)) int32
 	res, reorder := operation()
 	if !reorder {
 		return res
-	} else {
-		k.reordering.checkReorder()
-		k.initRef()
-		k.reordering.disableReorder()
-		res, reorder = operation()
-		if reorder {
-			panic(errorx.IllegalState("must never happen"))
-		}
-		k.reordering.enableReorder()
-		return res
 	}
+	k.reordering.checkReorder()
+	k.initRef()
+	k.reordering.disableReorder()
+	res, reorder = operation()
+	if reorder {
+		panic(errorx.IllegalState("must never happen"))
+	}
+	k.reordering.enableReorder()
+	return res
 }
 
 func (k *Kernel) apply(l, r int32, op operand) int32 {

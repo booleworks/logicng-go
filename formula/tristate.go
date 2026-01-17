@@ -29,7 +29,6 @@ func (t Tristate) Negate() Tristate {
 func TristateFromBool(b bool) Tristate {
 	if b {
 		return TristateTrue
-	} else {
-		return TristateFalse
 	}
+	return TristateFalse
 }

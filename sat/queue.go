@@ -55,7 +55,7 @@ func (q *boundedQueue) push(x int) {
 }
 
 func (q *boundedQueue) avg() int {
-	return q.sumOfQueue / int(q.queueSize)
+	return q.sumOfQueue / q.queueSize
 }
 
 func (q *boundedQueue) valid() bool {

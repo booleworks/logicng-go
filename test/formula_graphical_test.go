@@ -86,9 +86,8 @@ func TestAstWriterDynamicStyle(t *testing.T) {
 			name, _, _ := fac.LiteralNamePhase(content)
 			if unicode.IsLower(rune(name[0])) {
 				return style2
-			} else {
-				return style3
 			}
+			return style3
 		default:
 			return style4
 		}
@@ -113,9 +112,8 @@ func TestAstWriterEdgeMapper(t *testing.T) {
 	computeEdgeStyle := func(src, _ f.Formula) *graphical.EdgeStyle {
 		if src.Sort() == f.SortPBC || src.Sort() == f.SortCC {
 			return style1
-		} else {
-			return style2
 		}
+		return style2
 	}
 	generator := &graphical.Generator[f.Formula]{
 		BackgroundColor:  graphical.Color("#444444"),
@@ -217,9 +215,8 @@ func TestDagWriterDynamicStyle(t *testing.T) {
 			name, _, _ := fac.LiteralNamePhase(content)
 			if unicode.IsLower(rune(name[0])) {
 				return style2
-			} else {
-				return style3
 			}
+			return style3
 		default:
 			return style4
 		}
@@ -247,9 +244,8 @@ func TestDagWriterEdgeMapper(t *testing.T) {
 	computeEdgeStyle := func(src, _ f.Formula) *graphical.EdgeStyle {
 		if src.Sort() == f.SortPBC || src.Sort() == f.SortCC {
 			return style1
-		} else {
-			return graphical.NoEdgeStyle()
 		}
+		return graphical.NoEdgeStyle()
 	}
 	generator := &graphical.Generator[f.Formula]{
 		DefaultEdgeStyle: graphical.Solid(graphical.ColorPurple),

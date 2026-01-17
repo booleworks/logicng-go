@@ -129,11 +129,10 @@ func (s *Solver) maximize(
 			return s.core.CreateModel(s.fac, internalModel, relevantIndices), sResult.state
 		} else if !sResult.Sat() {
 			return s.core.CreateModel(s.fac, internalModel, relevantIndices), succ
-		} else {
-			internalModel = s.core.Model()
-			currentModel = sResult.Model()
-			currentBound = len(currentModel.PosVars())
 		}
+		internalModel = s.core.Model()
+		currentModel = sResult.Model()
+		currentBound = len(currentModel.PosVars())
 	} else if currentBound == len(selectors) {
 		return s.core.CreateModel(s.fac, internalModel, relevantIndices), succ
 	}

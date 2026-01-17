@@ -23,7 +23,7 @@ func (b *bitset) set(index int32) {
 	if int(wordIndex) >= len(b.words) {
 		b.ensureSize(int(index) + 1)
 	}
-	b.words[wordIndex] |= (1 << bitIndex)
+	b.words[wordIndex] |= 1 << bitIndex
 }
 
 func (b *bitset) get(index int) bool {
@@ -77,7 +77,7 @@ func (b *bitset) cardinality() int {
 }
 
 func (b *bitset) nextSetBit(fromIndex int32) int32 {
-	wordIndex := int32(fromIndex / 64)
+	wordIndex := fromIndex / 64
 	if int(wordIndex) >= len(b.words) {
 		return -1
 	}

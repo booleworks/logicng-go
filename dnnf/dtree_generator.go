@@ -64,11 +64,10 @@ func generateWithEliminatingOrder(
 func compose(fac f.Factory, trees []dtree) dtree {
 	if len(trees) == 1 {
 		return trees[0]
-	} else {
-		left := compose(fac, trees[0:len(trees)/2])
-		right := compose(fac, trees[len(trees)/2:])
-		return newDtreeNode(fac, left, right)
 	}
+	left := compose(fac, trees[0:len(trees)/2])
+	right := compose(fac, trees[len(trees)/2:])
+	return newDtreeNode(fac, left, right)
 }
 
 type graph struct {

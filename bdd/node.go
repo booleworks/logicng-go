@@ -7,7 +7,7 @@ type Node interface {
 	// Label returns the label of the node.  Can either be a variable or a constant.
 	Label() string
 
-	// Reports whether the node is an inner node.
+	// InnerNode reports whether the node is an inner node.
 	InnerNode() bool
 
 	// Low returns the node of the low edge or nil for a terminal node.
@@ -32,7 +32,7 @@ func (c ConstantNode) Label() string {
 	return "$false"
 }
 
-// Reports whether the node is an inner node.
+// InnerNode reports whether the node is an inner node.
 func (c ConstantNode) InnerNode() bool { return false }
 
 // Low returns the node of the low edge or nil for a terminal node.
@@ -53,7 +53,7 @@ type InnerNode struct {
 // Label returns the label of the node.  Can either be a variable or a constant.
 func (n InnerNode) Label() string { return n.Variable }
 
-// Reports whether the node is an inner node.
+// InnerNode reports whether the node is an inner node.
 func (n InnerNode) InnerNode() bool { return true }
 
 // Low returns the node of the low edge or nil for a terminal node.

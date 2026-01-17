@@ -16,9 +16,8 @@ func Restrict(fac f.Factory, formula f.Formula, assignment *Assignment) f.Formul
 	case f.SortLiteral:
 		if formula.IsPos() {
 			return assignment.restrictVariable(fac, f.Variable(formula))
-		} else {
-			return assignment.restrictNegativeLiteral(fac, f.Literal(formula))
 		}
+		return assignment.restrictNegativeLiteral(fac, f.Literal(formula))
 	case f.SortNot:
 		op, _ := fac.NotOperand(formula)
 		return fac.Not(Restrict(fac, op, assignment))

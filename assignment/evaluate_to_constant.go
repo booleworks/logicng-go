@@ -48,9 +48,8 @@ func (c *evaluationContext) test(formula f.Formula, topLevel bool) f.Formula {
 		found, ok := c.mapping[variable]
 		if !ok {
 			return formula
-		} else {
-			return c.fac.Constant(formula.IsPos() == found)
 		}
+		return c.fac.Constant(formula.IsPos() == found)
 	case f.SortNot:
 		return c.handleNot(formula, topLevel)
 	case f.SortImpl:
@@ -76,9 +75,8 @@ func (c *evaluationContext) handleNot(formula f.Formula, topLevel bool) f.Formul
 	}
 	if opResult.IsConstant() {
 		return c.fac.Constant(isFalsum(opResult))
-	} else {
-		return c.fac.Not(opResult)
 	}
+	return c.fac.Not(opResult)
 }
 
 func (c *evaluationContext) handleImplication(formula f.Formula, topLevel bool) f.Formula {
@@ -88,16 +86,13 @@ func (c *evaluationContext) handleImplication(formula f.Formula, topLevel bool) 
 		if c.evaluatesToTrue {
 			if isFalsum(leftResult) {
 				return c.fac.Verum()
-			} else {
-				return c.test(right, topLevel)
 			}
-		} else {
-			if isVerum(leftResult) {
-				return c.test(right, topLevel)
-			} else {
-				return c.fac.Verum()
-			}
+			return c.test(right, topLevel)
 		}
+		if isVerum(leftResult) {
+			return c.test(right, topLevel)
+		}
+		return c.fac.Verum()
 	}
 	if !c.evaluatesToTrue && topLevel {
 		return c.fac.Verum()
@@ -106,9 +101,8 @@ func (c *evaluationContext) handleImplication(formula f.Formula, topLevel bool) 
 	if rightResult.IsConstant() {
 		if isVerum(rightResult) {
 			return c.fac.Verum()
-		} else {
-			return c.fac.Not(leftResult)
 		}
+		return c.fac.Not(leftResult)
 	}
 	return c.fac.Implication(leftResult, rightResult)
 }
@@ -119,9 +113,8 @@ func (c *evaluationContext) handleEquivalence(formula f.Formula, topLevel bool) 
 	if leftResult.IsConstant() {
 		if isVerum(leftResult) {
 			return c.test(right, topLevel)
-		} else {
-			return c.test(c.fac.Not(right), topLevel)
 		}
+		return c.test(c.fac.Not(right), topLevel)
 	}
 
 	rightResult := c.test(right, false)
@@ -131,9 +124,8 @@ func (c *evaluationContext) handleEquivalence(formula f.Formula, topLevel bool) 
 		}
 		if isVerum(rightResult) {
 			return leftResult
-		} else {
-			return c.fac.Not(leftResult)
 		}
+		return c.fac.Not(leftResult)
 	}
 
 	return c.fac.Equivalence(leftResult, rightResult)

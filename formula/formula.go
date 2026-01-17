@@ -82,9 +82,8 @@ func (l Literal) IsNeg() bool {
 func (l Literal) Variable() Variable {
 	if l.IsPos() {
 		return Variable(l)
-	} else {
-		return EncodeVariable(negId(l.ID()))
 	}
+	return EncodeVariable(negId(l.ID()))
 }
 
 // Negate returns the negation of the literal.

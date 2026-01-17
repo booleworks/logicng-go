@@ -79,7 +79,6 @@ func compute(fac f.Factory, formula f.Formula, cnf bool, hdl handler.Handler) (f
 func hasNormalform(fac f.Factory, formula f.Formula, cnf bool) bool {
 	if cnf {
 		return normalform.IsCNF(fac, formula)
-	} else {
-		return normalform.IsDNF(fac, formula)
 	}
+	return normalform.IsDNF(fac, formula)
 }

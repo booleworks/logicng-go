@@ -307,9 +307,8 @@ func findSequence(fac f.Factory, bdd *BDD, vars []string) bool {
 				name, _ := fac.VarName(order[i])
 				if !slices.Contains(vars, name) {
 					return false
-				} else {
-					numFound++
 				}
+				numFound++
 			}
 			return true
 		}

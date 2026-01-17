@@ -96,9 +96,8 @@ func bitsetComp(a, b any) int {
 		// Check which bitset has the bit set at position pos
 		if (word1 & (1 << pos)) != 0 {
 			return 1 // bitset1 has the bit set
-		} else {
-			return -1 // bitset2 has the bit set
 		}
+		return -1 // bitset2 has the bit set
 	}
 
 	return 0

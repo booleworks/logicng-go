@@ -26,9 +26,8 @@ func (m *oll) search(hdl handler.Handler) (Result, handler.State) {
 		m.encoder = newEncoder()
 		if m.problemType == weighted {
 			return m.weighted()
-		} else {
-			return m.unweighted()
 		}
+		return m.unweighted()
 	})
 }
 

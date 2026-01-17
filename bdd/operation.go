@@ -26,10 +26,9 @@ func (k *Kernel) satOneRec(r int32) int32 {
 	if isZero(k.low(r)) {
 		res := k.satOneRec(k.high(r))
 		return k.pushRef(k.makeNodeUnsafe(k.level(r), bddFalse, res))
-	} else {
-		res := k.satOneRec(k.low(r))
-		return k.pushRef(k.makeNodeUnsafe(k.level(r), res, bddFalse))
 	}
+	res := k.satOneRec(k.low(r))
+	return k.pushRef(k.makeNodeUnsafe(k.level(r), res, bddFalse))
 }
 
 func (k *Kernel) satOneSet(r, variable, pol int32) int32 {
@@ -54,26 +53,22 @@ func (k *Kernel) satOneSetRec(r, variable, satPolarity int32) int32 {
 		if isZero(k.low(r)) {
 			res := k.satOneSetRec(k.high(r), variable, satPolarity)
 			return k.pushRef(k.makeNodeUnsafe(k.level(r), bddFalse, res))
-		} else {
-			res := k.satOneSetRec(k.low(r), variable, satPolarity)
-			return k.pushRef(k.makeNodeUnsafe(k.level(r), res, bddFalse))
 		}
+		res := k.satOneSetRec(k.low(r), variable, satPolarity)
+		return k.pushRef(k.makeNodeUnsafe(k.level(r), res, bddFalse))
 	} else if k.level(variable) < k.level(r) {
 		res := k.satOneSetRec(r, k.high(variable), satPolarity)
 		if satPolarity == bddTrue {
 			return k.pushRef(k.makeNodeUnsafe(k.level(variable), bddFalse, res))
-		} else {
-			return k.pushRef(k.makeNodeUnsafe(k.level(variable), res, bddFalse))
 		}
-	} else {
-		if isZero(k.low(r)) {
-			res := k.satOneSetRec(k.high(r), k.high(variable), satPolarity)
-			return k.pushRef(k.makeNodeUnsafe(k.level(r), bddFalse, res))
-		} else {
-			res := k.satOneSetRec(k.low(r), k.high(variable), satPolarity)
-			return k.pushRef(k.makeNodeUnsafe(k.level(r), res, bddFalse))
-		}
+		return k.pushRef(k.makeNodeUnsafe(k.level(variable), res, bddFalse))
 	}
+	if isZero(k.low(r)) {
+		res := k.satOneSetRec(k.high(r), k.high(variable), satPolarity)
+		return k.pushRef(k.makeNodeUnsafe(k.level(r), bddFalse, res))
+	}
+	res := k.satOneSetRec(k.low(r), k.high(variable), satPolarity)
+	return k.pushRef(k.makeNodeUnsafe(k.level(r), res, bddFalse))
 }
 
 func (k *Kernel) fullSatOne(r int32) int32 {
@@ -101,13 +96,12 @@ func (k *Kernel) fullSatOneRec(r int32) int32 {
 			res = k.pushRef(k.makeNodeUnsafe(v, res, 0))
 		}
 		return k.pushRef(k.makeNodeUnsafe(k.level(r), res, 0))
-	} else {
-		res := k.fullSatOneRec(k.high(r))
-		for v := k.level(k.high(r)) - 1; v > k.level(r); v-- {
-			res = k.pushRef(k.makeNodeUnsafe(v, res, 0))
-		}
-		return k.pushRef(k.makeNodeUnsafe(k.level(r), 0, res))
 	}
+	res := k.fullSatOneRec(k.high(r))
+	for v := k.level(k.high(r)) - 1; v > k.level(r); v-- {
+		res = k.pushRef(k.makeNodeUnsafe(v, res, 0))
+	}
+	return k.pushRef(k.makeNodeUnsafe(k.level(r), 0, res))
 }
 
 func (k *Kernel) allSat(r int32) [][]byte {
@@ -363,9 +357,8 @@ func (k *Kernel) toFormula(fac f.Factory, r int32, followPathsToTrue bool) f.For
 	formula := k.toFormulaRec(fac, r, followPathsToTrue)
 	if followPathsToTrue {
 		return formula
-	} else {
-		return formula.Negate(fac)
 	}
+	return formula.Negate(fac)
 }
 
 func (k *Kernel) toFormulaRec(fac f.Factory, r int32, followPathsToTrue bool) f.Formula {

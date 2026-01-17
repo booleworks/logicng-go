@@ -1,8 +1,8 @@
 package formula
 
-// FormulaDepth returns the depth of the given formula. The depth of an atomic
+// Depth returns the depth of the given formula. The depth of an atomic
 // formula is defined as 0, all other operators increase the depth by 1.
-func FormulaDepth(fac Factory, formula Formula) int {
+func Depth(fac Factory, formula Formula) int {
 	cached, ok := LookupFunctionCache(fac, FuncDepth, formula)
 	if ok {
 		return cached.(int)
@@ -14,7 +14,7 @@ func FormulaDepth(fac Factory, formula Formula) int {
 		maxDepth := 0
 		ops := fac.Operands(formula)
 		for _, op := range ops {
-			maxDepth = max(maxDepth, FormulaDepth(fac, op))
+			maxDepth = max(maxDepth, Depth(fac, op))
 		}
 		result = maxDepth + 1
 	}

@@ -176,7 +176,7 @@ func TestRandomizerAnd(t *testing.T) {
 		for range 10 {
 			formula := random.And(depth)
 			assert.Equal(f.SortAnd, formula.Sort())
-			assert.True(f.FormulaDepth(fac, formula) <= depth)
+			assert.True(f.Depth(fac, formula) <= depth)
 		}
 	}
 }
@@ -193,7 +193,7 @@ func TestRandomizerOr(t *testing.T) {
 		for range 10 {
 			formula := random.Or(depth)
 			assert.Equal(f.SortOr, formula.Sort())
-			assert.True(f.FormulaDepth(fac, formula) <= depth)
+			assert.True(f.Depth(fac, formula) <= depth)
 		}
 	}
 }
@@ -211,7 +211,7 @@ func TestRandomizerNot(t *testing.T) {
 		for range 10 {
 			formula := random.Not(depth)
 			assert.Equal(f.SortNot, formula.Sort())
-			assert.True(f.FormulaDepth(fac, formula) <= depth)
+			assert.True(f.Depth(fac, formula) <= depth)
 		}
 	}
 }
@@ -228,7 +228,7 @@ func TestRandomizerImpl(t *testing.T) {
 		for range 10 {
 			formula := random.Impl(depth)
 			assert.Equal(f.SortImpl, formula.Sort())
-			assert.True(f.FormulaDepth(fac, formula) <= depth)
+			assert.True(f.Depth(fac, formula) <= depth)
 		}
 	}
 }
@@ -245,7 +245,7 @@ func TestRandomizerEquiv(t *testing.T) {
 		for range 10 {
 			formula := random.Equiv(depth)
 			assert.Equal(f.SortEquiv, formula.Sort())
-			assert.True(f.FormulaDepth(fac, formula) <= depth)
+			assert.True(f.Depth(fac, formula) <= depth)
 		}
 	}
 }

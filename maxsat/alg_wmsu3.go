@@ -47,9 +47,8 @@ func (m *wmsu3) search(hdl handler.Handler) (Result, handler.State) {
 		case IncIterative:
 			if isBMO {
 				return m.iterativeBmo()
-			} else {
-				return m.iterative()
 			}
+			return m.iterative()
 		default:
 			panic(errorx.UnknownEnumValue(m.incrementalStrategy))
 		}
@@ -252,40 +251,39 @@ func (m *wmsu3) iterativeBmo() (Result, handler.State) {
 			} else {
 				if m.currentWeight == 1 || m.currentWeight == minWeight {
 					return m.optimum(), succ
-				} else {
-					if state := m.foundUpperBound(m.ubCost); !state.Success {
-						return Result{}, state
+				}
+				if state := m.foundUpperBound(m.ubCost); !state.Success {
+					return Result{}, state
+				}
+				assumptions = []int32{}
+				previousWeight := m.currentWeight
+				posWeight++
+				m.currentWeight = m.orderWeights[posWeight]
+				if len(objFunction) > 0 {
+					cpy := make([]int32, len(objFunction))
+					copy(cpy, objFunction)
+					functions[len(functions)-1] = cpy
+				}
+				functions = append(functions, []int32{})
+				weights = append(weights, 0)
+				localCost = 0
+				e = newEncoder()
+				e.setIncremental(IncIterative)
+				bmoEncodings = append(bmoEncodings, e)
+				firstEncoding = append(firstEncoding, true)
+				for i := 0; i < len(encodingAssumptions); i++ {
+					solver.AddClause([]int32{encodingAssumptions[i]}, nil)
+				}
+				encodingAssumptions = []int32{}
+				for i := 0; i < m.nSoft(); i++ {
+					if !activeSoft[i] && previousWeight == m.softClauses[i].weight {
+						solver.AddClause([]int32{sat.Not(m.softClauses[i].assumptionVar)}, nil)
 					}
-					assumptions = []int32{}
-					previousWeight := m.currentWeight
-					posWeight++
-					m.currentWeight = m.orderWeights[posWeight]
-					if len(objFunction) > 0 {
-						cpy := make([]int32, len(objFunction))
-						copy(cpy, objFunction)
-						functions[len(functions)-1] = cpy
+					if m.currentWeight == m.softClauses[i].weight {
+						assumptions = append(assumptions, sat.Not(m.softClauses[i].assumptionVar))
 					}
-					functions = append(functions, []int32{})
-					weights = append(weights, 0)
-					localCost = 0
-					e = newEncoder()
-					e.setIncremental(IncIterative)
-					bmoEncodings = append(bmoEncodings, e)
-					firstEncoding = append(firstEncoding, true)
-					for i := 0; i < len(encodingAssumptions); i++ {
-						solver.AddClause([]int32{encodingAssumptions[i]}, nil)
-					}
-					encodingAssumptions = []int32{}
-					for i := 0; i < m.nSoft(); i++ {
-						if !activeSoft[i] && previousWeight == m.softClauses[i].weight {
-							solver.AddClause([]int32{sat.Not(m.softClauses[i].assumptionVar)}, nil)
-						}
-						if m.currentWeight == m.softClauses[i].weight {
-							assumptions = append(assumptions, sat.Not(m.softClauses[i].assumptionVar))
-						}
-						if activeSoft[i] {
-							activeSoft[i] = false
-						}
+					if activeSoft[i] {
+						activeSoft[i] = false
 					}
 				}
 			}

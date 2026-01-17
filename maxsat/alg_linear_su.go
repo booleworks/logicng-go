@@ -49,12 +49,10 @@ func (m *linearSU) search(hdl handler.Handler) (Result, handler.State) {
 		if m.problemType == weighted {
 			if m.bmoMode && m.bmo {
 				return m.bmoSearch()
-			} else {
-				return m.normalSearch()
 			}
-		} else {
 			return m.normalSearch()
 		}
+		return m.normalSearch()
 	})
 }
 
@@ -87,47 +85,44 @@ func (m *linearSU) bmoSearch() (Result, handler.State) {
 			}
 			if newCost == 0 && currentWeight == minWeight {
 				return m.optimum(), succ
+			}
+			if newCost == 0 {
+				obj := make([]int32, len(m.objFunction))
+				copy(obj, m.objFunction)
+				functions = append(functions, obj)
+				localCost = newCost
+				weights = append(weights, 0)
+				posWeight++
+				currentWeight = m.orderWeights[posWeight]
+				m.solver = m.rebuildBMO(functions, weights, currentWeight)
 			} else {
-				if newCost == 0 {
-					obj := make([]int32, len(m.objFunction))
-					copy(obj, m.objFunction)
-					functions = append(functions, obj)
-					localCost = newCost
-					weights = append(weights, 0)
-					posWeight++
-					currentWeight = m.orderWeights[posWeight]
-					m.solver = m.rebuildBMO(functions, weights, currentWeight)
+				if localCost == 0 {
+					m.encoder.encodeCardinality(m.solver, m.objFunction, newCost/currentWeight-1)
 				} else {
-					if localCost == 0 {
-						m.encoder.encodeCardinality(m.solver, m.objFunction, newCost/currentWeight-1)
-					} else {
-						m.encoder.updateCardinality(m.solver, newCost/currentWeight-1)
-					}
-					localCost = newCost
+					m.encoder.updateCardinality(m.solver, newCost/currentWeight-1)
 				}
+				localCost = newCost
 			}
 		} else {
 			m.nbCores++
 			if currentWeight == minWeight {
 				if m.nbSatisfiable == 0 {
 					return unsat(), succ
-				} else {
-					return m.optimum(), succ
 				}
-			} else {
-				obj := make([]int32, len(m.objFunction))
-				copy(obj, m.objFunction)
-				functions = append(functions, obj)
-				weights = append(weights, localCost/currentWeight)
-				m.lbCost += localCost
-				posWeight++
-				currentWeight = m.orderWeights[posWeight]
-				localCost = 0
-				if state := m.foundLowerBound(m.lbCost); !state.Success {
-					return Result{}, state
-				}
-				m.solver = m.rebuildBMO(functions, weights, currentWeight)
+				return m.optimum(), succ
 			}
+			obj := make([]int32, len(m.objFunction))
+			copy(obj, m.objFunction)
+			functions = append(functions, obj)
+			weights = append(weights, localCost/currentWeight)
+			m.lbCost += localCost
+			posWeight++
+			currentWeight = m.orderWeights[posWeight]
+			localCost = 0
+			if state := m.foundLowerBound(m.lbCost); !state.Success {
+				return Result{}, state
+			}
+			m.solver = m.rebuildBMO(functions, weights, currentWeight)
 		}
 	}
 }
@@ -146,32 +141,30 @@ func (m *linearSU) normalSearch() (Result, handler.State) {
 			if newCost == 0 {
 				m.ubCost = newCost
 				return m.optimum(), succ
-			} else {
-				if m.problemType == weighted {
-					if !m.encoder.hasPBEncoding() {
-						m.encoder.encodePB(m.solver, &m.objFunction, &m.coeffs, newCost-1)
-					} else {
-						m.encoder.updatePB(m.solver, newCost-1)
-					}
+			}
+			if m.problemType == weighted {
+				if !m.encoder.hasPBEncoding() {
+					m.encoder.encodePB(m.solver, &m.objFunction, &m.coeffs, newCost-1)
 				} else {
-					if !m.encoder.hasCardEncoding() {
-						m.encoder.encodeCardinality(m.solver, m.objFunction, newCost-1)
-					} else {
-						m.encoder.updateCardinality(m.solver, newCost-1)
-					}
+					m.encoder.updatePB(m.solver, newCost-1)
 				}
-				m.ubCost = newCost
-				if state := m.foundUpperBound(m.ubCost); !state.Success {
-					return Result{}, state
+			} else {
+				if !m.encoder.hasCardEncoding() {
+					m.encoder.encodeCardinality(m.solver, m.objFunction, newCost-1)
+				} else {
+					m.encoder.updateCardinality(m.solver, newCost-1)
 				}
+			}
+			m.ubCost = newCost
+			if state := m.foundUpperBound(m.ubCost); !state.Success {
+				return Result{}, state
 			}
 		} else {
 			m.nbCores++
 			if m.nbSatisfiable == 0 {
 				return unsat(), succ
-			} else {
-				return m.optimum(), succ
 			}
+			return m.optimum(), succ
 		}
 	}
 }

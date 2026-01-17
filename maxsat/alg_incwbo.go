@@ -324,20 +324,19 @@ func (m *incWBO) weightSearchInc() (Result, handler.State) {
 					m.saveModel(m.solver.Model())
 				}
 				return m.optimum(), succ
-			} else {
-				m.updateCurrentWeight(m.weightStrategy)
-				cost := m.incComputeCostModel(m.solver.Model())
-				if cost < m.ubCost {
-					m.ubCost = cost
-					m.saveModel(m.solver.Model())
-				}
-				if m.lbCost == m.ubCost {
-					return m.optimum(), succ
-				} else if state := m.foundUpperBound(m.ubCost); !state.Success {
-					return Result{}, state
-				}
-				m.incrementalBuildWeightSolver()
 			}
+			m.updateCurrentWeight(m.weightStrategy)
+			cost := m.incComputeCostModel(m.solver.Model())
+			if cost < m.ubCost {
+				m.ubCost = cost
+				m.saveModel(m.solver.Model())
+			}
+			if m.lbCost == m.ubCost {
+				return m.optimum(), succ
+			} else if state := m.foundUpperBound(m.ubCost); !state.Success {
+				return Result{}, state
+			}
+			m.incrementalBuildWeightSolver()
 		}
 	}
 }

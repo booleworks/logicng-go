@@ -165,9 +165,8 @@ func normalizeLE(fac f.Factory, ps []f.Literal, cs []int, rhs int) f.Formula {
 func gcd(small, big int) int {
 	if small == 0 {
 		return big
-	} else {
-		return gcd(big%small, small)
 	}
+	return gcd(big%small, small)
 }
 
 type ilpair struct {

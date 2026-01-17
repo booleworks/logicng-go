@@ -22,7 +22,7 @@ func TestSetCoverSmall(t *testing.T) {
 
 func TestSetCornerCase(t *testing.T) {
 	assert := assert.New(t)
-	sets := [][]string{}
+	var sets [][]string
 	setCover := MinimumSetCover(sets)
 	assert.Equal(0, len(setCover))
 

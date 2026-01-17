@@ -77,9 +77,8 @@ func (g *GraphicalGenerator) negativeEdgeStyle(src, dst int32) *graphical.EdgeSt
 		return graphical.NoEdgeStyle()
 	} else if g.ComputeNegativeEdgeStyle == nil {
 		return g.DefaultNegativeEdgeStyle
-	} else {
-		return g.ComputeNegativeEdgeStyle(src, dst)
 	}
+	return g.ComputeNegativeEdgeStyle(src, dst)
 }
 
 func (g *bddGenerator) walkBDD(bdd *BDD) {

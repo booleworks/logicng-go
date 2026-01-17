@@ -1,8 +1,9 @@
 package iter
 
 import (
-	"github.com/booleworks/logicng-go/sat"
 	"math"
+
+	"github.com/booleworks/logicng-go/sat"
 
 	f "github.com/booleworks/logicng-go/formula"
 )

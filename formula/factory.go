@@ -951,8 +951,7 @@ func (fac *CachingFactory) getPBCUnsafe(formula Formula) pbc {
 	}
 }
 
-// NewAuxVariable generates and returns a new auxiliary variable of the given
-// sort.
+// NewAuxVar generates and returns a new auxiliary variable of the given sort.
 func (fac *CachingFactory) NewAuxVar(sort AuxVarSort) Variable {
 	variable := fac.Var(fmt.Sprintf("%s%d", sort, fac.auxVarCounters[sort]))
 	fac.auxVarCounters[sort]++

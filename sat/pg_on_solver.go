@@ -94,9 +94,8 @@ func (p *pgOnSolver) computeTransformation(
 		name, phase, _ := p.fac.LiteralNamePhase(formula)
 		if polarity {
 			return []int32{p.solverLiteral(name, phase)}
-		} else {
-			return []int32{p.solverLiteral(name, phase) ^ 1}
 		}
+		return []int32{p.solverLiteral(name, phase) ^ 1}
 	case f.SortNot:
 		op, _ := p.fac.NotOperand(formula)
 		return p.computeTransformation(op, prop, !polarity, topLevel)
@@ -121,11 +120,7 @@ func (p *pgOnSolver) pgImpl(formula f.Formula, prop f.Proposition, polarity, top
 		wasCached, pgVar = p.getPGVar(formula, polarity)
 	}
 	if wasCached {
-		if polarity {
-			return []int32{pgVar}
-		} else {
-			return []int32{pgVar ^ 1}
-		}
+		return []int32{pgVar ^ 1}
 	}
 
 	left, right, _ := p.fac.BinaryLeftRight(formula)
@@ -136,24 +131,22 @@ func (p *pgOnSolver) pgImpl(formula f.Formula, prop f.Proposition, polarity, top
 		leftPgVarNeg := p.computeTransformation(left, prop, false, false)
 		rightPgVarPos := p.computeTransformation(right, prop, true, false)
 		return sliceVV(leftPgVarNeg, rightPgVarPos)
-	} else {
-		// (~left | right) => pg = (left & ~right) | pg = (left | pg) & (~right | pg)
-		leftPgVarPos := p.computeTransformation(left, prop, true, topLevel)
-		rightPgVarNeg := p.computeTransformation(right, prop, false, topLevel)
-		if topLevel {
-			if leftPgVarPos != nil {
-				p.solver.AddClause(leftPgVarPos, prop)
-			}
-			if rightPgVarNeg != nil {
-				p.solver.AddClause(rightPgVarNeg, prop)
-			}
-			return nil
-		} else {
-			p.solver.AddClause(sliceEV(pgVar, leftPgVarPos), prop)
-			p.solver.AddClause(sliceEV(pgVar, rightPgVarNeg), prop)
-			return []int32{pgVar ^ 1}
-		}
 	}
+	// (~left | right) => pg = (left & ~right) | pg = (left | pg) & (~right | pg)
+	leftPgVarPos := p.computeTransformation(left, prop, true, topLevel)
+	rightPgVarNeg := p.computeTransformation(right, prop, false, topLevel)
+	if topLevel {
+		if leftPgVarPos != nil {
+			p.solver.AddClause(leftPgVarPos, prop)
+		}
+		if rightPgVarNeg != nil {
+			p.solver.AddClause(rightPgVarNeg, prop)
+		}
+		return nil
+	}
+	p.solver.AddClause(sliceEV(pgVar, leftPgVarPos), prop)
+	p.solver.AddClause(sliceEV(pgVar, rightPgVarNeg), prop)
+	return []int32{pgVar ^ 1}
 }
 
 func (p *pgOnSolver) pgEquiv(formula f.Formula, prop f.Proposition, polarity, topLevel bool) []int32 {
@@ -167,9 +160,8 @@ func (p *pgOnSolver) pgEquiv(formula f.Formula, prop f.Proposition, polarity, to
 	if wasCached {
 		if polarity {
 			return []int32{pgVar}
-		} else {
-			return []int32{pgVar ^ 1}
 		}
+		return []int32{pgVar ^ 1}
 	}
 
 	left, right, _ := p.fac.BinaryLeftRight(formula)
@@ -185,10 +177,9 @@ func (p *pgOnSolver) pgEquiv(formula f.Formula, prop f.Proposition, polarity, to
 			p.solver.AddClause(sliceVV(leftPgVarNeg, rightPgVarPos), prop)
 			p.solver.AddClause(sliceVV(leftPgVarPos, rightPgVarNeg), prop)
 			return nil
-		} else {
-			p.solver.AddClause(sliceEVV(pgVar^1, leftPgVarNeg, rightPgVarPos), prop)
-			p.solver.AddClause(sliceEVV(pgVar^1, leftPgVarPos, rightPgVarNeg), prop)
 		}
+		p.solver.AddClause(sliceEVV(pgVar^1, leftPgVarNeg, rightPgVarPos), prop)
+		p.solver.AddClause(sliceEVV(pgVar^1, leftPgVarPos, rightPgVarNeg), prop)
 	} else {
 		// (left => right) & (right => left) => pg
 		// = ~(left => right) | ~(right => left) | pg
@@ -198,16 +189,14 @@ func (p *pgOnSolver) pgEquiv(formula f.Formula, prop f.Proposition, polarity, to
 			p.solver.AddClause(sliceVV(leftPgVarPos, rightPgVarPos), prop)
 			p.solver.AddClause(sliceVV(leftPgVarNeg, rightPgVarNeg), prop)
 			return nil
-		} else {
-			p.solver.AddClause(sliceEVV(pgVar, leftPgVarPos, rightPgVarPos), prop)
-			p.solver.AddClause(sliceEVV(pgVar, leftPgVarNeg, rightPgVarNeg), prop)
 		}
+		p.solver.AddClause(sliceEVV(pgVar, leftPgVarPos, rightPgVarPos), prop)
+		p.solver.AddClause(sliceEVV(pgVar, leftPgVarNeg, rightPgVarNeg), prop)
 	}
 	if polarity {
 		return []int32{pgVar}
-	} else {
-		return []int32{pgVar ^ 1}
 	}
+	return []int32{pgVar ^ 1}
 }
 
 func (p *pgOnSolver) pgNary(formula f.Formula, prop f.Proposition, polarity, topLevel bool) []int32 {
@@ -223,9 +212,8 @@ func (p *pgOnSolver) pgNary(formula f.Formula, prop f.Proposition, polarity, top
 	if wasCached {
 		if polarity {
 			return []int32{pgVar}
-		} else {
-			return []int32{pgVar ^ 1}
 		}
+		return []int32{pgVar ^ 1}
 	}
 
 	ops, _ := p.fac.NaryOperands(formula)
@@ -267,30 +255,28 @@ func (p *pgOnSolver) pgNary(formula f.Formula, prop f.Proposition, polarity, top
 				singleClause = append(singleClause, opPgVars...)
 			}
 			return singleClause
-		} else {
-			// (v1 | ... | vk) => pg = (~v1 | pg) & ... & (~vk | pg)
-			for _, op := range ops {
-				opPgVars := p.computeTransformation(op, prop, false, topLevel)
-				if topLevel {
-					if opPgVars != nil {
-						p.solver.AddClause(opPgVars, prop)
-					}
-				} else {
-					p.solver.AddClause(sliceEV(pgVar, opPgVars), prop)
-				}
-			}
+		}
+		// (v1 | ... | vk) => pg = (~v1 | pg) & ... & (~vk | pg)
+		for _, op := range ops {
+			opPgVars := p.computeTransformation(op, prop, false, topLevel)
 			if topLevel {
-				return nil
+				if opPgVars != nil {
+					p.solver.AddClause(opPgVars, prop)
+				}
+			} else {
+				p.solver.AddClause(sliceEV(pgVar, opPgVars), prop)
 			}
+		}
+		if topLevel {
+			return nil
 		}
 	default:
 		panic(errorx.BadFormulaSort(&fsort))
 	}
 	if polarity {
 		return []int32{pgVar}
-	} else {
-		return []int32{pgVar ^ 1}
 	}
+	return []int32{pgVar ^ 1}
 }
 
 func (p *pgOnSolver) getPGVar(formula f.Formula, polarity bool) (bool, int32) {
@@ -322,9 +308,8 @@ func (p *pgOnSolver) solverLiteral(name string, phase bool) int32 {
 	}
 	if phase {
 		return index * 2
-	} else {
-		return (index * 2) ^ 1
 	}
+	return (index * 2) ^ 1
 }
 
 func (p *pgOnSolver) newSolverVariable() int32 {

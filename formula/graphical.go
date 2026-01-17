@@ -144,9 +144,8 @@ func litString(fac Factory, literal Literal) string {
 	name, phase, _ := fac.LitNamePhase(literal)
 	if phase {
 		return name
-	} else {
-		return "¬" + name
 	}
+	return "¬" + name
 }
 
 // GenerateGraphicalFormulaDAG generates a graphical representation of the
@@ -280,7 +279,6 @@ func (g *dagGenerator) addNode(formula Formula, defaultLabel string, terminal bo
 		g.representation.AddNode(node)
 		g.nodes[formula] = node
 		return node, false
-	} else {
-		return node, true
 	}
+	return node, true
 }

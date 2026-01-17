@@ -67,9 +67,8 @@ func TestWriteGraph30DynamicStyle(t *testing.T) {
 			return style1
 		} else if l <= 20 {
 			return style2
-		} else {
-			return style3
 		}
+		return style3
 	}
 
 	eStyle1 := graphical.NewEdgeStyle(graphical.EdgeDefault, graphical.ColorGreen)
@@ -85,9 +84,8 @@ func TestWriteGraph30DynamicStyle(t *testing.T) {
 			return eStyle1
 		} else if l1 <= 20 && l2 <= 20 {
 			return eStyle2
-		} else {
-			return eStyle3
 		}
+		return eStyle3
 	}
 
 	computeLabel := func(content f.Formula) string { return fmt.Sprintf("value: %s", content.Sprint(fac)) }

@@ -17,9 +17,8 @@ func Evaluate(fac f.Factory, formula f.Formula, assignment *Assignment) bool {
 	case f.SortLiteral:
 		if formula.IsPos() {
 			return assignment.evaluateVariable(f.Variable(formula))
-		} else {
-			return assignment.evaluateNegativeLiteral(f.Literal(formula))
 		}
+		return assignment.evaluateNegativeLiteral(f.Literal(formula))
 	case f.SortNot:
 		op, _ := fac.NotOperand(formula)
 		return !Evaluate(fac, op, assignment)

@@ -119,9 +119,8 @@ func occurenceOrder(fac f.Factory, formula f.Formula, min2max bool) []f.Variable
 			return i < j
 		} else if min2max {
 			return o1 < o2
-		} else {
-			return o1 > o2
 		}
+		return o1 > o2
 	})
 	return variables
 }

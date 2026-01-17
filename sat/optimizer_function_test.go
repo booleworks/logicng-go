@@ -284,9 +284,8 @@ func optimize(
 	solver.Add(formulas...)
 	if maximize {
 		return solver.Maximize(literals, additionalVariables...)
-	} else {
-		return solver.Minimize(literals, additionalVariables...)
 	}
+	return solver.Minimize(literals, additionalVariables...)
 }
 
 func testMinimumModel(

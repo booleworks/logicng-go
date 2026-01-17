@@ -42,9 +42,8 @@ func CompileWithHandler(fac f.Factory, formula f.Formula, hdl handler.Handler) (
 	bddIndex, state := compile(fac, formula, kernel, hdl)
 	if !state.Success {
 		return nil, state
-	} else {
-		return newBdd(bddIndex, kernel), succ
 	}
+	return newBdd(bddIndex, kernel), succ
 }
 
 // CompileWithVarOrder creates a BDD for a given formula and a variable
@@ -71,9 +70,8 @@ func CompileWithVarOrderAndHandler(
 	bddIndex, state := compile(fac, formula, kernel, hdl)
 	if !state.Success {
 		return nil, state
-	} else {
-		return newBdd(bddIndex, kernel), succ
 	}
+	return newBdd(bddIndex, kernel), succ
 }
 
 // CompileWithKernel creates a BDD for a given formula with a given kernel.
@@ -97,9 +95,8 @@ func CompileWithKernelAndHandler(
 	bddIndex, state := compile(fac, formula, kernel, hdl)
 	if !state.Success {
 		return nil, state
-	} else {
-		return newBdd(bddIndex, kernel), succ
 	}
+	return newBdd(bddIndex, kernel), succ
 }
 
 // CompileLiterals creates a BDD for a conjunction of literals with a given
@@ -160,9 +157,8 @@ func compile(fac f.Factory, formula f.Formula, kernel *Kernel, hdl handler.Handl
 		idx := kernel.getOrAddVarIndex(variable)
 		if formula.IsPos() {
 			return kernel.ithVar(idx), succ
-		} else {
-			return kernel.nithVar(idx), succ
 		}
+		return kernel.nithVar(idx), succ
 	case f.SortNot:
 		op, _ := fac.NotOperand(formula)
 		operand, state := compile(fac, op, kernel, hdl)
@@ -402,9 +398,8 @@ func (b *BDD) Support() []f.Variable {
 	mdl, err := b.createModel(supportBdd)
 	if err != nil {
 		return []f.Variable{}
-	} else {
-		return mdl.PosVars()
 	}
+	return mdl.PosVars()
 }
 
 // NodeCount returns the number of distinct nodes for the BDD.

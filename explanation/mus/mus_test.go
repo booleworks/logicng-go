@@ -41,9 +41,8 @@ func testFiles(fac f.Factory, all bool) []*[]f.Proposition {
 	file4 := generateDimacsPropositions(fac, "../../test/data/dimacs/unsat/ca032.shuffled.cnf")
 	if all {
 		return []*[]f.Proposition{&pg2, &pg3, &pg4, &pg5, &pg6, &pg7, &file1, &file2, &file3, &file4}
-	} else {
-		return []*[]f.Proposition{&pg2, &pg3, &pg4, &pg5, &pg6, &file1, &file2}
 	}
+	return []*[]f.Proposition{&pg2, &pg3, &pg4, &pg5, &pg6, &file1, &file2}
 }
 
 func testMUS(t *testing.T, fac f.Factory, original *[]f.Proposition, mus *e.UnsatCore) {
