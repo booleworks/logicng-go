@@ -133,14 +133,12 @@ func newFormulaRandomizer(fac f.Factory, config *Config) *FormulaRandomizer {
 func determineConfig(fac f.Factory, initConfig []*Config) *Config {
 	if len(initConfig) > 0 {
 		return initConfig[0]
-	} else {
-		configFromFactory, ok := fac.ConfigurationFor(configuration.FormulaRandomizer)
-		if !ok {
-			return DefaultConfig()
-		} else {
-			return configFromFactory.(*Config)
-		}
 	}
+	configFromFactory, ok := fac.ConfigurationFor(configuration.FormulaRandomizer)
+	if !ok {
+		return DefaultConfig()
+	}
+	return configFromFactory.(*Config)
 }
 
 // Constant returns a random constant.
@@ -318,32 +316,31 @@ func (r *FormulaRandomizer) PBC() f.Formula {
 func (r *FormulaRandomizer) Formula(maxDepth int) f.Formula {
 	if maxDepth == 0 {
 		return r.Atom()
-	} else {
-		n := r.random.Float64()
-		switch {
-		case n < r.fTypeProbabilities.constant:
-			return r.Constant()
-		case n < r.fTypeProbabilities.literal:
-			return r.Literal().AsFormula()
-		case n < r.fTypeProbabilities.pbc:
-			return r.PBC()
-		case n < r.fTypeProbabilities.cc:
-			return r.CC()
-		case n < r.fTypeProbabilities.amo:
-			return r.AMO()
-		case n < r.fTypeProbabilities.exo:
-			return r.EXO()
-		case n < r.fTypeProbabilities.or:
-			return r.Or(maxDepth)
-		case n < r.fTypeProbabilities.and:
-			return r.And(maxDepth)
-		case n < r.fTypeProbabilities.not:
-			return r.Not(maxDepth)
-		case n < r.fTypeProbabilities.impl:
-			return r.Impl(maxDepth)
-		default:
-			return r.Equiv(maxDepth)
-		}
+	}
+	n := r.random.Float64()
+	switch {
+	case n < r.fTypeProbabilities.constant:
+		return r.Constant()
+	case n < r.fTypeProbabilities.literal:
+		return r.Literal().AsFormula()
+	case n < r.fTypeProbabilities.pbc:
+		return r.PBC()
+	case n < r.fTypeProbabilities.cc:
+		return r.CC()
+	case n < r.fTypeProbabilities.amo:
+		return r.AMO()
+	case n < r.fTypeProbabilities.exo:
+		return r.EXO()
+	case n < r.fTypeProbabilities.or:
+		return r.Or(maxDepth)
+	case n < r.fTypeProbabilities.and:
+		return r.And(maxDepth)
+	case n < r.fTypeProbabilities.not:
+		return r.Not(maxDepth)
+	case n < r.fTypeProbabilities.impl:
+		return r.Impl(maxDepth)
+	default:
+		return r.Equiv(maxDepth)
 	}
 }
 
@@ -373,15 +370,14 @@ func (r *FormulaRandomizer) ccVariables() []f.Variable {
 func generateVars(fac f.Factory, config *Config) []f.Variable {
 	if config.Variables != nil {
 		return config.Variables
-	} else {
-		variables := make([]f.Variable, config.NumVars)
-		decimalPlaces := int(math.Ceil(math.Log10(float64(config.NumVars))))
-		formatter := fmt.Sprintf("v%s%dd", "%0", decimalPlaces)
-		for i := range variables {
-			variables[i] = fac.Var(fmt.Sprintf(formatter, i))
-		}
-		return variables
 	}
+	variables := make([]f.Variable, config.NumVars)
+	decimalPlaces := int(math.Ceil(math.Log10(float64(config.NumVars))))
+	formatter := fmt.Sprintf("v%s%dd", "%0", decimalPlaces)
+	for i := range variables {
+		variables[i] = fac.Var(fmt.Sprintf(formatter, i))
+	}
+	return variables
 }
 
 func (r *FormulaRandomizer) cSort() f.CSort {

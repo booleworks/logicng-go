@@ -166,9 +166,8 @@ func (fac *CachingFactory) Falsum() Formula {
 func (fac *CachingFactory) Constant(value bool) Formula {
 	if value {
 		return fac.cTrue
-	} else {
-		return fac.cFalse
 	}
+	return fac.cFalse
 }
 
 // Var returns a Boolean variable with the given name.  In contrast to the
@@ -206,19 +205,18 @@ func (fac *CachingFactory) Lit(name string, phase bool) Literal {
 	variable := fac.Variable(name)
 	if phase {
 		return Literal(variable)
-	} else {
-		lit, ok := fac.negLitCache[name]
-		if !ok {
-			id := negId(variable.ID())
-			if id > fac.id {
-				fac.id = id
-			}
-			lit = EncodeLiteral(id)
-			fac.negLitCache[name] = lit
-			fac.literals[lit] = literal{name, false}
-		}
-		return lit
 	}
+	lit, ok := fac.negLitCache[name]
+	if !ok {
+		id := negId(variable.ID())
+		if id > fac.id {
+			fac.id = id
+		}
+		lit = EncodeLiteral(id)
+		fac.negLitCache[name] = lit
+		fac.literals[lit] = literal{name, false}
+	}
+	return lit
 }
 
 // Literal returns a Boolean literal with the given name and phase. For a name "A"
@@ -559,18 +557,16 @@ func (fac *CachingFactory) addFormulaAnd(opCache *map[uint32]present, ops *[]For
 		return 0x01
 	} else if formula == fac.cFalse || fac.containsComplement(opCache, formula) {
 		return 0x00
-	} else {
-		id := formula.ID()
-		if _, ok := (*opCache)[id]; !ok {
-			(*opCache)[id] = present{}
-			*ops = append(*ops, formula)
-		}
-		if fac.isCNFClause(formula) {
-			return 0x01
-		} else {
-			return 0x02
-		}
 	}
+	id := formula.ID()
+	if _, ok := (*opCache)[id]; !ok {
+		(*opCache)[id] = present{}
+		*ops = append(*ops, formula)
+	}
+	if fac.isCNFClause(formula) {
+		return 0x01
+	}
+	return 0x02
 }
 
 func (fac *CachingFactory) condenseOperandsOr(operands ...Formula) ([]Formula, bool, bool) {
@@ -615,18 +611,16 @@ func (fac *CachingFactory) addFormulaOr(opCache *map[uint32]present, ops *[]Form
 		return 0x01
 	} else if formula == fac.cTrue || fac.containsComplement(opCache, formula) {
 		return 0x00
-	} else {
-		id := formula.ID()
-		if _, ok := (*opCache)[id]; !ok {
-			(*opCache)[id] = present{}
-			*ops = append(*ops, formula)
-		}
-		if formula.Sort() == SortLiteral {
-			return 0x01
-		} else {
-			return 0x02
-		}
 	}
+	id := formula.ID()
+	if _, ok := (*opCache)[id]; !ok {
+		(*opCache)[id] = present{}
+		*ops = append(*ops, formula)
+	}
+	if formula.Sort() == SortLiteral {
+		return 0x01
+	}
+	return 0x02
 }
 
 func (fac *CachingFactory) findAnd(hash uint64, ops []Formula) (Formula, bool) {
@@ -761,18 +755,10 @@ func opsEquals[t comparable](o1, o2 []t) bool {
 }
 
 func (fac *CachingFactory) pbcsEquals(p1, p2 *pbc) bool {
-	if p1.comparator != p2.comparator || p1.rhs != p2.rhs || !opsEquals(p1.literals, p2.literals) {
-		return false
-	}
-	if len(p1.coefficients) != len(p2.coefficients) {
-		return false
-	}
-	for i, v := range p1.coefficients {
-		if v != p2.coefficients[i] {
-			return false
-		}
-	}
-	return true
+	return p1.comparator == p2.comparator &&
+		p1.rhs == p2.rhs &&
+		opsEquals(p1.literals, p2.literals) &&
+		opsEquals(p1.coefficients, p2.coefficients)
 }
 
 func (fac *CachingFactory) containsComplement(opCache *map[uint32]present, formula Formula) bool {

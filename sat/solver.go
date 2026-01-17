@@ -52,14 +52,12 @@ func NewSolver(fac f.Factory, config ...*Config) *Solver {
 func determineConfig(fac f.Factory, initConfig []*Config) *Config {
 	if len(initConfig) > 0 {
 		return initConfig[0]
-	} else {
-		configFromFactory, ok := fac.ConfigurationFor(configuration.Sat)
-		if !ok {
-			return DefaultConfig()
-		} else {
-			return configFromFactory.(*Config)
-		}
 	}
+	configFromFactory, ok := fac.ConfigurationFor(configuration.Sat)
+	if !ok {
+		return DefaultConfig()
+	}
+	return configFromFactory.(*Config)
 }
 
 // Add adds the given formulas to the solver.  If the formulas are not already

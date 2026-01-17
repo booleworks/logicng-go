@@ -66,7 +66,6 @@ func canonicalEnumeration(
 	}
 	if cnf {
 		return fac.And(ops...), succ
-	} else {
-		return fac.Or(ops...), succ
 	}
+	return fac.Or(ops...), succ
 }

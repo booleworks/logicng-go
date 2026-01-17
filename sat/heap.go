@@ -2,6 +2,7 @@ package sat
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -84,11 +85,11 @@ func (h *lngheap) remove(n int32) {
 }
 
 func (h *lngheap) build(ns []int32) {
-	for i := 0; i < len(h.heap); i++ {
-		h.indices[h.heap[i]] = -1
+	for _, v := range h.heap {
+		h.indices[v] = -1
 	}
 	h.heap = []int32{}
-	for i := 0; i < len(ns); i++ {
+	for i := range ns {
 		h.indices[ns[i]] = i
 		h.heap = append(h.heap, ns[i])
 	}
@@ -98,8 +99,8 @@ func (h *lngheap) build(ns []int32) {
 }
 
 func (h *lngheap) clear() {
-	for i := 0; i < len(h.heap); i++ {
-		h.indices[h.heap[i]] = -1
+	for _, v := range h.heap {
+		h.indices[v] = -1
 	}
 	h.heap = []int32{}
 }
@@ -158,8 +159,10 @@ func (h *lngheap) growTo(size int) {
 	if len(h.indices) >= size {
 		return
 	}
-	numberNew := size - len(h.indices)
-	for i := 0; i < numberNew; i++ {
-		h.indices = append(h.indices, -1)
+	oldLen := len(h.indices)
+	h.indices = slices.Grow(h.indices, size-oldLen)
+	h.indices = h.indices[:size]
+	for i := oldLen; i < size; i++ {
+		h.indices[i] = -1
 	}
 }

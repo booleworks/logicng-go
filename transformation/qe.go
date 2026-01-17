@@ -10,9 +10,9 @@ import (
 // formula, the resulting formula is formula[true/x] | formula[false/x].
 func ExistentialQE(fac f.Factory, formula f.Formula, variable ...f.Variable) f.Formula {
 	result := formula
-	for _, variable := range variable {
-		pos, _ := assignment.New(fac, variable.AsLiteral())
-		neg, _ := assignment.New(fac, variable.Negate(fac))
+	for _, v := range variable {
+		pos, _ := assignment.New(fac, v.AsLiteral())
+		neg, _ := assignment.New(fac, v.Negate(fac))
 		result = fac.Or(assignment.Restrict(fac, result, pos), assignment.Restrict(fac, result, neg))
 	}
 	return result

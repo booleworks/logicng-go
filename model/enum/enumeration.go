@@ -164,8 +164,8 @@ func getCartesianProduct(fac f.Factory, variables *f.VarSet) [][]f.Literal {
 }
 
 func extendedByLiteral(literals []f.Literal, lit f.Literal) []f.Literal {
-	extended := make([]f.Literal, len(literals), len(literals)+1)
+	extended := make([]f.Literal, len(literals)+1)
 	copy(extended, literals)
-	extended = append(extended, lit)
+	extended[len(literals)] = lit
 	return extended
 }

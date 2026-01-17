@@ -18,9 +18,8 @@ func (g *Generator[T]) NodeStyle(node T) *NodeStyle {
 		return NoNodeStyle()
 	} else if g.ComputeNodeStyle == nil {
 		return g.DefaultNodeStyle
-	} else {
-		return g.ComputeNodeStyle(node)
 	}
+	return g.ComputeNodeStyle(node)
 }
 
 // LabelOrDefault returns the label for the given node or a given defaultLabel
@@ -28,9 +27,8 @@ func (g *Generator[T]) NodeStyle(node T) *NodeStyle {
 func (g *Generator[T]) LabelOrDefault(node T, defaultLabel string) string {
 	if g.ComputeLabel == nil {
 		return defaultLabel
-	} else {
-		return g.ComputeLabel(node)
 	}
+	return g.ComputeLabel(node)
 }
 
 // EdgeStyle returns the edge style for the edge between the given src and dst
@@ -40,7 +38,6 @@ func (g *Generator[T]) EdgeStyle(src, dst T) *EdgeStyle {
 		return NoEdgeStyle()
 	} else if g.ComputeEdgeStyle == nil {
 		return g.DefaultEdgeStyle
-	} else {
-		return g.ComputeEdgeStyle(src, dst)
 	}
+	return g.ComputeEdgeStyle(src, dst)
 }

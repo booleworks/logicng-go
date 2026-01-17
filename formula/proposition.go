@@ -66,10 +66,12 @@ func NewExtendedProposition[T fmt.Stringer](formula Formula, backpack T) *Extend
 
 // PropComparator compares two propositions p1 and p2.
 func PropComparator(a, b Proposition) int {
+	aString := a.String()
+	bString := b.String()
 	switch {
-	case a.String() > b.String():
+	case aString > bString:
 		return 1
-	case a.String() < b.String():
+	case aString < bString:
 		return -1
 	default:
 		return int(a.Formula()) - int(b.Formula())

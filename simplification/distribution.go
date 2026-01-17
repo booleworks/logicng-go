@@ -66,10 +66,10 @@ func distributeNary(fac f.Factory, formula f.Formula) f.Formula {
 		return result
 	}
 	operands.RemoveAll(part2Operands[mostCommon].AsImmutable())
-	relevantFormulas := make([]f.Formula, 0)
 	set := part2Operands[mostCommon]
+	relevantFormulas := make([]f.Formula, 0, set.Size())
 	for _, preRelevantFormula := range set.Content() {
-		relevantParts := make([]f.Formula, 0)
+		relevantParts := make([]f.Formula, 0, len(fac.Operands(preRelevantFormula))-1)
 		for _, part := range fac.Operands(preRelevantFormula) {
 			if part != mostCommon {
 				relevantParts = append(relevantParts, part)

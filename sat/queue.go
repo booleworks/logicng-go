@@ -21,9 +21,13 @@ func (q *boundedQueue) growTo(size int) {
 	if len(q.elems) >= size {
 		return
 	}
-	numberNew := size - len(q.elems)
-	for range numberNew {
-		q.elems = append(q.elems, 0)
+	oldCap := cap(q.elems)
+	if size > oldCap {
+		newElems := make([]int, size)
+		copy(newElems, q.elems)
+		q.elems = newElems
+	} else {
+		q.elems = q.elems[:size]
 	}
 	q.first = 0
 	q.maxSize = size

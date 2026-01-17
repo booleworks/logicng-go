@@ -96,9 +96,8 @@ func formattedLength(fac f.Factory, formula f.Formula, topLevel bool) int {
 	length := len(formula.Sprint(fac))
 	if !topLevel && formula.Sort() == f.SortOr {
 		return length + 2
-	} else {
-		return length
 	}
+	return length
 }
 
 type minimizationResult struct {

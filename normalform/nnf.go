@@ -106,12 +106,10 @@ func nnfRecNary(fac f.Factory, fsort f.FSort, polarity bool, operands ...f.Formu
 	var sort f.FSort
 	if polarity {
 		sort = fsort
+	} else if fsort == f.SortAnd {
+		sort = f.SortOr
 	} else {
-		if fsort == f.SortAnd {
-			sort = f.SortOr
-		} else {
-			sort = f.SortAnd
-		}
+		sort = f.SortAnd
 	}
 	naryOp, _ := fac.NaryOperator(sort, nops...)
 	return naryOp

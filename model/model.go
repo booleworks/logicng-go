@@ -16,9 +16,8 @@ type Model struct {
 func New(literals ...f.Literal) *Model {
 	if literals == nil {
 		return &Model{[]f.Literal{}}
-	} else {
-		return &Model{literals}
 	}
+	return &Model{literals}
 }
 
 // AddLiteral adds the given literals to the model.
@@ -92,11 +91,9 @@ func (m *Model) Sprint(fac f.Factory) string {
 	var sb strings.Builder
 	sb.WriteString("[")
 	length := len(m.Literals)
-	count := 0
-	for _, lit := range m.Literals {
-		count++
+	for i, lit := range m.Literals {
 		sb.WriteString(lit.Sprint(fac))
-		if count < length {
+		if i+1 < length {
 			sb.WriteString(", ")
 		}
 	}

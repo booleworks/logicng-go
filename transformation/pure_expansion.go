@@ -53,9 +53,8 @@ func ExpandAMOAndEXO(fac f.Factory, formula f.Formula) (f.Formula, error) {
 			config.AMOEncoder = encoding.AMOPure
 			cc, _ := encoding.EncodeCC(fac, formula, config)
 			return fac.And(cc...), nil
-		} else {
-			return 0, errorx.BadInput("CC other than AMO or EXO cannot be expanded")
 		}
+		return 0, errorx.BadInput("CC other than AMO or EXO cannot be expanded")
 	case f.SortPBC:
 		return 0, errorx.BadInput("PBC cannot be expanded")
 	default:

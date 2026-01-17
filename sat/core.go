@@ -137,9 +137,8 @@ func Sign(lit int32) bool {
 func signAsInt(lit int32) int32 {
 	if (lit & 1) == 1 {
 		return 1
-	} else {
-		return 0
 	}
+	return 0
 }
 
 // Vari returns the solver variable of a solver literal.
@@ -226,9 +225,8 @@ func (m *CoreSolver) v(lit int32) *variable {
 func (m *CoreSolver) value(lit int32) f.Tristate {
 	if Sign(lit) {
 		return m.v(lit).assignment.Negate()
-	} else {
-		return m.v(lit).assignment
 	}
+	return m.v(lit).assignment
 }
 
 func (m *CoreSolver) lt(x, y int32) bool {
@@ -263,8 +261,8 @@ func (m *CoreSolver) AddClause(ps []int32, proposition f.Proposition) bool {
 	m.assertNotInCall()
 	if m.config.ProofGeneration {
 		slice := make([]int32, len(ps))
-		for i := 0; i < len(ps); i++ {
-			slice[i] = (Vari(ps[i]) + 1) * (-2*signAsInt(ps[i]) + 1)
+		for i, p := range ps {
+			slice[i] = (Vari(p) + 1) * (-2*signAsInt(p) + 1)
 		}
 		m.pgOriginalClauses = append(m.pgOriginalClauses, proofInformation{slice, proposition})
 	}
@@ -331,11 +329,10 @@ func (m *CoreSolver) AddClause(ps []int32, proposition f.Proposition) bool {
 			m.pgProof = append(m.pgProof, []int32{0})
 		}
 		return m.ok
-	} else {
-		c := newClause(ps, -1)
-		m.clauses = append(m.clauses, c)
-		m.attachClause(c)
 	}
+	c := newClause(ps, -1)
+	m.clauses = append(m.clauses, c)
+	m.attachClause(c)
 	return true
 }
 
@@ -930,9 +927,8 @@ func (m *CoreSolver) findNewWatchForAtMostClause(c *clause, p int32) int32 {
 	}
 	if numTrue > 1 {
 		return LitError
-	} else {
-		return LitUndef
 	}
+	return LitUndef
 }
 
 func (m *CoreSolver) analyze(conflictClause *clause, outLearnt *[]int32) {

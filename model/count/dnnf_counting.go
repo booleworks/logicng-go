@@ -58,9 +58,8 @@ func CountWithHandler(
 		}
 		if nonTrueCount == 0 {
 			return big.NewInt(1), nil, succ
-		} else {
-			return big.NewInt(0), nil, succ
 		}
+		return big.NewInt(0), nil, succ
 	}
 	cnfs, err := encodeAsCNF(fac, formulas)
 	if err != nil {

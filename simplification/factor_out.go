@@ -33,11 +33,10 @@ func factorOutRec(fac f.Factory, formula f.Formula, rf RatingFunction) f.Formula
 			newOps[i] = FactorOut(fac, op, rf)
 		}
 		newFormula, _ := fac.NaryOperator(formula.Sort(), newOps...)
-		if formula.Sort() == f.SortAnd || formula.Sort() == f.SortOr {
+		if newFormula.Sort() == f.SortAnd || newFormula.Sort() == f.SortOr {
 			return factorOutSimplify(fac, newFormula, rf)
-		} else {
-			return newFormula
 		}
+		return newFormula
 	case f.SortNot:
 		op, _ := fac.NotOperand(formula)
 		return FactorOut(fac, op, rf).Negate(fac)
@@ -55,9 +54,8 @@ func factorOutSimplify(fac f.Factory, formula f.Formula, rf RatingFunction) f.Fo
 	}
 	if rf(fac, formula) < rf(fac, simplified) {
 		return formula
-	} else {
-		return simplified
 	}
+	return simplified
 }
 
 func factorOut(fac f.Factory, formula f.Formula) (f.Formula, bool) {
@@ -126,7 +124,6 @@ func computeMaxOccurringSubformula(fac f.Factory, formula f.Formula) (f.Formula,
 	}
 	if maxCount < 2 {
 		return 0, false
-	} else {
-		return maxFormula, true
 	}
+	return maxFormula, true
 }

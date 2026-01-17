@@ -108,17 +108,15 @@ func chooseByOccs(
 		sort.SliceStable(vars, func(i, j int) bool {
 			if diff := occs[vars[i]] - occs[vars[j]]; diff != 0 {
 				return diff > 0
-			} else {
-				return vars[i] > vars[j]
 			}
+			return vars[i] > vars[j]
 		})
 	} else {
 		sort.SliceStable(vars, func(i, j int) bool {
 			if diff := occs[vars[i]] - occs[vars[j]]; diff != 0 {
 				return diff < 0
-			} else {
-				return vars[i] < vars[j]
 			}
+			return vars[i] < vars[j]
 		})
 	}
 	var limit int

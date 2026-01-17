@@ -17,7 +17,7 @@ const (
 // WriteMermaidToString writes the given graphical representation as a
 // Mermaid.js file to a string.
 func WriteMermaidToString(representation *Representation) string {
-	buf := bytes.NewBufferString("")
+	buf := new(bytes.Buffer)
 	WriteMermaidToWriter(buf, representation)
 	return buf.String()
 }
@@ -119,9 +119,8 @@ func mermaidEdgeSymbolString(edge *Edge, directed bool) string {
 	}
 	if edge.label == "" {
 		return edgeConnector
-	} else {
-		return fmt.Sprintf("%s|\"%s\"|", edgeConnector, edge.label)
 	}
+	return fmt.Sprintf("%s|\"%s\"|", edgeConnector, edge.label)
 }
 
 func mermaidNodeStyleString(id string, style *NodeStyle) string {

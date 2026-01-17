@@ -164,9 +164,7 @@ func (m *maxSatAlgorithm) newSatSolver() *sat.CoreSolver {
 
 func (m *maxSatAlgorithm) saveModel(currentModel []bool) {
 	m.model = make([]bool, m.nbInitialVariables)
-	for i := 0; i < m.nbInitialVariables; i++ {
-		m.model[i] = currentModel[i]
-	}
+	copy(m.model, currentModel[:m.nbInitialVariables])
 }
 
 func (m *maxSatAlgorithm) computeCostModel(currentModel []bool, weight int) int {
@@ -240,18 +238,16 @@ func (m *maxSatAlgorithm) foundLowerBound(lowerBound int) handler.State {
 	e := EventMaxSatNewLowerBound{lowerBound}
 	if m.hdl.ShouldResume(e) {
 		return succ
-	} else {
-		return handler.Cancelation(e)
 	}
+	return handler.Cancelation(e)
 }
 
 func (m *maxSatAlgorithm) foundUpperBound(upperBound int) handler.State {
 	e := EventMaxSatNewUpperBound{upperBound}
 	if m.hdl.ShouldResume(e) {
 		return succ
-	} else {
-		return handler.Cancelation(e)
 	}
+	return handler.Cancelation(e)
 }
 
 func (m *maxSatAlgorithm) getCurrentWeight() int {
@@ -307,9 +303,8 @@ func (m *maxSatAlgorithm) literal(lit f.Literal) int32 {
 	}
 	if lit.IsPos() {
 		return index * 2
-	} else {
-		return (index * 2) ^ 1
 	}
+	return (index * 2) ^ 1
 }
 
 func (m *maxSatAlgorithm) saveState() *SolverState {
@@ -360,8 +355,7 @@ func (m *maxSatAlgorithm) loadState(state *SolverState) error {
 	m.ubCost = state.ubCost
 	m.lbCost = 0
 	m.currentWeight = state.currentWeight
-	for i := 0; i < len(m.softClauses); i++ {
-		clause := m.softClauses[i]
+	for i, clause := range m.softClauses {
 		clause.relaxationVars = []int32{}
 		clause.weight = state.softWeights[i]
 		clause.assumptionVar = sat.LitUndef

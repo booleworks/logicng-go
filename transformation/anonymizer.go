@@ -21,7 +21,7 @@ type Anonymizer struct {
 // generated variables.  The default Prefix is `v`.
 func NewAnonymizer(fac f.Factory, prefix ...string) *Anonymizer {
 	pfx := "v"
-	if prefix != nil {
+	if len(prefix) > 0 {
 		pfx = prefix[0]
 	}
 	return &Anonymizer{

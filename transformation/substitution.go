@@ -45,13 +45,11 @@ func Substitute(fac f.Factory, formula f.Formula, subst *Substitution) (f.Formul
 		s, ok := subst.subst[variable]
 		if !ok {
 			return formula, nil
-		} else {
-			if formula.IsPos() {
-				return s, nil
-			} else {
-				return s.Negate(fac), nil
-			}
 		}
+		if formula.IsPos() {
+			return s, nil
+		}
+		return s.Negate(fac), nil
 	case f.SortNot:
 		op, _ := fac.NotOperand(formula)
 		subst, err := Substitute(fac, op, subst)
@@ -127,7 +125,6 @@ func substitutePbc(fac f.Factory, pbc f.Formula, substitution *Substitution) (f.
 	}
 	if len(newLits) == 0 {
 		return fac.Constant(comparator.Evaluate(lhsFixed, rhs)), nil
-	} else {
-		return fac.PBC(comparator, rhs-lhsFixed, newLits, newCoeffs), nil
 	}
+	return fac.PBC(comparator, rhs-lhsFixed, newLits, newCoeffs), nil
 }

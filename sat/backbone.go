@@ -31,25 +31,23 @@ type Backbone struct {
 func (b *Backbone) ToFormula(fac f.Factory) f.Formula {
 	if !b.Sat {
 		return fac.Falsum()
-	} else {
-		return fac.Minterm(b.CompleteBackbone(fac)...)
 	}
+	return fac.Minterm(b.CompleteBackbone(fac)...)
 }
 
 // CompleteBackbone returns the positive and negative literals of the backbone.
 func (b *Backbone) CompleteBackbone(fac f.Factory) []f.Literal {
 	if !b.Sat {
 		return []f.Literal{}
-	} else {
-		completeBackbone := make([]f.Literal, 0, len(b.Positive)+len(b.Negative))
-		for i := 0; i < len(b.Positive); i++ {
-			completeBackbone = append(completeBackbone, b.Positive[i].AsLiteral())
-		}
-		for i := 0; i < len(b.Negative); i++ {
-			completeBackbone = append(completeBackbone, b.Negative[i].Negate(fac))
-		}
-		return completeBackbone
 	}
+	completeBackbone := make([]f.Literal, 0, len(b.Positive)+len(b.Negative))
+	for _, v := range b.Positive {
+		completeBackbone = append(completeBackbone, v.AsLiteral())
+	}
+	for _, v := range b.Negative {
+		completeBackbone = append(completeBackbone, v.Negate(fac))
+	}
+	return completeBackbone
 }
 
 // ComputeBackbone computes the positive and negative backbone on the solver.
@@ -250,20 +248,19 @@ func (m *CoreSolver) isUnit(lit int32, clause *clause) bool {
 			}
 		}
 		return true
-	} else {
-		countPos := 0
-		cardinality := clause.cardinality()
-		for i := 0; i < clause.size(); i++ {
-			variable := Vari(clause.get(i))
-			if Vari(lit) != variable && m.model[variable] {
-				countPos++
-				if countPos == cardinality {
-					return true
-				}
+	}
+	countPos := 0
+	cardinality := clause.cardinality()
+	for i := 0; i < clause.size(); i++ {
+		variable := Vari(clause.get(i))
+		if Vari(lit) != variable && m.model[variable] {
+			countPos++
+			if countPos == cardinality {
+				return true
 			}
 		}
-		return false
 	}
+	return false
 }
 
 func (m *CoreSolver) addBackboneLiteral(lit int32) {

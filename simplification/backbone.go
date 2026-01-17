@@ -28,7 +28,6 @@ func PropagateBackbone(fac f.Factory, formula f.Formula) f.Formula {
 		}
 		restrictedFormula := assignment.Restrict(fac, formula, ass)
 		return fac.And(backboneFormula, restrictedFormula)
-	} else {
-		return formula
 	}
+	return formula
 }

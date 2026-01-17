@@ -72,9 +72,8 @@ func NoNodeStyle() *NodeStyle {
 func NewNodeStyle(shape Shape, strokeColor, textColor, backgroundColor Color) *NodeStyle {
 	if shape == ShapeDefault && strokeColor == "" && textColor == "" && backgroundColor == "" {
 		return NoNodeStyle()
-	} else {
-		return &NodeStyle{shape, strokeColor, textColor, backgroundColor}
 	}
+	return &NodeStyle{shape, strokeColor, textColor, backgroundColor}
 }
 
 // Circle generates a new node style for a circle with the given stroke, text,
@@ -126,9 +125,8 @@ func NoEdgeStyle() *EdgeStyle {
 func NewEdgeStyle(edgeType EdgeType, color Color) *EdgeStyle {
 	if edgeType == EdgeDefault && color == "" {
 		return NoEdgeStyle()
-	} else {
-		return &EdgeStyle{edgeType, color}
 	}
+	return &EdgeStyle{edgeType, color}
 }
 
 // Solid generates a new solid edge with the given color.

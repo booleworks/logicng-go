@@ -40,13 +40,12 @@ func ComputeForFormulasWithHandler(
 		return nil, state
 	} else if props == nil {
 		return nil, handler.Success()
-	} else {
-		forms := make([]f.Formula, len(props))
-		for i, prop := range props {
-			forms[i] = prop.Formula()
-		}
-		return forms, handler.Success()
 	}
+	forms := make([]f.Formula, len(props))
+	for i, prop := range props {
+		forms[i] = prop.Formula()
+	}
+	return forms, handler.Success()
 }
 
 // Compute computes the SMUS for the given list of propositions modulo some
@@ -116,9 +115,8 @@ func minimumHs(hSolver *sat.Solver, variables []f.Variable, hdl handler.Handler)
 	minimumHsModel, state := hSolver.MinimizeWithHandler(f.VariablesAsLiterals(variables), hdl)
 	if !state.Success {
 		return nil, state
-	} else {
-		return minimumHsModel.PosVars(), handler.Success()
 	}
+	return minimumHsModel.PosVars(), handler.Success()
 }
 
 func grow(growSolver *sat.Solver, h, variables []f.Variable, hdl handler.Handler) ([]f.Variable, handler.State) {
@@ -129,14 +127,13 @@ func grow(growSolver *sat.Solver, h, variables []f.Variable, hdl handler.Handler
 		return nil, state
 	} else if maxModel == nil {
 		return nil, handler.Success()
-	} else {
-		err := growSolver.LoadState(solverState)
-		if err != nil {
-			panic(err)
-		}
-		minimumCorrectionSet := f.NewMutableVarSet(variables...)
-		posVars := maxModel.PosVars()
-		minimumCorrectionSet.RemoveAllElements(&posVars)
-		return minimumCorrectionSet.Content(), handler.Success()
 	}
+	err := growSolver.LoadState(solverState)
+	if err != nil {
+		panic(err)
+	}
+	minimumCorrectionSet := f.NewMutableVarSet(variables...)
+	posVars := maxModel.PosVars()
+	minimumCorrectionSet.RemoveAllElements(&posVars)
+	return minimumCorrectionSet.Content(), handler.Success()
 }

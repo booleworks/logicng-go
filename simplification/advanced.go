@@ -144,14 +144,12 @@ func AdvancedWithHandler(
 func determineConfig(fac f.Factory, initConfig []*Config) *Config {
 	if len(initConfig) > 0 {
 		return initConfig[0]
-	} else {
-		configFromFactory, ok := fac.ConfigurationFor(configuration.AdvancedSimplifier)
-		if !ok {
-			return DefaultConfig()
-		} else {
-			return configFromFactory.(*Config)
-		}
 	}
+	configFromFactory, ok := fac.ConfigurationFor(configuration.AdvancedSimplifier)
+	if !ok {
+		return DefaultConfig()
+	}
+	return configFromFactory.(*Config)
 }
 
 func computeMinDNF(fac f.Factory, simplified f.Formula, hdl handler.Handler) (f.Formula, handler.State) {
@@ -208,7 +206,6 @@ func simplifyWithRating(fac f.Factory, formula, simplifiedOneStep f.Formula, con
 	ratingFormula := config.RatingFunction(fac, formula)
 	if ratingSimplified < ratingFormula {
 		return simplifiedOneStep
-	} else {
-		return formula
 	}
+	return formula
 }

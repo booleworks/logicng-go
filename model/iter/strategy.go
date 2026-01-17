@@ -118,9 +118,8 @@ func (s BasicStrategy) SplitVarsForRecursionDepth(
 ) *f.VarSet {
 	if recursionDepth == 0 {
 		return s.SplitProvider.Vars(solver, variables)
-	} else {
-		return s.ReduceSplitVars(variables, recursionDepth)
 	}
+	return s.ReduceSplitVars(variables, recursionDepth)
 }
 
 func (s BasicStrategy) ReduceSplitVars(variables *f.VarSet, _ int) *f.VarSet {

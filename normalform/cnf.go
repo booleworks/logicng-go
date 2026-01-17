@@ -100,14 +100,12 @@ func CNF(fac f.Factory, formula f.Formula, config ...*CNFConfig) f.Formula {
 func determineConfig(fac f.Factory, initConfig []*CNFConfig) *CNFConfig {
 	if len(initConfig) > 0 {
 		return initConfig[0]
-	} else {
-		configFromFactory, ok := fac.ConfigurationFor(configuration.CNF)
-		if !ok {
-			return DefaultCNFConfig()
-		} else {
-			return configFromFactory.(*CNFConfig)
-		}
 	}
+	configFromFactory, ok := fac.ConfigurationFor(configuration.CNF)
+	if !ok {
+		return DefaultCNFConfig()
+	}
+	return configFromFactory.(*CNFConfig)
 }
 
 func advancedEncoding(fac f.Factory, formula f.Formula, config *CNFConfig) f.Formula {
@@ -133,9 +131,8 @@ func singleAdvancedEncoding(
 	if !state.Success {
 		if config.FallbackAlgorithmForAdvancedEncoding == CNFPlaistedGreenbaum {
 			return PGCNFWithBoundary(fac, formula, config.AtomBoundary)
-		} else {
-			return TseitinCNFWithBoundary(fac, formula, config.AtomBoundary)
 		}
+		return TseitinCNFWithBoundary(fac, formula, config.AtomBoundary)
 	}
 	return result
 }

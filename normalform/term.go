@@ -24,15 +24,9 @@ func testTerm(fac f.Factory, formula f.Formula, minterm bool) bool {
 	case f.SortImpl, f.SortEquiv, f.SortNot, f.SortCC, f.SortPBC:
 		return false
 	case f.SortOr:
-		if minterm {
-			return false
-		}
-		return onlyLiterals(fac, formula)
+		return !minterm && onlyLiterals(fac, formula)
 	case f.SortAnd:
-		if !minterm {
-			return false
-		}
-		return onlyLiterals(fac, formula)
+		return minterm && onlyLiterals(fac, formula)
 	default:
 		panic(errorx.UnknownEnumValue(fsort))
 	}
