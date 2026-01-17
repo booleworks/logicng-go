@@ -12,7 +12,7 @@
 // with it. There should be very seldom the need to create more than one
 // factory.
 //
-// Formula factories are not thread-safe and you can not share formulas between
-// formula factories since a formula in fact is only a unique ID (uint32) on
-// the factory.
+// Formula factories are not thread-safe, and you can not share formulas
+// between formula factories since a formula in fact is only a unique ID
+// (uint32) on the factory.
 package formula

@@ -6,7 +6,7 @@ import (
 	f "github.com/booleworks/logicng-go/formula"
 )
 
-// GeneratePigeonHole generates a pigeon hole problem of size n and returns it
+// GeneratePigeonHole generates a pigeonhole problem of size n and returns it
 // as a formula.
 func GeneratePigeonHole(fac f.Factory, n int) f.Formula {
 	prefix := "v"

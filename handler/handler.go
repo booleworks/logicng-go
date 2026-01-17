@@ -20,7 +20,7 @@ func (nopHandler) ShouldResume(event.Event) bool {
 }
 
 // The State contains the information if a handler was canceled and
-// if so, which was the event which caused the cancelation.  If the handler
+// if so, which was the event which caused the cancellation.  If the handler
 // was not canceled, the cause is the "Nothing" event.
 type State struct {
 	Success     bool

@@ -26,7 +26,7 @@ const (
 
 // CNFConfig represents the configuration for the CNF conversion.  It stores
 // the main algorithm to transform the formula.  If the advanced algorithm is
-// chosen, also a fallback algorithm has to be chosen.  Furthermore boundaries
+// chosen, also a fallback algorithm has to be chosen.  Furthermore, boundaries
 // for number of distributions, created clauses, or atoms can be provided for
 // the advanced algorithm.
 type CNFConfig struct {

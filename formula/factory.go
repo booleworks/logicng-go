@@ -113,8 +113,8 @@ type CachingFactory struct {
 
 // NewFactory returns a new caching formula factory.  If the optional
 // conserveVars flag is set to true, trivial contradictions and tautologies are
-// not simplified in formulas. E. g. a formula like A & ~A, A | ~A, or A => A
-// can be generated on the formula factory.  Therefore it is guaranteed that
+// not simplified in formulas. E.g. a formula like A & ~A, A | ~A, or A => A
+// can be generated on the formula factory.  Therefore, it is guaranteed that
 // all variables of the original formula are still present on the formula
 // factory. If set to false, the formulas will be simplified to false or true
 // and therefore variables of the original formula can not be present on the

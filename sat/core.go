@@ -418,8 +418,8 @@ func (m *CoreSolver) Solve(hdl handler.Handler) (f.Tristate, handler.State) {
 	return status, succ
 }
 
-// SolveWithAssumptions is used to the the formulas on the solver with the
-// given assumptions.  Returns the result as tristate and an the handler state.
+// SolveWithAssumptions is used to solve the formulas on the solver with the
+// given assumptions.  Returns the result as tristate and the handler state.
 func (m *CoreSolver) SolveWithAssumptions(
 	hdl handler.Handler, assumptions []int32,
 ) (res f.Tristate, state handler.State) {

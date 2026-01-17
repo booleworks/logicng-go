@@ -4,7 +4,7 @@ import f "github.com/booleworks/logicng-go/formula"
 
 // CoreState bundles the inner state of a SAT solver and is only used for
 // serializing and de-serializing solvers.  There should be no need to use it
-// in other contexts and it should *never* be used to manipulate solver state.
+// in other contexts, and it should *never* be used to manipulate solver state.
 type CoreState struct {
 	Config                *Config
 	LLConfig              *LowLevelConfig
